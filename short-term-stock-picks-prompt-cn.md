@@ -17,24 +17,176 @@
 
 ## 技能与数据调用规范(工欲善其事,必先利其器)
 
-本项目 `.claude/skills/` 内置 46 个金融技能。**短周期选股必须优先调用对应技能,而非裸手推演**——技能已封装数据源、计算口径与 A 股适配逻辑。选股场景与单股深评不同,核心是"广撒网生成候选池 → 硬门槛过滤 → 多维评分排序 → 组合风控",技能按此流程编排。
+本项目 `.claude/skills/` 内置 46+ 个金融技能。**短周期选股必须优先调用对应技能,而非裸手推演**——技能已封装数据源、计算口径与 A 股适配逻辑。选股场景与单股深评不同,核心是"广撒网生成候选池 → 硬门槛过滤 → 多维评分排序 → 组合风控",技能按此流程编排。
 
-### 一、数据源优先级(多级兜底,任一可用即取数)
+### 一、数据源优先级(五级架构,逐级升级)
 
-依据 `china-market-data` 技能的多层架构逐级取数,避免单一数据源缺失导致选股中断:
+构建五级数据获取体系,从结构化 API 到自适应网页抓取,确保选股漏斗每个环节都有数据支撑:
 
-| 层级 | 来源 | 密钥 | 覆盖 | 适用 |
-|---|---|---|---|---|
-| Tier-0 | 万得 Wind(`wind-mcp`) | `WIND_API_KEY`(`ak_` 开头) | 全市场+研报+量化+智能选股 | 最全,机构首选;`wind_search_stocks`/`wind_factor_analysis` 尤其适合选股 |
-| Tier-1 | 同花顺 iFind(`ifind-mcp`) | `IFIND_AUTH_TOKEN` | 财务/一致预期/ESG/债券/港美股/宏观行业 | 精确财务,同花顺自家 |
-| Tier-2 | AkShare(`akshare-mcp`) | 无需密钥 | 行情/财报/行业/指数/涨跌榜 | 免费高频批量 |
-| Tier-3 | 新闻公告(`china-news-mcp`) | 无需密钥 | 个股新闻/市场头条 | 情绪与事件 |
-| 兜底 | `findata-toolkit-cn` 脚本 | 无需密钥 | 行情/财报/董监高/北向/宏观 | MCP 全失效时脚本取数 |
-| 兜底 | curl 东方财富 API | 无需密钥 | K线/榜单/资金/板块 | WebFetch 被拦时用 curl+awk |
+| 层级 | 来源 | 类型 | 成本 | 速度 | 覆盖 | 适用场景 |
+|---|---|---|---|---|---|---|
+| **Tier-0** | 万得 Wind(`wind-mcp`) | MCP 结构化 | 付费 | ★★★★★ | ★★★★★ | 全市场+研报+量化+智能选股 | 最全,机构首选;`wind_search_stocks`/`wind_factor_analysis` 尤其适合选股 |
+| **Tier-1** | 同花顺 iFind(`ifind-mcp`) | MCP 结构化 | 付费 | ★★★★★ | ★★★★☆ | 财务/一致预期/ESG/债券/港美股/宏观行业 | 精确财务,同花顺自家 |
+| **Tier-2** | AkShare(`akshare-mcp`) | MCP 结构化 | 免费 | ★★★★☆ | ★★★☆☆ | 行情/财报/行业/指数/涨跌榜 | 免费高频批量,选股首选免费源 |
+| **Tier-3** | FMP(`fmp-global-data`) | REST API | 免费(限次) | ★★★★☆ | ★★★★★ | 全球股票/ETF/基金/加密/外汇/商品/宏观经济/分析师评级 | **跨市场对标、全球估值、外围市场联动、财报日历** |
+| **Tier-4** | Scrapling(网页抓取) | 自适应爬虫 | 免费 | ★★★☆☆ | ★★★★★ | 任何公开网页 | **兜底层:公告原文/研报/社区舆情/交易所数据/反爬站点** |
+| **Tier-5** | 脚本/MCP 兜底 | 混合 | 免费 | ★★★☆☆ | ★★★☆☆ | 行情/财报/董监高/北向/宏观 | MCP 全部失效时的最后手段 |
 
-> 环境变量 `IFIND_DATA_SOURCE_MODE` 切换策略:`wind-fallback`(推荐)、`ifind-fallback`(默认)、`akshare-only`(纯免费)。
+> **升级原则**: 选股漏斗各环节优先用结构化数据源(Tier-0 → Tier-1 → Tier-2),需要跨市场/外围数据时切入 Tier-3(FMP),结构化源无法满足时升级到 Tier-4(Scrapling 网页抓取),最后才用 Tier-5 脚本兜底。
 
-### 二、同花顺热门榜单与板块轮动获取(短周期选股的"风口雷达")
+> **环境变量 `IFIND_DATA_SOURCE_MODE`** 切换策略:`wind-fallback`(推荐,Wind→iFind→AkShare)、`ifind-fallback`(默认,iFind→AkShare)、`akshare-only`(纯免费)、`scrapling-only`(仅网页抓取)。
+
+### 二、FMP 全球数据专项调用指南(选股场景)
+
+FMP 在选股漏斗中的三个关键环节发挥作用:
+
+#### 场景 1: 候选池生成 — 全球对标筛选
+```python
+# 筛选特定行业+市值范围的全球股票(辅助判断 A 股相对估值)
+stocks = api('company-screener', {
+    'sector': 'Technology',
+    'marketCapMoreThan': '1000000000',
+    'betaLower': '0',
+    'betaUpper': '2',
+    'limit': '50'
+})
+# 用于判断 A 股科技股在全球科技股估值中的相对位置
+```
+
+#### 场景 2: 批量行情快照 — 外围市场联动
+```python
+# 一次获取全球主要指数/板块行情,判断外围对 A 股次日影响
+quotes = api('batch-quote', {'symbols': 'SPY,IWM,QQQ,DX-Y-NG00,NQ=F'})
+# 美债收益率(treasury-rates) → 影响 A 股成长股估值
+# 大宗商品(commodities-list) → 影响资源股板块
+```
+
+#### 场景 3: 财报日历 — 2 周窗口催化扫描
+```python
+# 获取未来 2 周全球财报(含中概股),判断外围财报季对 A 股映射
+earnings = api('earnings-calendar', {'from': '2026-06-27', 'to': '2026-07-11'})
+# 结合 A 股财报日历,判断是否存在"外围映射"机会
+```
+
+#### 场景 4: 市场异动 — 全球涨跌榜
+```python
+# 全球最大涨跌,判断是否有跨境传染效应
+gainers = api('biggest-gainers', {'limit': '10'})
+losers = api('biggest-losers', {'limit': '10'})
+# 若某行业美股暴涨,A 股同板块可能有映射机会
+```
+
+### 三、Scrapling 网页抓取专项调用指南(选股场景)
+
+Scrapling 在选股漏斗中的定位:当 MCP 数据源的量化筛选能力不足以覆盖特定数据源时启用。
+
+#### 抓取器选择决策树
+```
+需要抓取网页数据?
+│
+├─ 静态页面,无反爬? ──→ Fetcher (最快,TLS 指纹伪装)
+│   例:国家统计局行业数据、证监会公告
+│
+├─ 需要 JS 渲染,无强反爬? ──→ DynamicFetcher
+│   例:东方财富板块排行、新浪财经、Yahoo Finance
+│
+└─ 有 Cloudflare/反爬保护? ──→ StealthyFetcher
+    例:巨潮资讯网、上交所/深交所、慧博投研
+```
+
+#### 选股漏斗常用抓取场景
+
+**1. 东方财富 — 板块成分股与排行**
+```python
+# 当 AkShare 行业分类不够细时,抓东方财富行业排行
+from scrapling.fetchers import DynamicFetcher
+page = DynamicFetcher.fetch(
+    'https://data.eastmoney.com/bkzj/hy.html',
+    network_idle=True,
+    wait_selector='.table-wrap'
+)
+# 提取行业板块涨跌幅、成交额、资金流向
+```
+
+**2. 巨潮资讯网 — 公告筛选(回购/增持/解禁)**
+```python
+# 当 Wind/iFind 不可用时,抓公告原文做事件驱动选股
+from scrapling.fetchers import StealthyFetcher
+page = StealthyFetcher.fetch(
+    'http://www.cninfo.com.cn/new/fulltextSearch/full?searchkey=回购&searchtype=announcement',
+    solve_cloudflare=True,
+    timeout=60000
+)
+# 提取公告标题、日期、摘要,筛选近 2 周内的回购/增持公告
+```
+
+**3. 批量行情抓取 — 多股票快照**
+```python
+from scrapling.fetchers import FetcherSession
+
+# 批量获取候选池股票的实时行情
+tickers = ['000725', '600519', '000858', '601318', '600036']
+with FetcherSession(impersonate='chrome', timeout=30) as session:
+    for ticker in tickers:
+        page = session.get(f'https://push2.eastmoney.com/api/qt/stock/get?secid=0.{ticker}')
+        info = page.json()
+        print(f"{ticker}: 成交额={info.get('fy1')}")
+```
+
+**4. 雪球 — 散户情绪与讨论热度**
+```python
+# 获取候选股在雪球的热度(辅助判断情绪面)
+from scrapling.fetchers import DynamicFetcher
+page = DynamicFetcher.fetch(
+    'https://xueqiu.com/v4/statuses/public_timeline_by_category.json?since_id=-1&max_id=-1&count=20&category=1111',
+    wait=2000,
+    disable_resources=True
+)
+```
+
+**5. 慧博投研 — 行业研报(辅助基本面判断)**
+```python
+# 获取券商研报,辅助判断行业景气度
+from scrapling.fetchers import DynamicFetcher
+page = DynamicFetcher.fetch(
+    'https://www.hibor.com.cn/search?keyword=面板行业+景气度',
+    network_idle=True,
+    wait_selector='.search-result-item'
+)
+```
+
+#### Scrapling MCP 工具速查(选股场景)
+
+| 工具 | 选股用途 |
+|------|----------|
+| `get` | 批量获取静态数据页(统计局/交易所) |
+| `bulk_get` | 并发抓取多个静态数据源 |
+| `fetch` | 抓取 JS 动态页面(东方财富板块排行) |
+| `bulk_fetch` | 并发抓取多个动态页面 |
+| `stealthy_fetch` | 抓巨潮/交易所/慧博等反爬站点 |
+| `bulk_stealthy_fetch` | 批量抓反保护站点 |
+| `open_session` | 同站多次抓取(如批量抓公告) |
+| `screenshot` | 抓取页面截图存档 |
+
+#### 解析技巧(选股场景)
+```python
+# 批量提取表格数据(行业排行)
+rows = page.css('table tbody tr')
+for row in rows:
+    data = {
+        'name': row.css('td:nth-child(1)::text').get(),
+        'change': row.css('td:nth-child(2)::text').get(),
+        'volume': row.css('td:nth-child(3)::text').get(),
+    }
+
+# 正则提取数字
+price = page.css('.price::text').re_first(r'[\d.]+')
+
+# 相似元素发现(批量同类数据)
+first_row.find_similar()
+```
+
+### 四、同花顺热门榜单与板块轮动获取(短周期选股的"风口雷达")
 
 短周期选股,风口与趋势比估值更重要。必须先拿到榜单与板块轮动,再下钻个股。
 
@@ -53,14 +205,15 @@
 
 **产出要求**:榜单含四表——①全市场人气/涨幅/成交额/换手率 Top20;②热门概念板块 Top10 + 行业板块 Top10(含 5 日涨幅、成交额、上涨/下跌家数);③板块轮动信号(`sector-rotation-detector` 判经济周期下的超配行业,与热门榜交叉验证);④"政策周期 + 市场热度"双确认的主线方向 2-3 个,作为候选池的核心来源。
 
-### 三、技能调用矩阵(短周期选股版)
+### 五、技能调用矩阵(短周期选股版)
 
 ⭐ = 短周期选股中强烈推荐调用;其余按风格与窗口择需调用。
 
 | 选股环节 | 技能 | 用途 |
 |---|---|---|
 | 宏观定调 | ⭐ `findata-toolkit-cn`(macro_data) | GDP/PMI/CPI/PPI/社融/M2/LPR/周期阶段 |
-| 国际形势 | ⭐ `china-market-data`(ifind EDB / 港美股 / 债券)+ curl 美元/美债/大宗 | 美联储/美元/美债/大宗/地缘传导 |
+| 国际形势 | ⭐ `china-market-data`(ifind EDB/港美股/债券) | 美联储/美元/美债/大宗/地缘传导 |
+| 国际形势(全球) | `fmp-global-data`(treasury-rates/market-risk-premium) | 美债收益率曲线/国家风险溢价 |
 | 行业轮动 | ⭐ `sector-rotation-detector` | 经济周期→超配行业,与热门榜交叉确认主线 |
 | 风口雷达 | ⭐ 同花顺热门榜单(见上) | 人气龙头/主线题材/板块排名 |
 | 候选池生成 | ⭐ `china-idea-generation` | 系统性选股:量化筛选+主题+模式识别 |
@@ -74,12 +227,16 @@
 | 横向财务 | ⭐ `financial-statement-analyzer` | 杜邦/盈利质量/Z值&M值造假筛查 |
 | 排雷 | ⭐ `china-break-trace` | 财务红旗、earnings quality |
 | 估值锚 | ⭐ `china-comps` / `china-comps-analysis` | 可比公司 PE/PB/PS 相对估值 |
+| 估值锚(全球) | `fmp-global-data`(profile + quote) | 全球对标公司估值比较 |
 | 估值锚 | `china-dcf` | DCF 绝对估值(快速版,定上下限) |
 | 技术与流动性 | ⭐ `findata-toolkit-cn`(stock_data --history) | K线/量价/换手率/成交额 |
 | 资金 | ⭐ `findata-toolkit-cn`(--insider / --northbound) | 董监高增减持、北向资金 |
 | 资金 | `insider-trading-analyzer` | 内部人交易、管理层信心信号 |
 | 催化日历 | ⭐ `china-catalyst-calendar` | 未来 2 周财报/政策/展会/解禁日历 |
+| 催化日历(全球) | `fmp-global-data`(earnings-calendar) | 全球财报日历,外围市场联动 |
 | 行业格局 | `china-sector-overview` | 行业龙头/竞争/政策/估值 |
+| 舆情抓取 | `Scrapling-Skill`(DynamicFetcher) | 雪球/东财股吧散户情绪 |
+| 公告抓取 | `Scrapling-Skill`(StealthyFetcher) | 巨潮公告原文(回购/增持/解禁) |
 | 组合优化 | ⭐ `risk-adjusted-return-optimizer` | 仓位/配置/风险调整收益最优 |
 | 组合风控 | `portfolio-health-check` | 集中度/相关性/因子暴露/隐性偏移 |
 | 输出 | `china-xlsx-author` | watchlist Excel(可选附件) |
@@ -88,14 +245,16 @@
 
 > 另有建模/IB/晨报类技能(`china-3-statement-model`/`china-initiating-coverage`/`china-morning-note`/`china-deal-screening`/`china-model-update`/`china-roll-forward`/`china-variance-commentary`/`china-earnings-preview`/`china-audit-xls`/`china-clean-data-xls`/`china-gl-recon`/`china-accrual-schedule`/`china-lbo-model`/`china-tax-loss-harvesting`/`china-deck-refresh`/`china-ppt-template-creator`/`china-ib-check-deck`/`china-skill-creator`)按需调用,详见 `.claude/skills/` 各 `SKILL.md`。
 
-### 四、调用原则
+### 六、调用原则
 1. **能调技能不裸手算**:凡矩阵覆盖的环节,先调技能取数/计算,再人工研判
 2. **多源交叉验证**:关键数据(财务/估值/资金/榜单)至少两源核对,差异大时标注
-3. **兜底优先级**:MCP 不可用 → `findata-toolkit-cn` 脚本 → curl 东方财富 API → 标注"数据缺失"
-4. **选股漏斗纪律**:候选池 ≥ 30 只 → 流动性硬门槛过滤 → 六维评分排序 → Top N → 组合风控调整;不得跳过漏斗直接拍脑袋推荐
-5. **每只候选都要过流动性核验与排雷**,不达标一律剔除,不留"看起来好但买不进"的票
-6. **催化日历必须覆盖未来 2 周窗口**,无明确催化的标的降权
-7. **按风格裁剪**:价值风格重跑 `undervalued-stock-screener`/`high-dividend-strategy`;成长风格重跑 `small-cap-growth-identifier`/`quant-factor-screener`;事件驱动重跑 `event-driven-detector`/`sentiment-reality-gap`
+3. **跨市场对标必跑**:选股时优先用 FMP 查找全球对标,判断 A 股相对估值位置
+4. **兜底优先级**:MCP 不可用 → 脚本(`findata-toolkit-cn`) → curl 东方财富 API → **Scrapling 网页抓取** → 标注"数据缺失"
+5. **选股漏斗纪律**:候选池 ≥ 30 只 → 流动性硬门槛过滤 → 六维评分排序 → Top N → 组合风控调整;不得跳过漏斗直接拍脑袋推荐
+6. **每只候选都要过流动性核验与排雷**,不达标一律剔除,不留"看起来好但买不进"的票
+7. **催化日历必须覆盖未来 2 周窗口**,无明确催化的标的降权
+8. **按风格裁剪**:价值风格重跑 `undervalued-stock-screener`/`high-dividend-strategy`;成长风格重跑 `small-cap-growth-identifier`/`quant-factor-screener`;事件驱动重跑 `event-driven-detector`/`sentiment-reality-gap`
+9. **Scrapling 克制使用**:网页抓取仅在其他数据源不可用时启用,抓取后及时清理临时文件
 
 ---
 
@@ -103,7 +262,7 @@
 
 ### 一、宏观、国际与政策定调(定方向——短周期的"天时")
 2 周窗口里,方向比估值更重要。先锁定宏观 + 国际 + 政策 + 情绪四维共振的顺风方向,再下钻选股。
-> 🔧 推荐技能:`findata-toolkit-cn`(`macro_data.py --dashboard --cycle`)取国内宏观 → `china-market-data`(ifind EDB/港美股/债券)+ curl 美元美债大宗 取国际形势 → `sector-rotation-detector` 判行业轮动 → 同花顺热门榜单测情绪与主线
+> 🔧 推荐技能:`findata-toolkit-cn`(`macro_data.py --dashboard --cycle`)取国内宏观 → `china-market-data`(ifind EDB/港美股/债券)+ curl 美元美债大宗 取国际形势 → `fmp-global-data`(treasury-rates) 看美债收益率 → `sector-rotation-detector` 判行业轮动 → 同花顺热门榜单测情绪与主线
 
 1. **国内宏观与经济周期**
    - 最新 GDP 增速、PMI(制造业/非制造业)、社融与信贷、M1/M2 增速与剪刀差、CPI/PPI(通胀/通缩信号)
@@ -130,7 +289,7 @@
 **小结**:未来 2 周宏观 + 国际 + 政策 + 情绪指向的顺风方向 = 【方向 A / B / C】,一句话定调,作为候选池核心来源。
 
 ### 二、候选股票池生成(广撒网,目标 30-50 只)
-> 🔧 推荐技能:`china-idea-generation` 系统性选股 → `undervalued-stock-screener` + `quant-factor-screener` + `small-cap-growth-identifier` 因子筛选 → `event-driven-detector` + `sentiment-reality-gap` 事件与错杀 → `china-catalyst-calendar` 圈定 2 周内有催化的公司 → 同花顺热门榜单上榜股 → 顺风板块成分股(下钻龙头+次龙头)
+> 🔧 推荐技能:`china-idea-generation` 系统性选股 → `undervalued-stock-screener` + `quant-factor-screener` + `small-cap-growth-identifier` 因子筛选 → `event-driven-detector` + `sentiment-reality-gap` 事件与错杀 → `china-catalyst-calendar` 圈定 2 周内有催化的公司 → `fmp-global-data`(company-screener) 全球对标筛选 → 同花顺热门榜单上榜股 → 顺风板块成分股(下钻龙头+次龙头)
 
 从以下来源汇总候选池并去重:
 1. **顺风板块成分股**:模块一锁定的 2-3 方向的龙头 + 次龙头(`china-sector-overview` 取龙头)
@@ -139,6 +298,8 @@
 4. **事件驱动**:`event-driven-detector` 命中近 2 周有并购/回购/指数调整/资产注入的票
 5. **错杀反弹**:`sentiment-reality-gap` 识别超跌但基本面稳的票
 6. **催化日历**:`china-catalyst-calendar` 圈定未来 2 周有财报/政策/展会/解禁落窗的公司
+7. **全球对标映射**:`fmp-global-data`(company-screener) 筛选全球同行业高增长公司,映射回 A 股对标标的
+8. **舆情热度**:`Scrapling-Skill` 抓雪球/东财股吧讨论热度高的候选股
 
 ### 三、流动性硬门槛过滤(用户强调,先过这关再往下评)
 A 股 T+1 且有涨跌停板,流动性不足 = 进不去 / 出不来 / 冲击成本吞噬利润。候选池先过流动性硬门槛,不达标直接剔除并记录原因,不进入评分。
@@ -158,21 +319,21 @@ A 股 T+1 且有涨跌停板,流动性不足 = 进不去 / 出不来 / 冲击成
 > 🔧 推荐技能:`findata-toolkit-cn`(`stock_data.py --history`)取成交额/换手率/量比 → `china-market-data`(`ifind_get_stock_info`)取自由流通市值与两融标的属性。每只候选都要有流动性核验数据,不得空白。
 
 ### 四、多维评分与排序(精选 Top N)
-> 🔧 推荐技能:`financial-statement-analyzer` 基本面 → `china-comps` + `china-dcf` 估值 → `findata-toolkit-cn`(--history)技术 → `--insider`/`--northbound` + `insider-trading-analyzer` 资金 → `china-catalyst-calendar` 催化 → `quant-factor-screener` 因子;排雷用 `china-break-trace`
+> 🔧 推荐技能:`financial-statement-analyzer` 基本面 → `china-comps` + `china-dcf` 估值 → `findata-toolkit-cn`(--history)技术 → `--insider`/`--northbound` + `insider-trading-analyzer` 资金 → `china-catalyst-calendar` 催化 → `quant-factor-screener` 因子;排雷用 `china-break-trace` → **`fmp-global-data` 全球对标估值**
 
 对过流动性门槛的候选,按六维打分(每维 0-100,加权合计),取 Top N:
 
 | 维度 | 权重 | 评分要点 |
 |---|---|---|
 | 基本面质量 | 20% | ROE/盈利增速/现金流含金量/杜邦(`financial-statement-analyzer`) |
-| 估值安全边际 | 15% | PE/PB 历史分位低、可比公司折价(`china-comps`)、DCF 有上行空间(`china-dcf`) |
+| 估值安全边际 | 15% | PE/PB 历史分位低、可比公司折价(`china-comps`)、DCF 有上行空间(`china-dcf`)、**全球对标估值合理(`fmp-global-data`)** |
 | 技术位置 | 20% | 多周期共振、靠近支撑/突破在即、筹码峰下方、量价配合 |
 | 资金推动 | 15% | 主力/北向/董监高净流入、龙虎榜机构席位(`insider-trading-analyzer`) |
 | 催化确定性 | 20% | 未来 2 周有明确催化(政策/财报/展会/事件)且未透支(`china-catalyst-calendar`) |
 | 流动性适配 | 10% | 成交额/换手率/量比健康,适配账户规模与进出 |
 
-**加分项**:`event-driven-detector` 命中 +5;`sentiment-reality-gap` 错杀 +5;板块龙头 +5。
-**减分项**:近 5 日已大涨(>15%)-10;商誉/质押/解禁雷(`china-break-trace`)-10;财务红旗 -15。
+**加分项**:`event-driven-detector` 命中 +5;`sentiment-reality-gap` 错杀 +5;板块龙头 +5;全球对标估值折价 +3。
+**减分项**:近 5 日已大涨(>15%)-10;商誉/质押/解禁雷(`china-break-trace`)-10;财务红旗 -15;全球对标明显高估 -5。
 
 输出**评分总表**(所有候选打分排序),Top N 进入推荐清单。
 
@@ -191,8 +352,8 @@ Top N 不是简单堆叠,要做成一个"短周期组合":
 
 ## 执行流程
 1. **确认输入**:核对七个输入变量,缺失且无法推断时先向用户追问,不臆测;尤其确认日期基准以圈定 2 周窗口
-2. **定调与取数**:模块一调用 `macro_data` + 国际数据 + `sector-rotation-detector` + 热门榜单,锁定 2-3 顺风方向
-3. **生成候选池**:模块二多源汇总 30-50 只
+2. **定调与取数**:模块一调用 `macro_data` + 国际数据 + `fmp-global-data`(美债) + `sector-rotation-detector` + 热门榜单,锁定 2-3 顺风方向
+3. **生成候选池**:模块二多源汇总 30-50 只(含 FMP 全球对标映射 + Scrapling 舆情/公告抓取)
 4. **流动性过滤**:模块三硬门槛剔除,记录剔除原因
 5. **评分排序**:模块四六维打分,输出评分总表,取 Top N
 6. **组合风控**:模块五调权重/替换相关标的,定总仓位与个股权重
@@ -203,7 +364,7 @@ Top N 不是简单堆叠,要做成一个"短周期组合":
 
 ### 一、输出形式(必须执行)
 1. **写入文件**:最终报告以 Markdown 写入项目 `output/` 文件夹,**不得只在对话中输出文本**
-2. **文件命名**:`{YYYYMMDD}_短周期2周推荐清单.md`,例如 `20260625_短周期2周推荐清单.md`
+2. **文件命名**:`{YYYYMMDD}_短周期2周推荐清单.md`,例如 `20260627_短周期2周推荐清单.md`
 3. **目录兜底**:若 `output/` 不存在,先创建再写入
 4. **回报路径**:对话中给出相对路径 + 一句话结论 + Top N 代码 + 总仓位
 
@@ -218,6 +379,7 @@ Top N 不是简单堆叠,要做成一个"短周期组合":
    | 政策主线 | 方向 A / B / C | 一句话 |
    | 市场情绪 | 🟢发酵 / 🟡温和 / 🔴退潮 | 一句话 |
    | 流动性环境 | 🟢充裕 / 🟡一般 / 🔴收紧 | 一句话 |
+   | 全球对标 | 🟢低估 / 🟡合理 / 🔴高估 | FMP 对标估值对比 |
    | **组合建议** | 🟢进攻 / 🟡均衡 / 🟡防守 | 总仓位 + Top N 数量 |
 
 3. **宏观与国际形势分析**(模块一):国内宏观 + 货币流动性 + 国际地缘 + 政策 + 情绪,每段结尾引用块小结
@@ -243,6 +405,7 @@ Top N 不是简单堆叠,要做成一个"短周期组合":
 | 催化剂 | 未来 2 周具体催化 + 日期 |
 | 流动性核验 | 日均成交额 / 换手率 / 量比(必须有数据) |
 | 风险点 | 最大的 1-2 个 |
+| 全球对标估值 | FMP 对标公司 PE/PB 对比(如有) |
 
 ### 四、Markdown 排版规范
 1. **层级清晰**:H1/H2/H3 建立目录感,模块之间用 `---` 分隔
@@ -263,6 +426,7 @@ Top N 不是简单堆叠,要做成一个"短周期组合":
 8. **短周期纪律**:2 周内不达预期果断换仓,不恋战;催化兑现即止盈,不贪;止损纪律严,2 周窗口不容扛单
 9. **诚实标注**:数据缺失处明确标注"数据缺失",不编造;实时行情注明截至时间
 10. **宏观国际联动**:国际形势与地缘政治必须具体到传导路径(美元→北向/成长、大宗→资源、地缘→军工/自主可控),不空谈
+11. **全球对标**:每只推荐尽量附 1-2 家全球对标公司估值对比(FMP),增强说服力
 
 ### 六、可选附件(按需生成,非强制)
 - **观察池 Excel**:调用 `china-xlsx-author` 生成候选池+评分总表,存 `output/{YYYYMMDD}_短周期观察池.xlsx`

@@ -9,7 +9,7 @@ china_market:
   # 可选：在 https://tushare.pro/register 注册
   # export TUSHARE_TOKEN=your_token_here
   optional:
-    tushare_token: "${TUSHARE_TOKEN}"
+    tushare_token: "b00b77adf03ecc2f9f525701a5470e86527ee93afbe3869a7a01768d"
 
 # 速率限制设置（每秒请求数）
 rate_limits:
