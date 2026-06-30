@@ -33,18 +33,36 @@
 **触发**: 用户要求对新覆盖的股票出具完整研报
 **技能**: `china-initiating-coverage`
 
-## 数据源五级架构(所有工作流共用)
+## 数据源六级架构(所有工作流共用)
 
 | 层级 | 来源 | 类型 | 适用 |
 |---|---|---|---|
 | Tier-0 | 万得 Wind(`wind-mcp`) | MCP 结构化 | 全市场+研报+量化+港美股,机构首选 |
 | Tier-1 | 同花顺 iFind(`ifind-mcp`) | MCP 结构化 | 财务/一致预期/ESG/债券/港美股/宏观 |
-| Tier-2 | AkShare(`akshare-mcp`) | MCP 结构化 | 免费,行情/财报/行业/指数,高频批量 |
-| Tier-3 | FMP(`fmp-global-data`) | REST API | 全球股票/ETF/加密货币/外汇/商品/分析师评级/宏观 |
-| Tier-4 | Scrapling | 自适应爬虫 | 公告原文/研报/社区舆情/反爬站点兜底 |
-| Tier-5 | 脚本/MCP 兜底 | 混合 | MCP 全部失效时的最后手段 |
+| Tier-2 | Tushare MCP + AkShare MCP | MCP 结构化 | 免费/低成本,行情/财报/行业/指数/宏观,高频批量 |
+| Tier-2.5 | 东方财富 push2 API | 直连 HTTP JSON | 实时行情/估值/基本信息,零爬虫开销 |
+| Tier-3 | BaoStock | Python 库(服务端数据) | 稳定历史K线/分钟线,不依赖上游网页 |
+| Tier-4 | FMP(`fmp-global-data`) | REST API | 全球股票/ETF/加密货币/外汇/商品/分析师评级/宏观 |
+| Tier-5 | Scrapling | 自适应爬虫 | 公告原文/研报/社区舆情/反爬站点兜底 |
 
-**升级原则**: 结构化优先 → 跨市场用 FMP → 兜底用 Scrapling → 最后用脚本。
+**升级原则**: 结构化优先 → 跨市场用 FMP → 直连 API → 脚本兜底 → 爬虫最后手段。
+
+### 数据源选择指南
+
+| 数据类型 | 首选 | 备选 | 兜底 |
+|---|---|---|---|
+| 实时行情/估值 | Tushare MCP / 东方财富 push2 | AkShare MCP | Scrapling |
+| 历史 K 线 | Tushare MCP `daily` | BaoStock | AkShare |
+| 财务报表 | Tushare MCP `income/balancesheet/cashflow` | AkShare MCP | Scrapling 巨潮 |
+| 财务指标 | Tushare MCP `fina_indicator` | AkShare `stock_financial_abstract_ths` | — |
+| 北向资金 | Tushare MCP `moneyflow_hsgt` | AkShare MCP | — |
+| 宏观数据 | Tushare MCP `cn_gdp/cn_cpi/cn_ppi/cn_pmi` | AkShare MCP | Scrapling 统计局 |
+| 概念板块 | Tushare MCP `dc_daily/cls_daily` | AkShare MCP | — |
+| 涨跌停/龙虎榜 | Tushare MCP `limit_list/top_list` | — | — |
+| 公告原文 | Tushare MCP `anns_d` | Scrapling 巨潮 | — |
+| 全球股票/加密/外汇 | FMP | Tushare `us_daily` | — |
+| ESG 评级 | iFind MCP | — | — |
+| 行业研报 | Wind MCP | Scrapling 慧博 | — |
 
 ## 技能分类总览(46+ 技能)
 
@@ -136,8 +154,10 @@
 1. **结构化优先**: 永远先从 MCP 结构化数据源(Tier-0→2)取数,不使用 Scrapling 除非必要
 2. **跨市场必跑**: 分析 A 股公司时,优先用 FMP 查找全球对标公司进行估值交叉验证
 3. **多源交叉**: 关键财务/估值数据至少两源核对,差异大时标注
-4. **兜底链**: MCP → 脚本(findata-toolkit-cn) → curl 东方财富 → Scrapling → 标注"数据缺失"
-5. **Scrapling 克制**: 网页抓取仅在其他源不可用时启用,抓取后及时清理临时文件
+4. **兜底链**: MCP(Tushare/AkShare) → 东方财富 push2 API(直连JSON) → BaoStock → Scrapling → 标注"数据缺失"
+5. **禁止 curl/爬虫拉结构化数据**: 东方财富/新浪财经等 JSON API 直接用 requests.get(),不走 Scrapling 浏览器渲染
+6. **Scrapling 克制**: 网页抓取仅在其他源不可用时启用(公告原文、研报PDF、社区舆情),抓取后及时清理临时文件
+7. **缓存优先**: 所有数据获取脚本自带 SQLite 缓存,避免重复请求
 
 ### 分析输出纪律
 1. **结论先行**: 每个判断先给结论,再展开论证

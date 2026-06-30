@@ -31,6 +31,7 @@ def get_config() -> dict:
         "china_market": {
             "primary": {
                 "stock_data": "akshare",
+                "history_kline": "baostock",
             },
             "optional": {
                 "tushare_token": os.getenv("TUSHARE_TOKEN"),
@@ -38,6 +39,10 @@ def get_config() -> dict:
         },
         "rate_limits": {
             "akshare": 5,
+        },
+        "cache": {
+            "enabled": True,
+            "db_path": str(PROJECT_DIR / "cache" / "data_cache.db"),
         },
     }
 

@@ -1,22 +1,25 @@
 ---
 name: china-market-data
-description: Query A-share and Chinese financial market data via multiple data sources. Four-tier architecture: Tier-0 Wind (most comprehensive paid), Tier-1 iFind (precise financials), Tier-2 AkShare (free open-source), Tier-3 Scrapling (web scraping for sites not covered by MCP). Use whenever the agent needs Chinese financial data — compatible with 沪深 A 股, 科创板, 创业板, 北交所, and 港股通 stocks.
+description: Query A-share and Chinese financial market data via multiple data sources. Six-tier architecture: Tier-0 Wind, Tier-1 iFind, Tier-2 Tushare/AkShare MCP, Tier-2.5 East Money push2 API (direct JSON), Tier-3 BaoStock (stable server-side data), Tier-4 FMP (global), Tier-5 Scrapling (web scraping fallback). Use whenever the agent needs Chinese financial data — compatible with 沪深 A 股, 科创板, 创业板, 北交所, and 港股通 stocks.
 ---
 
 # china-market-data
 
 ## Architecture overview
 
-Four complementary data acquisition layers, escalating from structured MCP tools to adaptive web scraping:
+Six complementary data acquisition layers, escalating from structured MCP tools to adaptive web scraping:
 
 | Tier | Source | Type | Cost | Speed | Coverage | When to use |
 |------|--------|------|------|-------|----------|-------------|
 | **0** | Wind (万得) | MCP structured | Paid | ★★★★★ | ★★★★★ | Default for all structured financial data |
 | **1** | iFind (同花顺) | MCP structured | Paid | ★★★★★ | ★★★★☆ | Precise financials, ESG, bonds, macro |
-| **2** | AkShare | MCP structured | Free | ★★★★☆ | ★★★☆☆ | Quick free data, batch queries, no API key |
-| **3** | Scrapling | Web scraping | Free | ★★★☆☆ | ★★★★★ | Unstructured web data, news, regulatory filings, protected sites |
+| **2** | Tushare MCP + AkShare MCP | MCP structured | Free | ★★★★☆ | ★★★★☆ | Primary free source:行情/财报/行业/指数/宏观/龙虎榜 |
+| **2.5** | East Money push2 API | Direct HTTP JSON | Free | ★★★★★ | ★★★☆ | Real-time quotes, PE/PB, market cap — zero scraping |
+| **3** | BaoStock | Python library (server-side) | Free | ★★★★☆ | ★★★☆ | Stable historical K-line, 5min/60min bars, financials |
+| **4** | FMP (全球数据) | REST API | Freemium | ★★★★☆ | ★★★★★ | Global stocks, ETFs, crypto, forex, commodities |
+| **5** | Scrapling | Web scraping | Free | ★★★☆☆ | ★★★★★ | Unstructured web data, news, regulatory filings, protected sites |
 
-**Escalation principle**: Always start with the most structured, lowest-latency source (Wind → iFind → AkShare). Only escalate to Scrapling when:
+**Escalation principle**: Always start with the most structured, lowest-latency source (Wind → iFind → Tushare/AkShare MCP → push2 API → BaoStock). Only escalate to Scrapling when:
 - No MCP tool covers the needed data
 - The data lives on a website not exposed via API
 - You need to scrape content behind anti-bot protection (Cloudflare, etc.)
@@ -104,7 +107,40 @@ Four complementary data acquisition layers, escalating from structured MCP tools
 | `ifind_index_data` | 指数行情 / 技术指标 / 估值 |
 | `ifind_sector_data` | 板块行情 / 成分股分析 |
 
-## Tier 2 — AkShare (免费开源)
+## Tier 2 — Tushare MCP + AkShare MCP (免费)
+
+### Tushare MCP（推荐作为免费首选）
+
+- MCP 服务：`tushareMcp`（无需密钥即可使用基础工具）
+- 覆盖：400+ 工具，涵盖 A 股行情、财报、资金流、龙虎榜、涨跌停、概念板块、宏观数据等
+- 优势：结构化数据、无需爬虫、覆盖极广
+
+**核心工具速查**：
+
+| 数据类型 | Tushare MCP 工具 |
+|----------|-----------------|
+| 日线行情 | `mcp__tushareMcp__daily` |
+| 分钟线 | `mcp__tushareMcp__stk_mins` |
+| 利润表 | `mcp__tushareMcp__income` |
+| 资产负债表 | `mcp__tushareMcp__balancesheet` |
+| 现金流量表 | `mcp__tushareMcp__cashflow` |
+| 财务指标 | `mcp__tushareMcp__fina_indicator` |
+| 每日指标 | `mcp__tushareMcp__daily_basic` |
+| 个股资金流 | `mcp__tushareMcp__moneyflow` |
+| 沪深港通 | `mcp__tushareMcp__moneyflow_hsgt` |
+| 涨跌停 | `mcp__tushareMcp__limit_list` / `limit_list_ths` |
+| 龙虎榜 | `mcp__tushareMcp__top_list` / `top_inst` |
+| 概念板块 | `mcp__tushareMcp__dc_daily` / `cls_daily` |
+| 宏观 GDP | `mcp__tushareMcp__cn_gdp` |
+| 宏观 CPI | `mcp__tushareMcp__cn_cpi` |
+| 宏观 PMI | `mcp__tushareMcp__cn_pmi` |
+| 货币供应 | `mcp__tushareMcp__cn_m` |
+| 社融 | `mcp__tushareMcp__sf_month` |
+| 公告 | `mcp__tushareMcp__anns_d` |
+| 新闻 | `mcp__tushareMcp__major_news` |
+| 美股行情 | `mcp__tushareMcp__us_daily` |
+
+### AkShare MCP
 
 - MCP 服务：`akshare-mcp`（无需密钥，直接启动）
 - 覆盖：A 股行情、财报、行业分类、指数
@@ -122,19 +158,65 @@ Four complementary data acquisition layers, escalating from structured MCP tools
 | `get_market_overview` | 涨幅榜/跌幅榜/成交额榜 |
 | `get_fund_data` | 公募基金/ETF 行情 |
 
-## Tier 3 — 新闻公告 (免费)
+## Tier 2.5 — 东方财富 push2 API（直连 HTTP JSON）
 
-- MCP 服务：`china-news-mcp`
-- 覆盖：个股新闻、市场头条
+东方财富 push2 API 返回原生 JSON，**无需爬虫、无需浏览器渲染**。
 
-| Tool | Purpose |
-|------|---------|
-| `get_stock_news` | 个股新闻 |
-| `get_market_headlines` | 市场头条 |
+```python
+import requests
 
----
+# 实时行情 + 估值（600519 贵州茅台）
+suffix = "1"  # 1=沪市, 0=深市
+url = (
+    f"https://push2.eastmoney.com/api/qt/stock/get"
+    f"?secid={suffix}.600519"
+    f"&fields=f43,f44,f45,f46,f47,f48,f57,f58,f60,f169,f170"
+)
+resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
+data = resp.json()["data"]
+# f43=最新价(分), f169=PE-TTM, f170=PB, f60=总市值
+```
 
-## Tier 4 — Scrapling (网页抓取兜底)
+| 字段 | 含义 | 单位 |
+|------|------|------|
+| f43 | 最新价 | 分（÷100） |
+| f44 | 涨跌幅 | ‱（÷100） |
+| f45 | 振幅 | ‱（÷100） |
+| f47 | 成交量 | 手 |
+| f48 | 成交额 | 元 |
+| f57 | 流通市值 | 万元 |
+| f58 | 股票简称 | 文本 |
+| f60 | 总市值 | 万元 |
+| f169 | PE-TTM | ‱（÷100） |
+| f170 | PB | ‱（÷100） |
+| f171 | 换手率 | ‱（÷100） |
+
+## Tier 3 — BaoStock（稳定历史 K 线）
+
+- 免费 Python 库，自有服务端基础设施
+- 不依赖上游网页接口（AkShare 依赖东方财富/新浪前端 API，可能因改版挂掉）
+- 提供 5 分钟/60 分钟 K 线，比 AkShare 更稳定
+
+```python
+import baostock as bs
+bs.login()
+rs = bs.query_history_k_data_plus(
+    "sh.600519",
+    "date,open,high,low,close,volume,amount,pctChg",
+    start_date="2025-01-01", end_date="2025-12-31",
+    frequency="d", adjustflag="2"  # 2=前复权
+)
+while rs.next():
+    row = rs.get_row_data()
+    # 0=date, 1=code, 2=open, 3=high, 4=low, 5=close, 6=volume, 7=amount, 8=pctChg
+```
+
+## Tier 4 — FMP（全球数据）
+
+- 覆盖：全球股票、ETF、加密货币、外汇、商品、分析师评级、宏观
+- REST API，需 API Key
+
+## Tier 5 — Scrapling（网页抓取兜底）
 
 当所有 MCP 数据源都无法获取所需信息时，使用 Scrapling 进行网页抓取。Scrapling 是一个自适应 Web 抓取框架，具备以下核心能力：
 
@@ -154,14 +236,14 @@ Four complementary data acquisition layers, escalating from structured MCP tools
 
 | 数据类型 | 首选方案 | 备选方案 |
 |----------|----------|----------|
-| 结构化财务数据 | Wind/iFind/AkShare MCP | — |
-| 实时行情快照 | AkShare `get_quote` | Scrapling `Fetcher` 抓东方财富/新浪财经 |
-| 历史 K 线 | AkShare `get_historical_data` | Scrapling `DynamicFetcher` 抓腾讯/新浪行情 |
-| 公司公告原文 | iFind `ifind_search_notice` | Scrapling `StealthyFetcher` 抓巨潮资讯网 |
-| 个股新闻 | AkShare `get_stock_news` | Scrapling `Fetcher` 抓东方财富股吧 |
-| 行业研报 | Wind `wind_search_research` | Scrapling `DynamicFetcher` 抓慧博/投研论坛 |
-| 宏观经济数据 | iFind EDB | Scrapling `Fetcher` 抓国家统计局 |
-| 港股/美股行情 | iFind 全球股票 | Scrapling `DynamicFetcher` 抓 Yahoo Finance |
+| 结构化财务数据 | Wind/iFind/Tushare MCP | — |
+| 实时行情快照 | 东方财富 push2 API / AkShare MCP | Scrapling `Fetcher` |
+| 历史 K 线 | Tushare MCP `daily` / BaoStock | AkShare |
+| 公司公告原文 | Tushare MCP `anns_d` | Scrapling `StealthyFetcher` 抓巨潮 |
+| 个股新闻 | Tushare MCP `major_news` | Scrapling `Fetcher` 抓东财 |
+| 行业研报 | Wind MCP | Scrapling `DynamicFetcher` 抓慧博/投研论坛 |
+| 宏观经济数据 | Tushare MCP `cn_gdp/cn_cpi/cn_ppi` | AkShare MCP |
+| 港股/美股行情 | iFind 全球股票 / Tushare `us_daily` | FMP |
 | 交易所公告/规则 | — | Scrapling `StealthyFetcher` 抓上交所/深交所 |
 | 东方财富/雪球社区 | — | Scrapling `DynamicFetcher` / `StealthyFetcher` |
 | 任何未覆盖的网站 | — | Scrapling（最后一道防线） |
@@ -183,20 +265,7 @@ Four complementary data acquisition layers, escalating from structured MCP tools
 
 ### 常用 A 股数据抓取场景
 
-#### 1. 从东方财富获取实时行情
-
-```python
-from scrapling.fetchers import DynamicFetcher
-
-page = DynamicFetcher.fetch(
-    'https://push2.eastmoney.com/api/qt/stock/get?secid=1.600519&fields=f43,f44,f45,f46,f47,f48,f50,f57,f58,f169,f170',
-    disable_resources=True,  # 只抓数据接口
-    network_idle=True
-)
-data = page.json()
-```
-
-#### 2. 从巨潮资讯网抓取公司公告原文
+#### 1. 从巨潮资讯网抓取公司公告原文
 
 ```python
 from scrapling.fetchers import StealthyFetcher
@@ -210,20 +279,7 @@ page = StealthyFetcher.fetch(
 titles = page.css('.news-result-item .title::text').getall()
 ```
 
-#### 3. 从新浪财经获取 K 线历史数据
-
-```python
-from scrapling.fetchers import DynamicFetcher
-
-page = DynamicFetcher.fetch(
-    'https://quotes.sina.cn/cn/api/jsonp.php/var%20CB_list=null/IB_CallerServlet?domain=cb.eastmoney.com&code=SH600519&type=history&count=100',
-    disable_resources=True,
-    network_idle=True
-)
-data = page.json()
-```
-
-#### 4. 从雪球获取个股讨论与舆情
+#### 2. 从雪球获取个股讨论与舆情
 
 ```python
 from scrapling.fetchers import DynamicFetcher
@@ -235,7 +291,7 @@ page = DynamicFetcher.fetch(
 )
 ```
 
-#### 5. 批量抓取多个股票的基本信息
+#### 3. 批量抓取多个股票的基本信息
 
 ```python
 from scrapling.fetchers import FetcherSession
@@ -246,7 +302,7 @@ with FetcherSession(impersonate='chrome', timeout=30) as session:
     for ticker in tickers:
         page = session.get(f'https://push2.eastmoney.com/api/qt/stock/get?secid=1.{ticker}')
         info = page.json()
-        print(f"{ticker}: {info.get('name')}")
+        print(f"{ticker}: {info.get('data', {}).get('f58', '')}")
 ```
 
 ### MCP 工具（Scrapling MCP Server）
@@ -312,9 +368,9 @@ first_item.find_similar()  # 找到所有同类元素
 
 > **env var `IFIND_DATA_SOURCE_MODE`**:
 > - `wind-only` (strict): 仅 Wind，不可用时报错
-> - `wind-fallback` (recommended): Wind 首选，回退 iFind → AkShare
+> - `wind-fallback` (recommended): Wind 首选，回退 iFind → Tushare → AkShare
 > - `ifind-only` (strict): 仅 iFind，不可用时报错
-> - `ifind-fallback` (default): iFind 首选，回退 AkShare
+> - `ifind-fallback` (default): iFind 首选，回退 Tushare/AkShare
 > - `akshare-only`: 仅 AkShare，跳过 Wind/iFind
 > - `scrapling-only`: 仅 Scrapling 网页抓取
 >
@@ -327,66 +383,71 @@ first_item.find_similar()  # 找到所有同类元素
 ### Step 1: 识别标的
 
 ```python
+# Tushare MCP — 股票列表
+mcp__tushareMcp__stock_basic(ts_code="600519.SH")
+
 # iFind — 自然语言选股
 ifind_search_stocks(query="电子行业市值大于100亿")
 
 # AkShare — 关键词搜索
 search_stock(keyword="茅台")
-
-# Scrapling — 从网站搜索
-Fetcher.get('https://so.eastmoney.com/news/s?keyword=贵州茅台')
 ```
 
 ### Step 2: 获取行情与财务数据
 
 ```python
-# iFind — 精确财务
-ifind_get_stock_financials(query="贵州茅台2024年年报的ROE、ROA、净利润增速")
+# Tushare MCP — 日线行情
+mcp__tushareMcp__daily(ts_code="600519.SH", start_date="20250101", end_date="20251231")
 
-# AkShare — 历史行情
-get_historical_data(ticker="600519", start_date="20240101", end_date="20241231", frequency="daily")
+# 东方财富 push2 API — 实时行情（零爬虫）
+requests.get("https://push2.eastmoney.com/api/qt/stock/get?secid=1.600519&fields=f43,f169,f170")
 
-# AkShare — 财务报表
-get_financials(ticker="600519", statement_type="income", period="annual")
+# BaoStock — 历史 K 线（稳定服务端）
+bs.query_history_k_data_plus("sh.600519", "date,open,high,low,close,volume", ...)
 
-# Scrapling — 东方财富实时行情（MCP 不可用时）
-DynamicFetcher.fetch('https://push2.eastmoney.com/api/qt/stock/get?secid=1.600519')
+# AkShare MCP — 财务报表
+get_financials(ticker="600519")
 ```
 
 ### Step 3: 行业 / 板块上下文
 
 ```python
+# Tushare MCP — 概念板块
+mcp__tushareMcp__dc_daily(trade_date="20260628", idx_type="概念板块")
+
 # iFind — 板块分析
 ifind_sector_data(query="白酒板块的成分股个数及过去5日平均涨跌幅")
 
 # AkShare — 行业成分
 get_industry_stocks(industry="白酒")
-
-# Scrapling — 行业排行
-Fetcher.get('https://data.eastmoney.com/bkzj/hy.html')
 ```
 
 ### Step 4: 宏观指标
 
 ```python
+# Tushare MCP — 宏观数据（推荐）
+mcp__tushareMcp__cn_gdp(start_q="2024Q1", end_q="2025Q4")
+mcp__tushareMcp__cn_cpi(start_m="202501", end_m="202512")
+mcp__tushareMcp__cn_pmi(m="202506")
+
 # iFind — 先搜索再取数
 ifind_search_edb(query="新能源汽车产量相关指标")
 ifind_get_edb_data(query="新能源汽车产量当月值（202301-202506）")
-
-# Scrapling — 国家统计局
-Fetcher.get('https://data.stats.gov.cn/easyquery.htm?cn=C01')
 ```
 
 ### Step 5: 新闻与舆情
 
 ```python
+# Tushare MCP — 新闻舆情
+mcp__tushareMcp__major_news(src="财联社", start_date="2025-01-01 00:00:00", end_date="2025-01-02 00:00:00")
+
 # iFind — 公告语义检索
 ifind_search_notice(query="贵州茅台2024年年度报告 分红", time_start="2025-01-01", time_end="2025-12-31", size=5)
 
 # AkShare — 个股新闻
 get_stock_news(ticker="600519")
 
-# Scrapling — 巨潮资讯公告原文
+# Scrapling — 巨潮资讯公告原文（MCP 不可用时）
 StealthyFetcher.fetch('http://www.cninfo.com.cn/new/fulltextSearch/full?searchkey=贵州茅台')
 
 # Scrapling — 东方财富股吧舆情
@@ -397,14 +458,14 @@ DynamicFetcher.fetch('https://guba.eastmoney.com/list,600519.html')
 
 ## 数据覆盖说明
 
-- **A 股**: Wind/iFind/AkShare 全覆盖（SH, SZ, BJ, STAR, ChiNext），Scrapling 可抓东方财富/新浪/腾讯行情
+- **A 股**: Wind/iFind/Tushare/AkShare/BaoStock 全覆盖（SH, SZ, BJ, STAR, ChiNext），Scrapling 可抓东方财富/新浪/腾讯行情
 - **港股**: iFind 完整覆盖；AkShare 部分覆盖；Scrapling 可抓 Yahoo Finance HK
-- **美股中概**: iFind 通过 `ifind_global_stock_*` 覆盖；Scrapling 可抓 Yahoo Finance
+- **美股中概**: iFind 通过 `ifind_global_stock_*` 覆盖；Tushare `us_daily`；Scrapling 可抓 Yahoo Finance
 - **基金**: iFind 完整覆盖（资料/行情/持仓/持有人）；AkShare 仅 ETF 行情
-- **债券**: iFind 覆盖信用债/可转债/回购；AkShare 需扩展
+- **债券**: iFind 覆盖信用债/可转债/回购；Tushare MCP 也有债券工具
 - **ESG**: 仅 iFind 提供
-- **宏观经济**: iFind EDB 覆盖最广；AkShare 有基础宏观数据；Scrapling 可抓统计局
-- **新闻/公告**: iFind 语义检索最强；Scrapling 可抓巨潮/交易所原文
+- **宏观经济**: Tushare MCP 覆盖最广（GDP/CPI/PPI/PMI/M2/社融）；AkShare 有基础宏观数据
+- **新闻/公告**: Tushare MCP `major_news` / `anns_d`；iFind 语义检索最强；Scrapling 可抓巨潮/交易所原文
 - **研报**: Wind 独有（44 个工具）；Scrapling 可抓慧博/投研论坛
 - **社区舆情**: Scrapling 可抓雪球/东方财富股吧
 - **未覆盖数据源**: Scrapling 是最后一道防线，几乎可以抓任何公开网页
@@ -415,15 +476,15 @@ DynamicFetcher.fetch('https://guba.eastmoney.com/list,600519.html')
 
 | 场景 | 首选 | 备选 1 | 备选 2 | 兜底 |
 |------|------|--------|--------|------|
-| 财务报表 | Wind | iFind | AkShare | — |
-| 实时行情 | iFind | AkShare | Scrapling 东方财富 | — |
-| K 线历史 | AkShare | Scrapling 新浪/腾讯 | — | — |
+| 财务报表 | Tushare MCP | iFind | AkShare | — |
+| 实时行情 | 东方财富 push2 API | Tushare MCP | AkShare | — |
+| K 线历史 | Tushare MCP | BaoStock | AkShare | — |
 | 股东结构 | Wind | iFind | — | — |
 | ESG 评级 | iFind | — | — | — |
-| 宏观数据 | iFind | AkShare | Scrapling 统计局 | — |
-| 公告原文 | iFind | Wind | Scrapling 巨潮 | — |
-| 个股新闻 | AkShare | iFind | Scrapling 东财 | — |
+| 宏观数据 | Tushare MCP | AkShare MCP | — | — |
+| 公告原文 | Tushare MCP `anns_d` | iFind | Scrapling 巨潮 | — |
+| 个股新闻 | Tushare MCP `major_news` | AkShare | Scrapling 东财 | — |
 | 行业研报 | Wind | Scrapling 慧博 | — | — |
 | 社区舆情 | — | — | — | Scrapling 雪球/东财 |
 | 港股行情 | iFind | — | Scrapling Yahoo | — |
-| 美股行情 | iFind | — | Scrapling Yahoo | — |
+| 美股行情 | Tushare `us_daily` | iFind | FMP | — |

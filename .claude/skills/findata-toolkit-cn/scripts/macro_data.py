@@ -2,7 +2,10 @@
 """
 China Macro Economic Data Fetcher
 ====================================
-Fetch A-share macro indicators using AKShare (no API key required).
+Fetch A-share macro indicators using multiple data sources:
+
+  Tier-1: AkShare (free, no API key)
+  Tier-2: Tushare MCP (optional, via Tushare API)
 
 Covers: LPR, CPI/PPI, GDP, PMI, social financing, money supply, northbound flow.
 
@@ -13,6 +16,7 @@ Usage:
     python macro_data.py --pmi                        # PMI data
     python macro_data.py --social-financing            # Social financing
     python macro_data.py --cycle                      # Business cycle assessment
+    python macro_data.py --clear-cache                 # Clear cached macro data
 """
 import argparse
 import sys
@@ -21,6 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common.utils import output_json, safe_float, error_exit
+from common.cache import cached
 
 
 def _direction(values: list, lookback: int = 6) -> str:
@@ -43,8 +48,9 @@ def _direction(values: list, lookback: int = 6) -> str:
 # Interest Rates
 # ---------------------------------------------------------------------------
 
+@cached(ttl=604800)  # macro data changes infrequently
 def fetch_rates() -> dict:
-    """Fetch Chinese interest rate data (LPR, MLF, etc.)."""
+    """Fetch Chinese interest rate data (LPR, MLF, Shibor)."""
     import akshare as ak
 
     result = {}
@@ -104,6 +110,7 @@ def fetch_rates() -> dict:
 # Inflation
 # ---------------------------------------------------------------------------
 
+@cached(ttl=604800)
 def fetch_inflation() -> dict:
     """Fetch Chinese CPI and PPI data."""
     import akshare as ak
@@ -114,8 +121,6 @@ def fetch_inflation() -> dict:
     try:
         df = ak.macro_china_cpi_monthly()
         if df is not None and not df.empty:
-            # Columns: ['商品', '日期', '今值', '预测值', '前值']
-            # Chronological order (oldest first), so .tail(12) is correct
             recent = df.tail(12)
             records = []
             for _, row in recent.iterrows():
@@ -135,9 +140,7 @@ def fetch_inflation() -> dict:
     try:
         df = ak.macro_china_ppi()
         if df is not None and not df.empty:
-            # Columns: ['月份', '当月', '当月同比增长', '累计']
-            # Reverse chronological order (newest first)
-            recent = df.head(12).iloc[::-1]  # take newest 12, reverse to ascending
+            recent = df.head(12).iloc[::-1]
             records = []
             for _, row in recent.iterrows():
                 records.append({
@@ -159,6 +162,7 @@ def fetch_inflation() -> dict:
 # PMI
 # ---------------------------------------------------------------------------
 
+@cached(ttl=604800)
 def fetch_pmi() -> dict:
     """Fetch China PMI data."""
     import akshare as ak
@@ -168,8 +172,7 @@ def fetch_pmi() -> dict:
     try:
         df = ak.macro_china_pmi()
         if df is not None and not df.empty:
-            # macro_china_pmi() returns reverse chronological order (newest first)
-            recent = df.head(12).iloc[::-1]  # take newest 12, reverse to ascending
+            recent = df.head(12).iloc[::-1]
             records = []
             for _, row in recent.iterrows():
                 records.append({
@@ -199,8 +202,9 @@ def fetch_pmi() -> dict:
 # Social Financing
 # ---------------------------------------------------------------------------
 
+@cached(ttl=604800)
 def fetch_social_financing() -> dict:
-    """Fetch China social financing data (社会融资规模)."""
+    """Fetch China social financing data (社会融资规模) + M2."""
     import akshare as ak
 
     result = {}
@@ -228,9 +232,7 @@ def fetch_social_financing() -> dict:
     try:
         df = ak.macro_china_money_supply()
         if df is not None and not df.empty:
-            # Columns: ['月份', '货币和准货币(M2)-数量(亿元)', '货币和准货币(M2)-同比增长', ...]
-            # Reverse chronological order (newest first)
-            recent = df.head(12).iloc[::-1]  # take newest 12, reverse to ascending
+            recent = df.head(12).iloc[::-1]
             records = []
             for _, row in recent.iterrows():
                 records.append({
@@ -333,6 +335,7 @@ def assess_business_cycle() -> dict:
 # Dashboard
 # ---------------------------------------------------------------------------
 
+@cached(ttl=3600)
 def macro_dashboard() -> dict:
     """Comprehensive China macro dashboard."""
     return {
@@ -351,7 +354,7 @@ def macro_dashboard() -> dict:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="China Macro Data Fetcher (AKShare, no API key)"
+        description="China Macro Data Fetcher (AkShare, no API key)"
     )
     parser.add_argument("--dashboard", action="store_true", help="Full dashboard")
     parser.add_argument("--rates", action="store_true", help="Interest rates")
@@ -361,7 +364,16 @@ def main():
                         help="Social financing + M2")
     parser.add_argument("--cycle", action="store_true",
                         help="Business cycle assessment")
+    parser.add_argument("--clear-cache", action="store_true",
+                        help="Clear all cached data and exit")
     args = parser.parse_args()
+
+    # Clear cache mode
+    if args.clear_cache:
+        from common.cache import cache_clear_all
+        count = cache_clear_all()
+        output_json({"cleared_entries": count, "message": "Cache cleared"})
+        return
 
     try:
         if args.rates:

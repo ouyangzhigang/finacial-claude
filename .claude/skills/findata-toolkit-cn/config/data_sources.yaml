@@ -4,13 +4,39 @@
 
 china_market:
   primary:
-    stock_data: "akshare"           # AKShare — 免费，无需密钥
+    stock_data: "akshare"           # AkShare — 免费，无需密钥
+    history_kline: "baostock"       # BaoStock — 免费，稳定服务端数据（Tier-2 补充）
 
-  # 可选：在 https://tushare.pro/register 注册
+  # 可选：Tushare MCP（推荐，比 AkShare 更全面的结构化数据）
   # export TUSHARE_TOKEN=your_token_here
   optional:
     tushare_token: "b00b77adf03ecc2f9f525701a5470e86527ee93afbe3869a7a01768d"
 
+# 数据源优先级（按数据功能划分）
+# --------------------------------
+# 实时行情/基本面：    AkShare → BaoStock
+# 历史K线：           AkShare → BaoStock（BaoStock 更稳定）
+# 财务报表：          AkShare（Sina 源）
+# 宏观数据：          AkShare
+# 北向资金：          AkShare
+# 董监高增减持：      AkShare（雪球源）
+
 # 速率限制设置（每秒请求数）
 rate_limits:
   akshare: 5
+
+# 缓存配置（存于项目目录 ./cache/）
+cache:
+  enabled: true
+  db_path: "./cache/data_cache.db"
+  # 按数据类型 TTL（秒）
+  ttl:
+    quote: 30              # 实时行情（交易时段 30s，非交易 5min）
+    history: 3600          # 历史 K 线
+    financials: 86400      # 财务报表（24h）
+    metrics: 3600          # 财务指标
+    northbound: 300        # 北向资金
+    insider: 86400         # 董监高增减持
+    macro: 604800          # 宏观数据（7 天）
+    screen: 3600           # 筛选结果
+    default: 600           # 默认 10 分钟
