@@ -1,0 +1,4 @@
+# MCP configs may contain plaintext API tokens — do not commit
+mcp-servers/*/mcp_config.json
+claude-for-finacial-services-cn
+finskills

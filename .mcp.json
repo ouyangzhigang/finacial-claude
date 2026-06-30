@@ -1,0 +1,30 @@
+{
+  "mcpServers": {
+    "china-news": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["mcp-servers/china-news-mcp/server.py"]
+    },
+    "akshare": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["mcp-servers/akshare-mcp/server.py"]
+    },
+    "ifind": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["mcp-servers/ifind-mcp/server.py"],
+      "env": {
+        "IFIND_AUTH_TOKEN": "eyJraWQiOiJtY3AtYXBpIiwidWlkIjoiODMxMDUxMjM5IiwiYWxnIjoiUlNBLU9BRVAtMjU2IiwiZW5jIjoiQTI1NkdDTSJ9.gpn-QsuVup8BGgq1FdqFs_pIKX1Dh-ThuiooQvwa4kCnFh6FxUO6LFhEzbI15g4IZtr3IFrk1VNEovTp2CXIksMoQ7AOCUTXQ1o8R7514ZfC23eCVHfu0pPadXCq2p6GGxQ4ycobckzzaMkmjhHNnWuckeYdHi_F7kfcjLO_o5K8-YEHJHfrMHlJuto1ha4f4ouQD-xfHHwbHX8BjIn7PyGsYMFxv_AKtOsYa0U6uquOYTsZjy3kyBTToPxaPxHnkIQTO3wrJXb_RRPIDHFz_n1zSFRcET3rl6q7SwbbqiI3dTEm5l5ge4J65SNZ63Cg3rSlwwuKwyhkL81I8hINMg.BC0Z6xJDcI7tkoPZ.XkRjzh5qrLKtOXKzLSw5867yiSPr_Nu49ukfusQBpCcHj_FnY2k6l_NP8uPJqtDx2Kb_dUUte2uapbQekJXjQdw-0fT1EiGiBNTiLPWSiHvuAL3FomDu5zwIAG_WCwiAkDsZAfQ3kMxUbCmWhct1T_K6Qmeh8DbYKe2T028LmXvQM7N4kJt3y215v6mzS5ANGkHU46vyb9ODY5w3AcquyoO3nmaC6LsuD6rxO9eVZBqRd4EKCaWu3EiwnekvNQ4yks8c2Ghr89gn0Owvmx7RNIryY8KOv2FgjNSPTAmNTGLdM-V1mbliF0kQhWhEb8PE8hLgYYYhq9X0R1keTV_LKEdWAEXcX9A4-aK905YSbGSSkbeMZ7T6CdZe-mNrtupmgG7XAa06OsWy8axaKvV8SVgb9L_62lDcrRZEh3Qiq7I2qkjCslHW9aroKirOthfOe3EfFw.Cv_DDKgxs3o8_4JdeM6qTw"
+      }
+    },
+    "wind": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["mcp-servers/wind-mcp/server.py"],
+      "env": {
+        "WIND_API_KEY": "ak_0sVjT4eDeanB_8-LsWflIcfnoH4P0tEf"
+      }
+    }
+  }
+}
