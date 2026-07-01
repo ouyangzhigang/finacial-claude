@@ -1,0 +1,1 @@
+请根据@output\20260701_热门板块潜力股综合推荐.md这个文件的报告，再去读取@short-term-stock-picks-prompt-cn.md这里prompt执行任务，把数据结合起来输出分析结果
