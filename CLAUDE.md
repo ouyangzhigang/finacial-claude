@@ -40,6 +40,20 @@ Progressive-disclosure: only YAML frontmatter is always in context; `SKILL.md` b
 
 Toolkit skills (`findata-toolkit-cn`) bundle self-contained Python scripts + their own `requirements.txt` + `config/data_sources.yaml`. Other analysis skills reference a toolkit **by name in prose** — no wiring. Skill data sources are free/keyless: AKShare (A-shares), yfinance / SEC EDGAR / FRED (US).
 
+## Slash commands & analysis prompts
+
+Three user-facing `/` commands in `.claude/commands/`, each binds `$ARGUMENTS` onto a root-level prompt framework and writes a Markdown report to `output/`:
+
+| Command | Prompt framework (repo root) | Output file |
+|---|---|---|
+| `/analysis-stock [股票+描述]` | `stock-analysis-prompt-cn.md` | `output/{code}_{YYYYMMDD}_深度分析报告.md` |
+| `/recommend-stocks [参数]` | `short-term-stock-picks-prompt-cn.md` | `output/{YYYYMMDD}_短周期2周推荐清单.md` |
+| `/hot-trends [约束]` | `recommend_module_stocks.md` | `output/{YYYYMMDD}_热门板块*.md` |
+
+**`$ARGUMENTS` passthrough:** substitution happens **only in the command file**, never in the `@`-referenced prompt file (loaded as a static framework). Each command therefore carries an explicit "输入变量绑定" block that parses `$ARGUMENTS` onto the framework's variables — change how args map by editing that block. The prompt frameworks stay generic (`【待填】` + defaults); **never hardcode a stock code into a framework file**.
+
+**Reports:** always written to `output/` (create the dir if missing), never chat-only. Each command's "输出要求" section defines the visual structure (decision dashboard, tables, 🟢🟡🔴 badges, 免责声明).
+
 ## Ignoring directories
 
 Claude Code can skip directories so search (Glob/Grep) and reads avoid them:
@@ -63,8 +77,12 @@ Key scripts (from root):
 - `python scripts/sync-china-skills.py` — propagate a `vertical-plugins/` skill edit to bundled agent copies
 - `python scripts/validate.py <output.json> <schema.json|schema.yaml>` — validate worker output
 - `bash scripts/deploy-managed-agent.sh <slug> [--dry-run]` — deploy a managed-agent cookbook
+- `python scripts/cn_fetch.py` — free HTTP data channel (新浪榜单 + 腾讯 K线/批量报价) for batch screening & K-line when an MCP field is missing or SSL-blocked; the commands' soft-fail fallback. Handles 腾讯 GBK + Windows SSL quirks internally.
+- `python scripts/hot_trend_dig.py` — 龙虎榜 detail mining via AkShare (`stock_lhb_detail_em`); parses 机构/拉萨/游资 signals.
+- `python scripts/orchestrate.py` — **reference only** event loop for cross-agent handoffs among the 4 China managed agents (not production).
 
 ## Environment gotchas
 
 - Python 3.13 on Windows; `python` is on PATH, `python3` is not.
 - Local network can't reach some financial APIs directly: the East Money global-headline endpoint fails SSL verification, and FMP returns 403 (likely geo/IP block). AkShare A-share endpoints work; other overseas/paid endpoints are unverified from here — plan on a proxy.
+- Local MCP reachability (verified by the existing commands): **iFind + AkShare + china-news work; Wind needs `WIND_SSL_NO_VERIFY=1`; FMP and East Money push2his fail.** When an MCP field is missing or SSL-blocked, fall back to `python scripts/cn_fetch.py` (新浪/腾讯 HTTP, keyless) or `curl` 东方财富 push2 镜像 (`19/29.push2`) + 腾讯 `qt.gtimg.cn` / `web.ifzq.gtimg.cn`. WebFetch/WebSearch are blocked locally.
