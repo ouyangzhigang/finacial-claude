@@ -5,15 +5,20 @@ os.environ.setdefault('TQDM_DISABLE', '1')
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 import warnings; warnings.filterwarnings('ignore')
 import ssl
-ssl._create_default_https_context = ssl._create_unverified_context
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+# SSL 验证控制：akshare 走东财/新浪端点，本机常缺 AKI 致证书链失败，默认放行（CLAUDE.md 记录），
+# 通过环境变量显式开关 —— 不再无注释全局 monkeypatch 关 SSL
+_SSL_NO_VERIFY = os.environ.get("FETCH_SSL_NO_VERIFY", "1").strip() in ("1", "true", "yes")
+if _SSL_NO_VERIFY:
+    ssl._create_default_https_context = ssl._create_unverified_context
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import requests
-_orig_req = requests.Session.request
-def _patched_req(self, *a, **k):
-    k.setdefault('verify', False)
-    return _orig_req(self, *a, **k)
-requests.Session.request = _patched_req
+if _SSL_NO_VERIFY:
+    _orig_req = requests.Session.request
+    def _patched_req(self, *a, **k):
+        k.setdefault('verify', False)
+        return _orig_req(self, *a, **k)
+    requests.Session.request = _patched_req
 
 import akshare as ak
 import pandas as pd
@@ -102,6 +107,10 @@ for d in ["20260630","20260701","20260629","20260626"]:
             print(f"[INFO] zt_pool@{d}: empty, try next")
     except Exception as e:
         print(f"[FAIL] zt_pool@{d}: {repr(e)[:80]}")
+else:
+    # 全日期失败/空 —— 不得漏写 key，否则下游 analyze 读 data["zt_pool"] KeyError 且不知是失败
+    data["zt_pool"] = {"_error": "zt_pool all candidate dates failed/empty"}
+    print("[FAIL] zt_pool: all dates failed"); dump()
 
 for d in ["20260630","20260701","20260629","20260626"]:
     try:
@@ -111,6 +120,9 @@ for d in ["20260630","20260701","20260629","20260626"]:
             print(f"[OK]   dt_pool@{d}: {len(dt)} rows"); dump(); break
     except Exception as e:
         print(f"[FAIL] dt_pool@{d}: {repr(e)[:80]}")
+else:
+    data["dt_pool"] = {"_error": "dt_pool all candidate dates failed/empty"}
+    print("[FAIL] dt_pool: all dates failed"); dump()
 
 safe("market_fund_flow", ak.stock_market_fund_flow)
 try:

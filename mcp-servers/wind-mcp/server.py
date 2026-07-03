@@ -168,7 +168,13 @@ def _mcp_call(server_type: str, method: str, params: dict, timeout: int = 60):
         if body.get("error"):
             msg = body["error"].get("message", str(body["error"]))
             return {"error": msg}
-        result = body.get("result", body)
+        # result 缺失不得返回整个 body 冒充数据 —— 空响应/协议异常须显式 error
+        if "result" in body:
+            result = body["result"]
+        else:
+            result = body  # 直接数据 dict（无 JSON-RPC 封装）
+        if result is None or (isinstance(result, dict) and not result):
+            return {"error": f"Wind {server_type} 返回空 result: {str(body)[:200]}"}
         # Handle nested MCP content[0].text (SSE pattern)
         if isinstance(result, dict) and "content" in result:
             inner_text = result["content"][0].get("text", "") if result.get("content") else ""
@@ -180,7 +186,8 @@ def _mcp_call(server_type: str, method: str, params: dict, timeout: int = 60):
                         return {"error": inner.get("mcp_tool_error_msg", str(inner))}
                     return inner
                 except (json.JSONDecodeError, TypeError):
-                    return {"text": inner_text}
+                    # JSON 解析失败不得返回 {"text": ...} 冒充数据 —— 下游会把 inner_text 当结果
+                    return {"error": f"Wind {server_type} 返回非JSON内容: {inner_text[:200]}"}
         return result
     finally:
         _semaphore.release()
@@ -216,11 +223,15 @@ def _call_wind(server_type: str, tool_name: str, arguments: dict) -> str:
         return json.dumps(data, ensure_ascii=False, default=str)
     except requests.exceptions.Timeout:
         return json.dumps({"error": f"Wind {server_type} 请求超时"}, ensure_ascii=False)
-    except requests.exceptions.ConnectionError:
-        return json.dumps({"error": f"无法连接 Wind {server_type} 服务，请检查网络"}, ensure_ascii=False)
+    except requests.exceptions.SSLError as e:
+        # SSLError 是 ConnectionError 子类，须先捕获；本机常见为证书链不全，提示 WIND_SSL_NO_VERIFY=1
+        return json.dumps({"error": f"Wind {server_type} SSL 证书验证失败 ({type(e).__name__}): {e}。本机可设 WIND_SSL_NO_VERIFY=1 临时绕过（不安全，仅开发）"}, ensure_ascii=False)
+    except requests.exceptions.ConnectionError as e:
+        return json.dumps({"error": f"无法连接 Wind {server_type} 服务 ({type(e).__name__}): {e}"}, ensure_ascii=False)
     except Exception as e:
         print(f"[ERROR] wind-mcp {server_type}/{tool_name}: {e}", file=sys.stderr)
-        return json.dumps({"error": f"Wind 请求失败，请检查日志"}, ensure_ascii=False)
+        # 不再剥离 e 写"请检查日志" —— 调用方需要真实异常类型和信息定位问题
+        return json.dumps({"error": f"Wind {server_type}/{tool_name} 请求失败 ({type(e).__name__}): {e}"}, ensure_ascii=False)
 
 
 # =============================================================================

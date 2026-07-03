@@ -5,15 +5,20 @@ os.environ.setdefault('TQDM_DISABLE', '1')
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 import warnings; warnings.filterwarnings('ignore')
 import ssl
-ssl._create_default_https_context = ssl._create_unverified_context
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+# SSL 验证控制：akshare 走东财/新浪端点，本机常缺 AKI 致证书链失败，默认放行（CLAUDE.md 记录），
+# 通过环境变量显式开关 —— 不再无注释全局 monkeypatch 关 SSL
+_SSL_NO_VERIFY = os.environ.get("FETCH_SSL_NO_VERIFY", "1").strip() in ("1", "true", "yes")
+if _SSL_NO_VERIFY:
+    ssl._create_default_https_context = ssl._create_unverified_context
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import requests
-_orig_req = requests.Session.request
-def _patched_req(self, *a, **k):
-    k.setdefault('verify', False)
-    return _orig_req(self, *a, **k)
-requests.Session.request = _patched_req
+if _SSL_NO_VERIFY:
+    _orig_req = requests.Session.request
+    def _patched_req(self, *a, **k):
+        k.setdefault('verify', False)
+        return _orig_req(self, *a, **k)
+    requests.Session.request = _patched_req
 
 import akshare as ak
 import pandas as pd
@@ -142,8 +147,8 @@ for b in candidate_boards:
                 hits = cons[cons[code_col[0]].astype(str).str.contains(CODE, na=False)]
                 if not hits.empty:
                     owned.append(b)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[SKIP] concept {b}: {repr(e)[:80]}")
 data["owned_concepts"] = owned
 print(f"[INFO] owned_concepts: {owned}")
 dump()

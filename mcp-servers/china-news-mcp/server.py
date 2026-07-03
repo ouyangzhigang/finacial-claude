@@ -27,7 +27,9 @@ server = FastMCP("china-news-mcp", instructions="Chinese financial news — stoc
 
 def _df_to_json(df: pd.DataFrame) -> str:
     if df is None or df.empty:
-        return json.dumps([], ensure_ascii=False)
+        # 不得返回 [] 冒充"无新闻"——空 DataFrame 通常是 SSL/限流致抓取失败(本机东方财富全球端点 SSL 挂),
+        # 静默返回 [] 会让情绪/催化分析在无声中跳过
+        return json.dumps({"error": "news fetch returned empty (likely SSL/rate-limit), NOT 'no news'", "source": "china-news"}, ensure_ascii=False)
     df = df.where(pd.notna(df), None)
     result = []
     for _, row in df.head(30).iterrows():

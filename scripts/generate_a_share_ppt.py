@@ -306,7 +306,7 @@ def make_charts(fin, hist, peers, company, ticker, chart_dir):
             fig, ax = plt.subplots(figsize=(8, 3))
             ax.barh(methods, vals, color=colors, alpha=0.8, height=0.6)
             ax.axvline(x=cp, color='#C0392B', lw=2.5, ls='--', label=f'当前价: ¥{cp:.2f}')
-            ax.set_xlabel('¥'); ax.set_title(f'{company} — 估值区间', fontsize=12, fontweight='bold', color='#1A3C6E', pad=10)
+            ax.set_xlabel('¥'); ax.set_title(f'{company} — 估值区间（经验系数法非DCF,可比{len(valid_pes)}家均值PE={avg_pe:.1f}）', fontsize=11, fontweight='bold', color='#1A3C6E', pad=10)
             ax.legend(loc='lower right'); ax.grid(True, alpha=0.3, axis='x')
             ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
             for bar, val in zip(ax.patches, vals):
@@ -538,11 +538,14 @@ def build_deck(args, quote, fin, hist, peers, charts):
 
     # ── S9: Thesis ──
     s = blank(); _add_header(s, f"投资逻辑  |  Investment Thesis — {co}")
+    # 数据量不足时 thesis 须显式降级 —— 不得用通用占位文案冒充数据驱动结论
+    _data_thin = (len(fin) < 2) or (len(hist) < 30) or (len(peers) < 3)
+    _thin_warn = " ⚠数据不足(以下为定性框架,非数据驱动)" if _data_thin else ""
     theses = [
-        ("行业地位", f"{co} 在 {args.industry or '所属行业'} 中的竞争定位与市场份额"),
-        ("财务质量", f"毛利率、净利率、ROE 等核心盈利能力指标（详见财务分析页，基于 {len(fin)} 年数据）"),
-        ("成长驱动", f"营收和利润增长趋势分析，基于 {len(hist)} 条历史K线数据"),
-        ("估值水平", f"当前PE/PB与 {len(peers)} 家行业可比公司对比分析"),
+        ("行业地位", f"{co} 在 {args.industry or '所属行业（未指定）'} 中的竞争定位与市场份额{_thin_warn}"),
+        ("财务质量", f"毛利率、净利率、ROE 等核心盈利能力指标（基于 {len(fin)} 年数据）{_thin_warn if len(fin)<2 else ''}"),
+        ("成长驱动", f"营收和利润增长趋势分析，基于 {len(hist)} 条历史K线{_thin_warn if len(hist)<30 else ''}"),
+        ("估值水平", f"当前PE/PB与 {len(peers)} 家行业可比公司对比{_thin_warn if len(peers)<3 else ''}"),
         ("风险因素", "行业风险、公司风险、市场风险综合评估（详见风险提示页）"),
     ]
     for i, (title, desc) in enumerate(theses):
@@ -576,15 +579,37 @@ def build_deck(args, quote, fin, hist, peers, charts):
     box = s.shapes.add_shape(1, Inches(2), Inches(1.3), Inches(9.3), Inches(1.8))
     box.fill.solid(); box.fill.fore_color.rgb = C_PRI; box.line.color.rgb = C_ACCENT
     tf = box.text_frame; tf.word_wrap = True
-    p = tf.paragraphs[0]; p.text = f"  评级：增持（Overweight）"; p.font.size = Pt(36); p.font.bold = True; p.font.color.rgb = C_WHITE
+    p = tf.paragraphs[0]
+    # 评级由估值与基本面驱动,严禁无条件"增持"(原硬编码导致对所有公司推荐买入=造假)
+    rating = "NR（数据不足,暂不评级）"
+    try:
+        _pe = quote.get('pe') if quote else None
+        _peer_pes = [pp.get('pe') for pp in (peers or []) if isinstance(pp, dict) and pp.get('pe') and 0 < pp.get('pe') < 999]
+        if _pe and _peer_pes:
+            import statistics
+            _med = statistics.median(_peer_pes)
+            if _pe < _med * 0.85:
+                rating = "相对低估（PE低于可比中位,需基本面确认）"
+            elif _pe > _med * 1.15:
+                rating = "相对高估（PE高于可比中位）"
+            else:
+                rating = "估值中性"
+        elif not fin:
+            rating = "NR（财务数据缺失）"
+    except Exception:
+        rating = "NR（评级计算异常）"
+    p.text = f"  评级：{rating}"; p.font.size = Pt(28); p.font.bold = True; p.font.color.rgb = C_WHITE
     p2 = tf.add_paragraph()
     if quote:
         p2.text = f"  当前价：¥{quote['price']}  |  PE(TTM): {quote.get('pe','N/A')}x  |  PB: {quote.get('pb','N/A')}x"
     p2.font.size = Pt(18); p2.font.color.rgb = C_ACCENT; p2.space_before = Pt(10)
     p3 = tf.add_paragraph(); p3.text = "  目标价与上行空间：详见估值分析页（基于行业可比PE）"; p3.font.size = Pt(14); p3.font.color.rgb = C_WHITE; p3.space_before = Pt(8)
+    _support = f"{len(fin)}年财务数据 + {len(hist)}条K线 + {len(peers)}家可比公司"
+    _support_warn = " ⚠数据量偏少,结论参考性有限" if (len(fin)<2 or len(hist)<30 or len(peers)<3) else ""
+    _est_warn = " ⚠无可比公司,估值不可得" if len(peers)<3 else ""
     _add_bullets(s, [
-        f"数据支撑：{len(fin)}年财务数据 + {len(hist)}条K线 + {len(peers)}家可比公司",
-        "估值方法：PE比较法 / 足球场估值区间",
+        f"数据支撑：{_support}{_support_warn}",
+        f"估值方法：PE比较法 / 足球场估值区间（经验系数非DCF）{_est_warn}",
         "操作建议：建议结合最新市场动态和公司公告做出投资决策",
         "风险提示：投资有风险，入市需谨慎，过往业绩不代表未来表现",
     ], Inches(1), Inches(3.3), Inches(11), Inches(3), size=14)
@@ -684,8 +709,13 @@ def main():
         '金融': ['601318','600036','601398','600000','601166','000001','600030'],
         '医药': ['300015','000538','600276','000963','300003','002007','600196'],
     }
-    industry = args.industry or '电池'
-    peer_codes = peer_tickers_map.get(industry, ['002594','600438','002129','002460'])
+    # 未指定行业或行业不在映射表时,不得默认电池股 —— 否则可比公司全错,估值对比造假
+    industry = args.industry or '未知行业'
+    if not args.industry:
+        print(f"  ⚠ 未指定 --industry,可比公司可能为空,估值对比将不可用")
+    peer_codes = peer_tickers_map.get(industry, [])
+    if not peer_codes:
+        print(f"  ⚠ 行业 '{industry}' 不在预设映射表(电池/白酒/新能源/半导体/金融/医药),无可比公司,估值页将标注不可得")
     # Add the target company to the list for highlight
     all_codes = [args.ticker] + peer_codes
     peers = fetch_peers(all_codes)

@@ -4,10 +4,16 @@
 MCP/wind/ifind/akshare 在本环境 SSL 证书失败或无网络,故全走 HTTP。
 用法见 main()。
 """
-import urllib.request, json, sys, time, ssl
+import urllib.request, json, sys, time, ssl, os
 
 UA = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-_CTX = ssl._create_unverified_context()  # 腾讯302→HTTPS证书在Win缺AKI,放行
+# SSL 验证控制：腾讯 qt.gtimg.cn / web.ifzq.gtimg.cn 在 Windows 常缺 AKI 致证书链失败，
+# 默认放行（与 CLAUDE.md 记录一致），但通过环境变量显式开关 —— 不再无注释硬编码 unverified context
+_CN_FETCH_SSL_NO_VERIFY = os.environ.get("CN_FETCH_SSL_NO_VERIFY", "1").strip() in ("1", "true", "yes")
+if _CN_FETCH_SSL_NO_VERIFY:
+    _CTX = ssl._create_unverified_context()
+else:
+    _CTX = ssl.create_default_context()
 
 def _get(url, encoding='utf-8', timeout=25, retry=3, headers=None):
     h = dict(UA); h.update(headers or {})
@@ -92,12 +98,15 @@ def quote(symbols):
                 'low': float(m[34]) if m[34] else 0,
                 'amount_yi': round(float(m[37]) / 1e8, 2) if m[37] else 0,  # 成交额(元->亿)
                 'turnover': float(m[38]) if m[38] else 0,     # 换手率%
-                'pe_ttm': float(m[39]) if m[39] else 0,
-                'mktcap_yi': round(float(m[45]) / 1e8, 2) if m[45] else 0,  # 总市值(元->亿)? 待核
-                'float_mktcap_yi': round(float(m[44]) / 1e8, 2) if m[44] else 0,  # 流通市值
+                # 估值/市值字段空时填 None 而非 0 —— PE=0 会被选股误判为"无估值压力/低估"
+                'pe_ttm': float(m[39]) if m[39] else None,
+                'mktcap_yi': round(float(m[45]) / 1e8, 2) if m[45] else None,  # 总市值(元->亿)? 待核
+                'float_mktcap_yi': round(float(m[44]) / 1e8, 2) if m[44] else None,  # 流通市值
                 'time': m[30],
             }
-        except Exception:
+        except Exception as e:
+            # 解析失败不得静默跳过 —— 否则返回 dict 缺该标的，下游不知是失败还是无数据
+            print(f"[cn_fetch.quote] 解析失败跳过 {line[:60]}: {e}", file=sys.stderr)
             continue
     return out
 
@@ -126,7 +135,8 @@ def sina_quote(symbols):
                 'amount_yuan': float(f[9]) if f[9] else 0,   # 成交额(元)
                 'date': f[30] if len(f) > 30 else '', 'time': f[31] if len(f) > 31 else '',
             }
-        except Exception:
+        except Exception as e:
+            print(f"[cn_fetch.sina_quote] 解析失败跳过 {line[:60]}: {e}", file=sys.stderr)
             continue
     return out
 
@@ -144,13 +154,22 @@ def main():
             n = x['name']
             if 'ST' in n or '退' in n:
                 continue
+            # PE/PB 缺失填 None 打印 'NA'，不得填 0 —— 选股读到 PE=0 会误判低估
             try:
-                pe = float(x.get('per') or 0)
+                per = x.get('per')
+                pe = float(per) if per and per != '0' else None
             except Exception:
-                pe = 0
+                pe = None
+            try:
+                pbv = x.get('pb')
+                pb = float(pbv) if pbv and pbv != '0' else None
+            except Exception:
+                pb = None
+            pe_str = f"{pe:.1f}" if pe is not None else "NA"
+            pb_str = f"{pb:.2f}" if pb is not None else "NA"
             print(f"{s}\t{n}\t{float(x['trade']):.2f}\t{float(x['changepercent']):.2f}\t"
                   f"{float(x['amount'])/1e8:.2f}\t{float(x['turnoverratio']):.2f}\t"
-                  f"{float(x['nmc'])/1e4:.1f}\t{pe:.1f}\t{float(x.get('pb') or 0):.2f}")
+                  f"{float(x['nmc'])/1e4:.1f}\t{pe_str}\t{pb_str}")
     elif cmd == 'factors':
         for sym in sys.argv[2:]:
             f = factors(sym)

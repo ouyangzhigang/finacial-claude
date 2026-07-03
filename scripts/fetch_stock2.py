@@ -5,14 +5,19 @@ os.environ.setdefault('TQDM_DISABLE', '1')
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 import warnings; warnings.filterwarnings('ignore')
 import ssl
-ssl._create_default_https_context = ssl._create_unverified_context
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+# SSL 验证控制：akshare 走东财/新浪端点，本机常缺 AKI 致证书链失败，默认放行（CLAUDE.md 记录），
+# 通过环境变量显式开关 —— 不再无注释全局 monkeypatch 关 SSL
+_SSL_NO_VERIFY = os.environ.get("FETCH_SSL_NO_VERIFY", "1").strip() in ("1", "true", "yes")
+if _SSL_NO_VERIFY:
+    ssl._create_default_https_context = ssl._create_unverified_context
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import requests
-_o = requests.Session.request
-def _p(self, *a, **k):
-    k.setdefault('verify', False); return _o(self, *a, **k)
-requests.Session.request = _p
+if _SSL_NO_VERIFY:
+    _o = requests.Session.request
+    def _p(self, *a, **k):
+        k.setdefault('verify', False); return _o(self, *a, **k)
+    requests.Session.request = _p
 import akshare as ak
 import pandas as pd, numpy as np
 

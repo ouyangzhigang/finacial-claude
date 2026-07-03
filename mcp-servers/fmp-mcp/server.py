@@ -40,8 +40,9 @@ def _load_api_key() -> str:
             key = cfg.get("api_key", "").strip()
             if key and key != "your-fmp-api-key-here":
                 return key
-        except Exception:
-            pass
+        except Exception as e:
+            # 配置文件解析失败不得静默 —— 否则 API_KEY="" 后续返回"未配置"，用户不知是配置坏了还是真没配
+            print(f"WARNING: fmp-mcp mcp_config.json 解析失败: {e}", file=sys.stderr)
     return ""
 
 

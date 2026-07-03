@@ -96,8 +96,11 @@ print(json.dumps(fetch_zt_pool(), ensure_ascii=False, default=str))
         if result.returncode == 0:
             data = json.loads(result.stdout)
             return data
+        # returncode != 0 不得静默返 None —— 下游不知是"无涨停"还是"子进程崩了"
+        print(f"涨停池子进程失败 rc={result.returncode}: {result.stderr[:300]}", file=sys.stderr)
+        return {"_error": f"sector_data.py exit {result.returncode}: {result.stderr[:200]}"}
     except Exception as e:
-        print(f"涨停池获取失败: {e}")
+        print(f"涨停池获取失败: {e}", file=sys.stderr)
     return None
 
 
@@ -116,8 +119,10 @@ print(json.dumps(fetch_market_overview(), ensure_ascii=False, default=str))
         )
         if result.returncode == 0:
             return json.loads(result.stdout)
+        print(f"市场概览子进程失败 rc={result.returncode}: {result.stderr[:300]}", file=sys.stderr)
+        return {"_error": f"sector_data.py exit {result.returncode}: {result.stderr[:200]}"}
     except Exception as e:
-        print(f"市场概览获取失败: {e}")
+        print(f"市场概览获取失败: {e}", file=sys.stderr)
     return None
 
 
@@ -136,8 +141,10 @@ print(json.dumps(fetch_connected_stocks(), ensure_ascii=False, default=str))
         )
         if result.returncode == 0:
             return json.loads(result.stdout)
+        print(f"连板梯队子进程失败 rc={result.returncode}: {result.stderr[:300]}", file=sys.stderr)
+        return {"_error": f"sector_data.py exit {result.returncode}: {result.stderr[:200]}"}
     except Exception as e:
-        print(f"连板梯队获取失败: {e}")
+        print(f"连板梯队获取失败: {e}", file=sys.stderr)
     return None
 
 
@@ -146,9 +153,9 @@ print(json.dumps(fetch_connected_stocks(), ensure_ascii=False, default=str))
 def parse_interpretation(text):
     """从龙虎榜'解读'字段解析机构/拉萨/游资信号"""
     if pd.isna(text) or str(text).strip() == '':
-        return {'type': 'unknown', 'count': 0, 'success_rate': 0.0}
+        return {'type': 'unknown', 'count': 0, 'success_rate': None}  # None=未知,不得0.0(否则<20触发伪造"低胜率")
     text = str(text)
-    result = {'type': 'unknown', 'count': 0, 'success_rate': 0.0}
+    result = {'type': 'unknown', 'count': 0, 'success_rate': None}  # None=未知,不得默认0(否则伪造"低胜率机构"扣分)
 
     if '机构买入' in text:
         result['type'] = 'institution_buy'
@@ -196,7 +203,7 @@ def parse_interpretation(text):
 def score_lhb_row(row, parsed):
     """对单只龙虎榜股票打分,返回(分数, 信号列表)"""
     signal_type = parsed.get('type', 'unknown')
-    success_rate = parsed.get('success_rate', 0.0)
+    success_rate = parsed.get('success_rate')  # None=解析失败/未知,不得默认0(否则<20触发伪造"低胜率")
     count = int(parsed.get('count', 0))
     net_buy = 0.0
     try:
@@ -211,7 +218,9 @@ def score_lhb_row(row, parsed):
     if signal_type == 'institution_buy':
         signals.append(f'机构买入{count}家')
         score += count * 2
-        if success_rate > 40:
+        if success_rate is None:
+            signals.append('胜率未知(不加分不扣分)')
+        elif success_rate > 40:
             signals.append('高胜率机构')
             score += 1
         elif success_rate < 20:
@@ -244,6 +253,18 @@ def cross_reference(lhb_df, hot_df, up_df, zt_data, sector_data):
     多源交叉:龙虎榜 + 热榜 + 飙升榜 + 涨停池 + 连板梯队
     为每只龙虎榜股票叠加热度/板块/连板信号
     """
+    # 源缺失/失败须显式标注 —— 不得静默降级让用户以为全源交叉完成
+    _failed = []
+    if hot_df is None or (isinstance(hot_df, dict) and hot_df.get('_error')):
+        _failed.append('hot_df')
+    if up_df is None or (isinstance(up_df, dict) and up_df.get('_error')):
+        _failed.append('up_df')
+    if zt_data is None or (isinstance(zt_data, dict) and zt_data.get('_error')):
+        _failed.append('zt_data')
+    if sector_data is None or (isinstance(sector_data, dict) and sector_data.get('_error')):
+        _failed.append('sector_data')
+    if _failed:
+        print(f"[cross_reference] 源缺失/失败: {', '.join(_failed)} —— 交叉结果基于部分源", file=sys.stderr)
     if lhb_df is None or lhb_df.empty:
         return pd.DataFrame()
 

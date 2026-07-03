@@ -36,7 +36,9 @@ server = FastMCP("akshare-mcp", instructions="Chinese financial data via AkShare
 def _df_to_json(df: pd.DataFrame) -> str:
     """Convert a DataFrame to a JSON string (records format, dates serialized)."""
     if df is None or df.empty:
-        return json.dumps([], ensure_ascii=False)
+        # 不得返回 [] 冒充"无数据"——空 DataFrame 通常是 SSL/限流/无效代码致抓取失败,
+        # 静默返回 [] 会让选股管线在完全无数据下算因子出推荐(驰宏案的数据层根因)
+        return json.dumps({"error": "data source returned empty (likely SSL/rate-limit/invalid code), NOT 'no data'", "source": "akshare"}, ensure_ascii=False)
     df = df.where(pd.notna(df), None)
     return json.dumps(df.to_dict(orient="records"), ensure_ascii=False, default=str)
 

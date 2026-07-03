@@ -55,12 +55,23 @@ def _load_auth_token() -> str:
 AUTH_TOKEN = _load_auth_token()
 BASE_URL = "https://api-mcp.51ifind.com:8643/ds-mcp-servers"
 
-# Custom SSL adapter for compatibility with iFind API (Python 3.12+ SSL fix)
+# SSL 验证控制：与 wind-mcp 一致，默认验证证书，本机证书链不全时显式设 IFIND_SSL_NO_VERIFY=1。
+# 不再硬编码 check_hostname=False/verify=False —— 那会让 SSL 失败被静默吞掉，调用方拿到空响应却以为成功。
+_IFIND_SSL_NO_VERIFY = os.environ.get("IFIND_SSL_NO_VERIFY", "").strip() in ("1", "true", "yes")
+if _IFIND_SSL_NO_VERIFY:
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    print("WARNING: iFind SSL 证书验证已关闭 (IFIND_SSL_NO_VERIFY=1)，仅限开发环境。", file=sys.stderr)
+
+
+# Custom SSL adapter for compatibility with iFind API (Python 3.12+ TLS fix)
 class CompatibleSSLAdapter(HTTPAdapter):
     def init_poolmanager(self, *args, **kwargs):
         ctx = create_urllib3_context()
-        ctx.check_hostname = False
-        # Allow older TLS versions for compatibility
+        if _IFIND_SSL_NO_VERIFY:
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+        # Enforce TLS 1.2+ for compatibility
         ctx.minimum_version = ssl.TLSVersion.TLSv1_2
         kwargs["ssl_context"] = ctx
         return super().init_poolmanager(*args, **kwargs)
@@ -114,7 +125,7 @@ def _post(server_type: str, payload: dict, timeout: int = 60) -> tuple:
             SERVER_URLS[server_type],
             json=payload,
             headers=_headers(server_type),
-            verify=False,
+            verify=not _IFIND_SSL_NO_VERIFY,
             timeout=timeout,
         )
         data = None
@@ -152,7 +163,7 @@ def _init_session(server_type: str) -> None:
         SERVER_URLS[server_type],
         json=notify,
         headers=_headers(server_type),
-        verify=False,
+        verify=not _IFIND_SSL_NO_VERIFY,
         timeout=10,
     )
 
@@ -167,7 +178,6 @@ def _call_ifind(server_type: str, tool_name: str, arguments: dict) -> str:
     if server_type not in SERVER_URLS:
         return json.dumps({"error": f"未知服务类型: {server_type}"}, ensure_ascii=False)
 
-    _init_session(server_type)
     payload = {
         "jsonrpc": "2.0",
         "id": _next_id(server_type),
@@ -175,13 +185,21 @@ def _call_ifind(server_type: str, tool_name: str, arguments: dict) -> str:
         "params": {"name": tool_name, "arguments": arguments},
     }
     try:
+        # _init_session 移进 try：会话初始化失败（SSL/网络/鉴权）须返回 error，不得向上抛裸异常
+        _init_session(server_type)
         resp, data = _post(server_type, payload)
         if isinstance(data, dict) and "error" in data:
             return json.dumps({"error": data["error"]}, ensure_ascii=False)
         resp.raise_for_status()
+        # 空响应/非JSON 不得序列化成 "null"/裸字符串冒充合法数据 ——
+        # 下游选股管线会把 null 当"无数据但调用成功"继续算因子出推荐（驰宏案数据层根因）
+        if data is None:
+            return json.dumps({"error": f"iFind {server_type}/{tool_name} 返回空响应 (HTTP {resp.status_code})，可能 SSL/限流/鉴权失败"}, ensure_ascii=False)
+        if not isinstance(data, dict):
+            return json.dumps({"error": f"iFind {server_type}/{tool_name} 返回非JSON响应: {str(data)[:200]}"}, ensure_ascii=False)
         return json.dumps(data, ensure_ascii=False, default=str)
     except Exception as e:
-        return json.dumps({"error": f"iFind 请求失败: {e}"}, ensure_ascii=False)
+        return json.dumps({"error": f"iFind 请求失败 ({type(e).__name__}): {e}"}, ensure_ascii=False)
 
 
 # ---------------------------------------------------------------------------
