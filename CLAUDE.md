@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A workspace assembling a China/US financial-investment analysis stack for Claude Code. No top-level build system, package manifest, or test suite — it composes data servers, installed Claude Skills, and two source trees.
 
 - `mcp-servers/` — **data layer**: 5 stdio MCP servers (FastMCP + Python)
-- `.claude/skills/` — **capability layer**: 47 installed Claude Skills
+- `./.claude/skills/` — **capability layer**: 47 installed Claude Skills
 - `.mcp.json` — project MCP config (holds plaintext tokens — keep git-ignored)
 - `claude-for-financial-services-cn/` — sell-side agents/cookbooks/skills source tree; has its own CLAUDE.md
 - `finskills/` — separate git repo; buy-side skills source (US-market + China-market)

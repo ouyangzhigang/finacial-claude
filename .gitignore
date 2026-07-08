@@ -2,3 +2,6 @@
 mcp-servers/*/mcp_config.json
 claude-for-finacial-services-cn
 finskills
+
+# 多 agent 运行产物(体积大+时效敏感,见 data/README.md)
+data/
