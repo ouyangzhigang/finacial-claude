@@ -1,0 +1,3 @@
+# Scrapling — 自适应网页抓取框架
+# Parser 已随 scrapling 主包安装；fetchers 依赖（playwright/curl_cffi/httpx/msgspec）本机已就位
+scrapling[all]>=0.4.10

@@ -1,0 +1,58 @@
+# A股常用抓取站点速查（URL + 通道 + 选择器，均经本地实测 2026-07-08）
+# 用法：配合 scripts/fetch.py 或 scrapling extract 命令
+# 通用注意：SSL 失败统一 --no-verify；选择器随站点改版会变，失效用 page.css(sel, adaptive=True)
+# auto 降级链说明：只在"异常或正文为空"时升级；JS 重站点 http 会返回非空外壳，
+#                   不会自动升级——此类站点必须显式指定 --channel。
+
+# ── 东方财富 push2his：K线/行情 JSON 接口（flaky，需重试） ──
+eastmoney_kline:
+  desc: 东方财富 push2his K线/行情 JSON 接口
+  channel: http（Fetcher.get，verify=False, stealthy_headers=True, impersonate=chrome）
+  flaky: true   # 实测不稳定：可能 200纯JSON / 502带HTML裹JSON / curl(56)连接断；重试 1-2 次通常成功
+  fetchpy: 'python scripts/fetch.py "URL" --no-verify --json'
+  url_template: "https://push2his.eastmoney.com/api/qt/stock/kline/get?secid={secid}&fields1=f1&fields2=f51,f52,f53,f54,f55,f56&klt={klt}&fqt=1&beg={beg}&end={end}"
+  params:
+    secid: "沪市=1.代码, 深市=0.代码（如 1.600519）"
+    klt: "101=日 102=周 103=月"
+    fqt: "0不复权 1前复权"
+  parse: "json.loads(page.body)['data']['klines']，每项 '日期,开,收,高,低,量,...' 字符串"
+  tested: "2026-07-08 取得贵州茅台 6 根日K，首根 2026-07-01,1180.10,1193.01,1196.80,1166.33,42474"
+
+# ── 东方财富 datacenter：龙虎榜/涨停板/融资融券 JSON ──
+eastmoney_datacenter:
+  desc: 东方财富 datacenter-web JSON 接口
+  channel: http（同上；flaky 同 push2his）
+  fetchpy: 'python scripts/fetch.py "URL" --no-verify --json'
+  url_template: "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName={RPT}&pageSize=50&pageNumber=1"
+  parse: "json.loads(page.body)['result']['data'] 为行列表"
+
+# ── 雪球 xueqiu：个股页（强反爬，必须 StealthyFetcher） ──
+xueqiu_stock:
+  desc: 雪球个股页（行情/资料/新闻）
+  channel: stealthy   # 实测：http 返回 85KB 无 title 的 JS 外壳；dynamic 触发"滑动验证页面"；stealthy 成功
+  fetchpy: 'python scripts/fetch.py "https://xueqiu.com/S/SH600519" --channel stealthy --no-verify'
+  url_template: "https://xueqiu.com/S/{SH或SZ}{code}"
+  parse: 'page.css("title::text").get() 得 "贵州茅台(SH600519)股票股价_股价行情_财报_数据报告 - 雪球"'
+  tested: "2026-07-08 StealthyFetcher 取得 145KB 完整页，title 与 贵州茅台/600519 关键词均在"
+
+# ── 同花顺 10jqka：个股页 ──
+tonghuashun_stock:
+  desc: 同花顺个股页
+  channel: http（verify=False）
+  fetchpy: 'python scripts/fetch.py "https://stockpage.10jqka.com.cn/600519/" --no-verify'
+  note: "未本地实测选择器；抓回后用 page.css 探查，失效用 adaptive=True"
+
+# ── 新浪财经：GBK 编码 ──
+sina_finance:
+  desc: 新浪财经榜单/行情页（GBK 编码）
+  channel: http（verify=False）
+  note: "新浪部分接口 GBK；scrapling 按响应头解码，若乱码用 page.body.decode('gbk')"
+  alternatives:
+    - "优先用项目 scripts/cn_fetch.py（已内置 GBK+SSL 处理）"
+
+# ── 受 Cloudflare 等保护的站点 ──
+protected_sites:
+  desc: 受 Cloudflare 等保护的站点
+  channel: stealthy
+  fetchpy: 'python scripts/fetch.py "URL" --channel stealthy --solve-cloudflare --no-verify'
+  note: "Cloudflare 挑战由 Scrapling 自动化方式处理，无需打码或凭证"

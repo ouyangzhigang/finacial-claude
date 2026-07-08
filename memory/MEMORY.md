@@ -1,0 +1,3 @@
+- [A股数据获取通道](a-share-data-source.md) — 主力=iFind MCP(全链路)+cn_fetch.py(rank/factors/kline,SSL自处理兜底);wind/akshare MCP SSL挂、china-news SSL挂时走curl -k东方财富datacenter/腾讯qt.gtimg.cn;secid沪1深0;1w账户选股<40元(半导体龙头普遍>40元,找低估值细分)
+- [短线荐股纪律](short-term-stock-discipline.md) — 驰宏锌锗推荐失误教训:回测证伪不得强推/周期≥5日/盘中价不作买入依据/催化同源≤50%/禁承诺措辞(已写入prompt框架)
+- [糊弄自查清单](audit-hushui-checklist.md) — 全工作区糊弄审计:已改13处(3框架+3命令+3技能+PPT增持+龙虎榜+2 MCP),待改60+处附行号改法(脚本/MCP/9 A股技能/US副本)

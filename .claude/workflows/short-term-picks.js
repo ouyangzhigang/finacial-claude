@@ -18,7 +18,25 @@ const topN = args.topN || 5, period = args.period || '2周', acc = args.account 
 const G = 'short-term-picks', RD = 'data/runs/' + asOf + '_' + G
 const goal = '短周期选股: Top' + topN + ' 周期' + period + ' 风险' + rp + ' 账户' + acc + ' 持仓' + pos + ' | 基准日' + asOf
 
-const P = (agent, task, extra, ctx) => task + '\n\n## 投资目标\n' + goal + '\n\n## 前序环节产出(承接,勿无视;如需细节用 Read 读对应 json 的 data 字段)\n' + (ctx || '(本环节为起点,无前序)') + '\n\n## 你的任务\n' + extra + '\n\n## 数据落盘(节约上下文,必须)\n把完整结构化输出 WRITE 到 ' + RD + '/' + agent + '.json(目录不存在先创建),envelope:{"runId":"' + asOf + '_' + G + '","asOf":"' + asOf + '","goal":"' + G + '","agent":"' + agent + '","fetchedAt":"' + asOf + '","data":{完整输出},"summary":"一句话","keyFields":{小摘录如 codes/verdicts/tailwinds}}\nschema 只返回 {path, summary, keyFields},勿把完整 data 塞进返回值。'
+// 本机数据源状态(2026-07-08 实测):iFind/akshare/wind MCP SSL 全挂,必须走 curl -k/新浪/china-news 降级链。
+// 每个 agent prompt 前置此块,避免子 agent 在 iFind SSL 上重试卡死。
+const DATA_STATUS = '\n## ⚠️ 本机数据源状态(实测·按此降级,勿在 iFind 上重试)\n' +
+  '- **iFind MCP**: SSL 证书验证失败(CERTIFICATE_VERIFY_FAILED) → **跳过,不要调用 mcp__ifind__***\n' +
+  '- **akshare MCP**: 走东方财富 push2,同 SSL 挂 → **跳过**\n' +
+  '- **wind MCP**: 常全挂 → **跳过**(除非已设 WIND_SSL_NO_VERIFY)\n' +
+  '- **可用通道(按优先)**:\n' +
+  '  1. `curl -k -s -H "User-Agent: Mozilla/5.0" "https://push2ex.eastmoney.com/getTopicZTPool?ut=7eea3edcaed734bea9cbfc24409ed989&dpt=wz.ztzt&Pageindex=0&pagesize=200&sort=fbt:asc&date=YYYYMMDD"` → 涨停池(-k 跳证书;字段 c代码 n名称 zdp涨跌幅 amount成交额 lbc连板 ltsz流通市值)\n' +
+  '  2. `curl -k -s "http://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=30&po=1&fid=f3&fs=m:90+t:2&fields=f2,f3,f12,f14"` → 概念板块涨幅(-k;f12代码 f14名称 f3涨跌幅)\n' +
+  '  3. `curl -s "http://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData?symbol=sh600519&scale=240&ma=no&datalen=30"` → **新浪日K首选**(http 不走 SSL;返回[{day,open,high,low,close,volume}];算 m5/m10/m20/MA20 用 close 序列)\n' +
+  '  4. `curl -s "http://qt.gtimg.cn/q=sh603118"` → 腾讯实时快照(GBK,http;字段索引:1名称 2代码 3现价 4昨收 5今开 31涨跌额 32涨跌幅 36成交量 37成交额 38换手 39PE 44流通市值 45总市值;用 python .decode(\'gbk\') 后 split(\'~\'))\n' +
+  '  5. `python scripts/cn_fetch.py squote sh603118` → 腾讯单股报价(SSL 自处理,可用;**注意 factors/kline 子命令有 bug,勿用**)\n' +
+  '  6. china-news MCP `get_stock_news`(ticker="603118") → 个股新闻+催化(**可用,不需分类器**)\n' +
+  '- **日K首选新浪 API**(cn_fetch factors bug + 东方财富 push2his 502 + 腾讯 web.ifzq.gtimg.cn 302,都不要用)\n' +
+  '- secid 规则:沪市 `1.代码`,深市 `0.代码`;新浪/腾讯前缀:沪 sh 深 sz\n' +
+  '- **Bash/Write 若被 glm 分类器拦(间歇性 "temporarily unavailable")**:等 5-10 秒重试同一命令,勿卡住勿换路\n' +
+  '- 连续 2 层挂 → 输出中显式标注"数据缺失"并继续,勿崩溃\n\n'
+
+const P = (agent, task, extra, ctx) => task + DATA_STATUS + '\n\n## 投资目标\n' + goal + '\n\n## 前序环节产出(承接,勿无视;如需细节用 Read 读对应 json 的 data 字段)\n' + (ctx || '(本环节为起点,无前序)') + '\n\n## 你的任务\n' + extra + '\n\n## 数据落盘(节约上下文,必须)\n把完整结构化输出 WRITE 到 ' + RD + '/' + agent + '.json(目录不存在先创建),envelope:{"runId":"' + asOf + '_' + G + '","asOf":"' + asOf + '","goal":"' + G + '","agent":"' + agent + '","fetchedAt":"' + asOf + '","data":{完整输出},"summary":"一句话","keyFields":{小摘录如 codes/verdicts/tailwinds}}\nschema 只返回 {path, summary, keyFields},勿把完整 data 塞进返回值。'
 
 if (String(period).match(/^[23]日|隔日/)) {
   log('周期<5日,拒绝选股,降级日内跟踪简报')
