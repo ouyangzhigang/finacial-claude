@@ -15,7 +15,7 @@ $ARGUMENTS
 
 > ⚠️ **周期下限硬约束**:`$ARGUMENTS` 解析出投资周期 < 5 个交易日(如"2 日""3 日""隔日")时,**拒绝执行选股**,不输出 Top N 买入清单——只输出"事件驱动日内跟踪简报"(观察位/触发位,无买入区间/仓位),并提示用户"2 日窗口无统计优势,建议改 ≥5 日或用 /analysis-stock 单股深评"。默认且推荐口径 = 2 周(10 交易日),最小 1 周(5 交易日)。
 
-1. **数据源按规范「本机数据源适配」小节**:ifind 为主力(已实测 `ifind_get_stock_summary` 可取近 1 月每日 OHLCV+涨跌幅+换手率);历史 K 线/短期动量用 `ifind_get_stock_summary`,**不要用** `stock_data.py --history`(走东方财富 push2his,本机经 Whistle/直连均不通);板块用 `ifind_sector_data`;新闻/情绪用 `ifind_search_news`/china-news-mcp;wind 工具需 `WIND_SSL_NO_VERIFY=1`。
+1. **数据源按规范「本机数据源适配」小节**:ifind 为主力(已实测 `ifind_get_stock_summary` 可取近 1 月每日 OHLCV+涨跌幅+换手率);历史 K 线/短期动量用 `ifind_get_stock_summary`,**不要用** `stock_data.py --history`(走东方财富 push2his,本机经 Whistle/直连均不通);板块用 `ifind_sector_data`;新闻/情绪用 `ifind_search_news`/china-news-mcp;wind 工具需 `WIND_SSL_NO_VERIFY=1`。**Soft-fail 链**:iFind→wind→cn_fetch.py→web-scraping fetch.py(`python .claude/skills/web-scraping/scripts/fetch.py "URL" --no-verify`,JS 渲染/反爬兜底)→curl -k→标缺失。
 2. **选股漏斗纪律**:候选池 ≥30 → 流动性硬门槛过滤 → 七维短线评分排序 → Top N → 组合风控,不得跳过漏斗直接拍脑袋推荐。
 3. **短线因子按规范「短线因子定义与计算口径」表算**:短期动量(5/10/20日)、量价突破、资金流连续性、板块 RPS、情绪(连板/封板率/炸板率)、催化兑现度。
 4. **评分权重已短线化**:技术25/资金20/催化20/情绪15/基本面10/估值5/流动性5;`quant-factor-screener` 仅用于价值底仓(其动量12-1月、低波动/低换手为中长期口径,别套短线弹性票)。

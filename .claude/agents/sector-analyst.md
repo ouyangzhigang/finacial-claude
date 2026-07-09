@@ -31,9 +31,10 @@ emoji: 🏭
 2. **AkShare MCP(兜底)**:`get_industry_stocks`(行业成分股)、`get_market_overview`(涨跌/成交额榜,SSL 常挂)
 3. **Wind MCP(补充,需 WIND_SSL_NO_VERIFY)**:`wind_search_stocks`(NL 智能选股)、`wind_get_index_fundamentals`
 4. **curl 兜底**:`curl -k` 东方财富 clist(`fs=m:90+t:2` 概念/`m:90+t:1` 行业,主域 exit 52 则切 19/29 镜像,带 UA)、`python scripts/cn_fetch.py rank`(新浪榜单,SSL 自处理,TSV:code\tname\tprice\tpct\tamount_yi\tturnover\tmktcap\tpe\tpb)、`python scripts/cn_fetch.py factors sym1 sym2 ...`(批量 m5/m10/m20/ma20/breakout/amt20 初筛)
-5. **findata-toolkit-cn 脚本(免费+自动降级,akshare MCP 挂时的最佳兜底)**:**路径在 `.claude/skills/findata-toolkit-cn/scripts/`,非 root `scripts/`**。
+5. **web-scraping fetch.py(板块/榜单页面兜底)**:`python .claude/skills/web-scraping/scripts/fetch.py "URL" --no-verify`(cn_fetch.py 不覆盖的榜单页/板块详情页/新闻聚合页;auto 降级 Fetcher→Dynamic→Stealthy;`--css "table"` 只取表格省 token;`--json` 提取 API 响应)
+6. **findata-toolkit-cn 脚本(免费+自动降级,akshare MCP 挂时的最佳兜底)**:**路径在 `.claude/skills/findata-toolkit-cn/scripts/`,非 root `scripts/`**。
    - `cd .claude/skills/findata-toolkit-cn && python scripts/sector_data.py --zt-pool`(涨停池+行业分布+连板梯队)、`--lt-pool`(连板梯队)、`--top-change`/`--top-volume`(涨幅/成交额 Top20)、`--board-concept`/`--board-industry`(板块排行,新浪源)、`--market-overview`(涨跌分布+总成交额)。东方财富挂自动降级新浪。
-6. 连续 2 层挂 → 标注"数据缺失",候选池缩水则评估对漏斗的影响
+7. 连续 2 层挂 → 标注"数据缺失",候选池缩水则评估对漏斗的影响
 
 ## 📚 Methodology(内化)
 

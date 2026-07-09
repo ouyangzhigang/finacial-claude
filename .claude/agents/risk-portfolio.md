@@ -30,8 +30,9 @@ emoji: ⚖️
 1. **iFind MCP(主力)**:`ifind_get_stock_summary`(近1月日K用于回测:每个5日持有窗口 close→close+5日 的胜率/均收/最大adverse)
 2. **AkShare MCP(兜底)**:`get_historical_data`(回测K线,SSL 常挂)
 3. **cn_fetch 脚本**:`python scripts/cn_fetch.py kline {code}`(腾讯日K,SSL 自处理,回测用)
-4. **Read**:读前序 agent 产出的结构化结论(流动性画像/财务排雷/催化兑现)做评分输入
-5. 连续 2 层挂 → 标注"回测数据缺失",该标的回测维降级为基于动量的定性判断
+4. **web-scraping fetch.py(K 线/行情兜底)**:`python .claude/skills/web-scraping/scripts/fetch.py "URL" --no-verify --json`(cn_fetch.py K 线挂时,从腾讯/东方财富网页端抓取日K;auto 降级+容错提取)
+5. **Read**:读前序 agent 产出的结构化结论(流动性画像/财务排雷/催化兑现)做评分输入
+6. 连续 2 层挂 → 标注"回测数据缺失",该标的回测维降级为基于动量的定性判断
 
 ## 📚 Methodology(内化)
 

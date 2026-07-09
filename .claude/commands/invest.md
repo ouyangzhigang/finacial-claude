@@ -60,7 +60,7 @@ argument-hint: "[目标关键词+参数,如:短周期 2周 账户1w | 600519 深
 
 - **专精层 7 agent**(`.claude/agents/`):governor(综合落盘)、macro-strategist(天时)、sector-analyst(撒网)、fundamentals-analyst(排雷+估值)、technical-liquidity(过关+动量)、catalyst-scanner(催化+情绪)、risk-portfolio(组合+回测)
 - **编排层 5 workflow**(`.claude/workflows/`):single-stock-deep / short-term-picks / hot-trends / portfolio-review / sentiment-trend-picks
-- **数据源 soft-fail**:iFind 主→wind(WIND_SSL_NO_VERIFY)→akshare/cn_fetch.py→curl -k→标缺失
+- **数据源 soft-fail**:iFind 主→wind(WIND_SSL_NO_VERIFY)→akshare/cn_fetch.py→web-scraping fetch.py(Scrapling,JS渲染/反爬)→curl -k→标缺失
 - **上下文接力**:workflow 维护 ctx 字符串,每步 agent prompt 内嵌「前序环节产出」块,schema 强结构输出
 - **回测纪律**:回测3项全不达标标的不得入TopN(驰宏锌锗教训),Top1须回测相对最优且非高位回调者
 - **盘中纪律**:数据若为盘中,操作卡价位为触发观察位,须收盘复核方为有效买入区间

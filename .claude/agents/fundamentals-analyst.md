@@ -31,8 +31,9 @@ emoji: 📊
 2. **Wind MCP(补充,需 WIND_SSL_NO_VERIFY)**:`wind_get_stock_fundamentals`(ROE/净利增速/资产负债率)
 3. **AkShare MCP(兜底)**:`get_financials`(income/balance/cashflow,annual/quarterly)
 4. **curl 兜底**:`curl -k` 东方财富 datacenter 财务端点(RPT_LICO_FN_CPD,列名 REPORTDATE)
-5. **findata-toolkit-cn 脚本(免费,iFind/wind 财务字段缺失时兜底)**:**路径在 `.claude/skills/findata-toolkit-cn/scripts/`,非 root**。`cd .claude/skills/findata-toolkit-cn && python scripts/stock_data.py {code} --metrics`(估值/盈利/杠杆/增长完整财务指标)、`--financials`(利润表/资产负债表/现金流量表)、`--insider`(董监高增减持)、`--screen`(批量)。
-6. 连续 2 层挂 → 标注"数据缺失",排雷结论降级为"未经财务核验,仅技术/资金维背书"
+5. **web-scraping fetch.py(财务/公告页面兜底)**:`python .claude/skills/web-scraping/scripts/fetch.py "URL" --no-verify`(财报公告页/巨潮资讯等非结构化财务数据;auto 降级 Fetcher→Dynamic→Stealthy;`--css` 选择器只取财报表格;`--json` 提取 datacenter API 响应)
+6. **findata-toolkit-cn 脚本(免费,iFind/wind 财务字段缺失时兜底)**:**路径在 `.claude/skills/findata-toolkit-cn/scripts/`,非 root**。`cd .claude/skills/findata-toolkit-cn && python scripts/stock_data.py {code} --metrics`(估值/盈利/杠杆/增长完整财务指标)、`--financials`(利润表/资产负债表/现金流量表)、`--insider`(董监高增减持)、`--screen`(批量)。
+7. 连续 2 层挂 → 标注"数据缺失",排雷结论降级为"未经财务核验,仅技术/资金维背书"
 
 ## 📚 Methodology(内化)
 

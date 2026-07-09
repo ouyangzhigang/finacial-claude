@@ -78,6 +78,8 @@ Key scripts (from root):
 - `python scripts/validate.py <output.json> <schema.json|schema.yaml>` — validate worker output
 - `bash scripts/deploy-managed-agent.sh <slug> [--dry-run]` — deploy a managed-agent cookbook
 - `python scripts/cn_fetch.py` — free HTTP data channel (新浪榜单 + 腾讯 K线/批量报价) for batch screening & K-line when an MCP field is missing or SSL-blocked; the commands' soft-fail fallback. Handles 腾讯 GBK + Windows SSL quirks internally.
+- `python scripts/market_radar.py` — **multi-source market radar**: aggregates 新浪 7x24 快讯 + 腾讯实时指数 + 东方财富板块/涨停池/龙虎榜/资金流, auto-extracts core signals (🔴 critical / 🟡 important / 🟢 normal). Recommended as the first-call market overview tool. Integrated into prefetch_shared.py.
+- `python .claude/skills/web-scraping/scripts/fetch.py` — Scrapling wrapper (Fetcher→Dynamic→Stealthy auto-fallback) for JS-rendered pages, anti-bot bypass, and unstructured web content when cn_fetch.py doesn't cover the endpoint. Sits before `curl` in the soft-fail chain.
 - `python scripts/hot_trend_dig.py` — 龙虎榜 detail mining via AkShare (`stock_lhb_detail_em`); parses 机构/拉萨/游资 signals.
 - `python scripts/orchestrate.py` — **reference only** event loop for cross-agent handoffs among the 4 China managed agents (not production).
 
@@ -85,4 +87,4 @@ Key scripts (from root):
 
 - Python 3.13 on Windows; `python` is on PATH, `python3` is not.
 - Local network can't reach some financial APIs directly: the East Money global-headline endpoint fails SSL verification, and FMP returns 403 (likely geo/IP block). AkShare A-share endpoints work; other overseas/paid endpoints are unverified from here — plan on a proxy.
-- Local MCP reachability (verified by the existing commands): **iFind + AkShare + china-news work; Wind needs `WIND_SSL_NO_VERIFY=1`; FMP and East Money push2his fail.** When an MCP field is missing or SSL-blocked, fall back to `python scripts/cn_fetch.py` (新浪/腾讯 HTTP, keyless) or `curl` 东方财富 push2 镜像 (`19/29.push2`) + 腾讯 `qt.gtimg.cn` / `web.ifzq.gtimg.cn`. WebFetch/WebSearch are blocked locally.
+- Local MCP reachability (verified by the existing commands): **iFind + AkShare + china-news work; Wind needs `WIND_SSL_NO_VERIFY=1`; FMP and East Money push2his fail.** When an MCP field is missing or SSL-blocked, fall back to `python scripts/cn_fetch.py` (新浪/腾讯 HTTP, keyless) → `python .claude/skills/web-scraping/scripts/fetch.py` (Scrapling, JS渲染/反爬/非结构化页面) → `curl` 东方财富 push2 镜像 (`19/29.push2`) + 腾讯 `qt.gtimg.cn` / `web.ifzq.gtimg.cn`. WebFetch/WebSearch are blocked locally.

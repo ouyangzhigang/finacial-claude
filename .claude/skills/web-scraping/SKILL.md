@@ -113,13 +113,20 @@ first.parent / first.next_sibling / first.below_elements()  # DOM 导航
 `scripts/fetch.py` 封装了本项目常用模式，可被其他技能/agent 直接调用：
 
 ```bash
-# 自动降级链：Fetcher→Dynamic→Stealthy；输出 JSON 元数据 + 内容到 stdout/文件
+# 自动降级链：Fetcher→Dynamic→Stealthy；默认重试 2 次（金融站点 flaky）
 python scripts/fetch.py "https://xueqiu.com/S/SH600519" --css "title" -o out.md
 python scripts/fetch.py "https://datacenter-web.eastmoney.com/api/data/v1/get?reportName=RPT_LHBSTKDETAIL" --no-verify --json
 python scripts/fetch.py "URL" --channel stealthy --solve-cloudflare -s "table"
+python scripts/fetch.py "URL" --no-verify --retry 3          # 增加重试次数（东方财富偶发 502）
+
+# 批量模式：从文件读取 URL（每行一个），输出到目录
+python scripts/fetch.py --urls-file urls.txt -o out/ --json   # 每 URL 一个 .json 文件
+python scripts/fetch.py --urls-file urls.txt -o out/           # 每 URL 一个 .md 文件
 ```
 
-也可作为模块：`from fetch import fetch_page; page, meta = fetch_page(url)`。
+**重试机制**：`--retry N`（默认 2）。整条降级链（http→dynamic→stealthy）跑完仍失败时，等 0.5s 后重试整条链。meta 里 `attempts` 数组记录每轮每通道的结果，`attempt` 字段标记成功在第几轮。金融站点（东方财富 push2his 偶发 502/空回复）重试常能拿到。
+
+也可作为模块：`from fetch import fetch_page; page, meta = fetch_page(url, retries=2)`。
 
 金融站点选择器速查见 `references/finance-recipes.md`（东方财富/雪球/同花顺/新浪的常用 URL 与选择器，含 SSL/GBK 注意点）。
 

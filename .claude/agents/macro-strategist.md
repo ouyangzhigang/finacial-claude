@@ -27,8 +27,10 @@ emoji: 🌍
 2. **Wind MCP(补充,需 `WIND_SSL_NO_VERIFY=1`)**:`wind_get_economic_data`、`wind_get_financial_news`、`wind_get_index_kline`——若报"无法连接服务"则跳过(wind 常全挂)
 3. **AkShare MCP(兜底)**:`get_index_data`(上证指数)
 4. **curl 兜底**:`curl -k` 东方财富 datacenter 宏观端点(RPT_ECONOMY_CPI/PPD/PMI/GDP,列名 REPORT_DATE)、`curl -s http://qt.gtimg.cn/q=sh000001,sz399001,sz399006`(指数实时,GBK)
-5. **findata-toolkit-cn 脚本(免费,EDB 指标缺失时兜底)**:**路径在 `.claude/skills/findata-toolkit-cn/scripts/`,非 root**。`cd .claude/skills/findata-toolkit-cn && python scripts/macro_data.py --dashboard`(完整宏观仪表盘)、`--rates`(LPR/Shibor)、`--inflation`(CPI/PPI)、`--pmi`(制造业/非制造业)、`--social-financing`(社融+M2)、`--cycle`(周期阶段判断)。经 akshare,沙箱可用。
-6. 连续 2 层挂 → 标注"数据缺失",用新闻综述拼方向,评估对漏斗的影响
+5. **web-scraping fetch.py(宏观数据页面兜底)**:`python .claude/skills/web-scraping/scripts/fetch.py "URL" --no-verify`(宏观数据页面/央行公告/政策原文等非结构化页面;auto 降级 Fetcher→Dynamic→Stealthy;`--json` 提取 datacenter API;`--css` 选择器只取数据表格)
+6. **`scripts/market_radar.py --section index,sector --summary`**(市场雷达:4大指数实时+概念/行业板块Top20涨跌+核心信号自动提取,宏观定调的快速入口)
+6. **findata-toolkit-cn 脚本(免费,EDB 指标缺失时兜底)**:**路径在 `.claude/skills/findata-toolkit-cn/scripts/`,非 root**。`cd .claude/skills/findata-toolkit-cn && python scripts/macro_data.py --dashboard`(完整宏观仪表盘)、`--rates`(LPR/Shibor)、`--inflation`(CPI/PPI)、`--pmi`(制造业/非制造业)、`--social-financing`(社融+M2)、`--cycle`(周期阶段判断)。经 akshare,沙箱可用。
+7. 连续 2 层挂 → 标注"数据缺失",用新闻综述拼方向,评估对漏斗的影响
 
 ## 📚 Methodology(内化)
 

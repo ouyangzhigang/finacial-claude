@@ -58,6 +58,39 @@ python scripts/hot_trend_dig.py --top 20        # 展示 Top N
 - akshare 龙虎榜/热榜/飙升榜经新浪源。Step1-3(龙虎榜/热榜/飙升)SSL 常挂→curl 龙虎榜 `RPT_DAILYBILLBOARD_DETAILS`;Step4-5(涨停池/市场概览)经 sector_data.py 可用。
 - 输出:龙虎榜明细+热榜+飙升榜+涨停池+连板梯队+市场概览。
 
+### `scripts/market_radar.py`(多源市场雷达+核心信号提取,**推荐首选**)
+```bash
+python scripts/market_radar.py                           # 全量扫描(JSON)
+python scripts/market_radar.py --summary                 # 核心信号摘要(人类可读)
+python scripts/market_radar.py --section index,news      # 只扫指定板块
+python scripts/market_radar.py --ticker 600519           # 加个股维度
+python scripts/market_radar.py --run-id 20260709_short   # 写入 run dir
+```
+- **数据源**:新浪(7x24快讯+榜单+日K)+ 腾讯(实时行情)+ 东方财富(板块+涨停池+龙虎榜+资金流)+ 自动降级
+- **核心信号自动提取**:🔴 critical(政策/黑天鹅)→ 🟡 important(板块异动/业绩超预期/大额资金)→ 🟢 normal(常规)
+- **信号类型**:index(指数异动)→ sector(板块异动≥3%)→ sentiment(涨停/连板)→ capital(资金流)→ news(关键词匹配)→ policy(政策)
+- **用途**:workflow Phase 0 预取;agent 按需调用;独立运行做市场扫描
+- **集成**:prefetch_shared.py 自动调用 `--section index,sector,news,capital --summary` 写入 `_shared.json` 的 `radarSignals` 字段
+
+### web-scraping fetch.py(Scrapling 包装,SSL/反爬/JS 渲染兜底)
+**路径**:`.claude/skills/web-scraping/scripts/fetch.py`(从 repo root 调用)
+```bash
+# 自动降级链:Fetcher→Dynamic→Stealthy;输出 JSON 元数据(stderr) + 内容(stdout/文件)
+python .claude/skills/web-scraping/scripts/fetch.py "URL" --css "selector" -o out.md
+python .claude/skills/web-scraping/scripts/fetch.py "URL" --no-verify --json
+python .claude/skills/web-scraping/scripts/fetch.py "URL" --channel stealthy --solve-cloudflare -s "table"
+```
+| 通道 | 适用场景 |
+|---|---|
+| `auto`(默认) | 自动降级 Fetcher→Dynamic→Stealthy |
+| `http` | 静态页/JSON API,TLS 指纹伪装(curl_cffi) |
+| `dynamic` | SPA/JS 渲染/需等接口返回(Playwright) |
+| `stealthy` | 反爬/Cloudflare Turnstile |
+- **何时用**:cn_fetch.py 不覆盖的端点(新闻页/公告页/非结构化页面)、MCP 缺字段且 curl 拿不到(需 JS 渲染或反爬)、批量采集(Spider)。
+- **CLI 免代码**:`scrapling extract get "URL" out.md --ai-targeted -s "selector"`(加 `--ai-targeted` 防 prompt injection)。
+- **金融站点配方**:见 `.claude/skills/web-scraping/references/finance-recipes.md`。
+- 也可作为模块:`from fetch import fetch_page; page, meta = fetch_page(url)`(需 cd 到 skill 目录或加 sys.path)。
+
 ### findata-toolkit-cn 脚本(免费+自动降级,**路径在 skill 内非 root**)
 **路径坑**:三个脚本在 `.claude/skills/findata-toolkit-cn/scripts/`,**不在 repo root `scripts/`**。
 **正确调用**(从 repo root):
@@ -82,10 +115,11 @@ python -c "import sys,json; sys.path.insert(0,'.claude/skills/findata-toolkit-cn
 ## 3. Soft-Fail 数据链(5 层,连续 2 层挂→标"数据缺失")
 
 ```
-iFind MCP(主) → wind MCP(WIND_SSL_NO_VERIFY=1,常挂) → akshare MCP/cn_fetch.py(SSL 自处理) → curl -k 东方财富 push2 镜像(19/29.push2)/腾讯 qt.gtimg.cn → 标注"数据缺失"+评估对漏斗影响
+iFind MCP(主) → wind MCP(WIND_SSL_NO_VERIFY=1,常挂) → akshare MCP/cn_fetch.py(SSL 自处理) → web-scraping fetch.py(Scrapling,JS 渲染/反爬/非结构化页面) → curl -k 东方财富 push2 镜像(19/29.push2)/腾讯 qt.gtimg.cn → 标注"数据缺失"+评估对漏斗影响
 ```
 - 东方财富 push2his K线加 UA 可用(secid 沪1深0);push2 实时盘口/资金流常挂。
 - 腾讯 `qt.gtimg.cn` / `web.ifzq.gtimg.cn` GBK + Windows SSL 自处理(cn_fetch.py 已封装)。
+- **web-scraping fetch.py** 在 curl 之前:cn_fetch.py 不覆盖的端点(新闻/公告/非结构化页面)、需 JS 渲染或反爬绕过的站点。auto 降级链 Fetcher→Dynamic→Stealthy,stderr 输出 meta JSON。
 - 连续 2 层挂→该 agent 输出显式标注影响面,不编造。
 
 ---

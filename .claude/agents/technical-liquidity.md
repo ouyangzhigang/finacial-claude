@@ -28,8 +28,9 @@ emoji: 📈
 2. **Wind MCP(补充,需 WIND_SSL_NO_VERIFY)**:`wind_get_stock_kline`(K线)、`wind_get_stock_technicals`(MACD/KDJ/RSI/BOLL)
 3. **AkShare MCP(兜底)**:`get_historical_data`(OHLCV,SSL 常挂)
 4. **curl/cn_fetch 兜底**:`curl -k -H "User-Agent: Mozilla/5.0" push2his.eastmoney.com/api/qt/stock/kline/get?secid=1.{code}&klt=101&fqt=1&beg=...&end=...&fields2=f51,f52,f53,f54,f55,f56,f57,f59,f60`(日K,沪1深0);`python scripts/cn_fetch.py kline {code}`(腾讯日K,SSL 自处理);`python scripts/cn_fetch.py factors {code1} {code2} ...`(批量 m5/m10/m20/ma5/ma10/ma20/breakout/amt20)
-5. **findata-toolkit-cn 备选(K线另一免费源)**:**路径在 `.claude/skills/findata-toolkit-cn/scripts/`,非 root**。`cd .claude/skills/findata-toolkit-cn && python scripts/stock_data.py {code} --history`(历史 OHLCV,经 akshare)。iFind/wind/cn_fetch K线都挂时用此。
-6. 连续 2 层挂 → 标注"K线数据缺失",动量维降级为基于快照单日涨跌的粗判
+5. **web-scraping fetch.py(K 线/行情页面兜底)**:`python .claude/skills/web-scraping/scripts/fetch.py "URL" --no-verify --json`(非结构化行情页面/JS 渲染的动态数据,auto 降级 Fetcher→Dynamic→Stealthy;东方财富 502 带 body 容错提取)
+6. **findata-toolkit-cn 备选(K线另一免费源)**:**路径在 `.claude/skills/findata-toolkit-cn/scripts/`,非 root**。`cd .claude/skills/findata-toolkit-cn && python scripts/stock_data.py {code} --history`(历史 OHLCV,经 akshare)。iFind/wind/cn_fetch K线都挂时用此。
+7. 连续 2 层挂 → 标注"K线数据缺失",动量维降级为基于快照单日涨跌的粗判
 
 ## 📚 Methodology(内化)
 

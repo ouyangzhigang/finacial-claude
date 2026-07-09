@@ -40,7 +40,7 @@ argument-hint: "[股票代码或名称 + 描述,如:600519 当前价1700 无仓 
 | 龙虎榜数据 | `ifind_get_stock_info`(若未返回则降级) | 近期机构/游资席位进出与接力 |
 | 主力与游资流向 | `ifind_get_stock_info`(若未返回则降级) | 近 5/20 日主力净流入、超大单/大单占比 |
 
-**降级兜底(soft-fail,不中断整体分析)**:iFind 为自然语言取数,若未直接返回龙虎榜/主力资金字段,改用 wind `wind_get_stock_technicals`(显式查"龙虎榜 + 融资融券 + 主力资金流向",需 `WIND_SSL_NO_VERIFY=1`);再不行用 akshare 历史数据 + 东方财富 push2 镜像估算。某维度最终仍缺失则标注"数据缺失",不编造。
+**降级兜底(soft-fail,不中断整体分析)**:iFind 为自然语言取数,若未直接返回龙虎榜/主力资金字段,改用 wind `wind_get_stock_technicals`(显式查"龙虎榜 + 融资融券 + 主力资金流向",需 `WIND_SSL_NO_VERIFY=1`);再不行用 `python scripts/cn_fetch.py`(rank/factors/kline,SSL 自处理)→ `python .claude/skills/web-scraping/scripts/fetch.py "URL" --no-verify`(Scrapling,JS 渲染/反爬/非结构化页面)→ `curl -k` 东方财富 push2 镜像。某维度最终仍缺失则标注"数据缺失",不编造。
 
 ## 第二步:按框架展开分析(数据→结论,层层咬合)
 

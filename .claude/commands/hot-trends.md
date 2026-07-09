@@ -17,8 +17,9 @@ iFind/wind 仍为主力数据源;下列本地脚本在 MCP 字段缺失、SSL �
 | 成交额精确快照 | `python scripts/cn_fetch.py squote sh600519,sz300458` | L3 流动性核验(新浪成交额=元最准,流动性以它为准) |
 | 日 K 线(前复权) | `python scripts/cn_fetch.py kline sh600519 30` | L3 多周期;ifind K 线缺失时补位 |
 | 龙虎榜价值挖掘 | `python scripts/hot_trend_dig.py` | L3 资金面;iFind 无专用龙虎榜工具,评估后以本地脚本为主、wind 龙虎榜为辅 |
+| 非结构化页面/新闻/公告 | `python .claude/skills/web-scraping/scripts/fetch.py "URL" --no-verify` | L2-L3;MCP 缺字段且 cn_fetch.py 不覆盖时,JS 渲染/反爬兜底;`--json` 提取 API 响应,`--css` 选择器只取片段 |
 
-> 取数原则:iFind/wind 先行 → 字段缺失或 SSL 失败时本地脚本补位 → 关键价位/成交额多源交叉,哪个准用哪个;板块行情与北向资金仍走 ifind/akshare MCP,新闻/情绪走 `ifind_search_news` / china-news MCP;某维度最终仍缺失标注"数据缺失",不编造。
+> 取数原则:iFind/wind 先行 → 字段缺失或 SSL 失败时 cn_fetch.py 补位 → cn_fetch.py 不覆盖的端点用 web-scraping fetch.py(Scrapling,JS 渲染/反爬) → 再不行 curl -k 东方财富 → 关键价位/成交额多源交叉,哪个准用哪个;板块行情与北向资金仍走 ifind/akshare MCP,新闻/情绪走 `ifind_search_news` / china-news MCP;某维度最终仍缺失标注"数据缺失",不编造。
 
 执行硬性要求(摘自该文件,此处仅作强调,以该文件正文为准):
 - **递进不跳层**:L1(大盘+政策)→ L2(板块+事件)→ L3(资金+基本面+技术+排行)→ 合成,上层未明确不下层;

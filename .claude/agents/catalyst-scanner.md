@@ -31,9 +31,10 @@ emoji: 🔥
 2. **china-news MCP**:`get_stock_news`(个股新闻,含龙虎榜/公告/业绩预告,极有用);`get_market_headlines`(SSL 常挂)
 3. **Wind MCP(补充,需 WIND_SSL_NO_VERIFY)**:`wind_get_financial_news`、`wind_get_stock_events`(IPO/增发/并购/ST/分红)
 4. **curl 兜底(龙虎榜)**:`curl -k` 东方财富 datacenter `RPT_DAILYBILLBOARD_DETAILS`(filter=(SECUCODE="{code}.SH"),关键字段 BILLBOARD_NET_AMT/BUY_SEAT/D1-D5_CLOSE_ADJCHRATE 上榜后涨跌)
-5. **脚本**:`PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python scripts/hot_trend_dig.py`(龙虎榜+热榜+涨停池,Step1-3 SSL 常挂,Step4-5 涨停池+市场概览可用);`python scripts/cn_fetch.py rank`(新浪成交额榜反推资金方向)
-6. **findata-toolkit-cn 直接命令(热榜/涨停备选,比 hot_trend_dig 更可控)**:**路径在 `.claude/skills/findata-toolkit-cn/scripts/`,非 root**。`cd .claude/skills/findata-toolkit-cn && python scripts/sector_data.py --zt-pool`(涨停池+行业分布+连板梯队)、`--lt-pool`(连板梯队)、`--broken-pool`(炸板股)、`--market-overview`(涨跌分布+涨停跌停+总成交额,情绪温度核心)、`--top-change`(飙升榜)。东方财富挂自动降级新浪。
-7. 连续 2 层挂 → 标注"资金/情绪信号缺失",催化维仅基于新闻判断
+5. **脚本**:`PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python scripts/hot_trend_dig.py`(龙虎榜+热榜+涨停池,Step1-3 SSL 常挂,Step4-5 涨停池+市场概览可用);`python scripts/cn_fetch.py rank`(新浪成交额榜反推资金方向);**`python scripts/market_radar.py --section news,longhu,capital --summary`**(7x24快讯+龙虎榜+资金流核心信号,推荐首选)
+6. **web-scraping fetch.py(非结构化页面/新闻兜底)**:`python .claude/skills/web-scraping/scripts/fetch.py "URL" --no-verify`(新闻页/公告页/非结构化页面,auto 降级 Fetcher→Dynamic→Stealthy);`--json` 提取 API 响应;`--css` 选择器只取片段省 token;东方财富 datacenter 502 带 body 时 fetch.py 容错提取可用
+7. **findata-toolkit-cn 直接命令(热榜/涨停备选,比 hot_trend_dig 更可控)**:**路径在 `.claude/skills/findata-toolkit-cn/scripts/`,非 root**。`cd .claude/skills/findata-toolkit-cn && python scripts/sector_data.py --zt-pool`(涨停池+行业分布+连板梯队)、`--lt-pool`(连板梯队)、`--broken-pool`(炸板股)、`--market-overview`(涨跌分布+涨停跌停+总成交额,情绪温度核心)、`--top-change`(飙升榜)。东方财富挂自动降级新浪。
+8. 连续 2 层挂 → 标注"资金/情绪信号缺失",催化维仅基于新闻判断
 
 ## 📚 Methodology(内化)
 
