@@ -4,8 +4,35 @@
     "asOf": "20260709",
     "goal": "short-term-picks",
     "path": "data/runs/20260709_short-term-picks/final.json",
-    "headline": "退潮缩量题材结构市:Top1紫金矿业(回测近5窗口3/3·非高位回调)27.6%+网宿砍半15.3%+恒为25.8%下单,中金/湖南观察staged,崇达/同兴达回测双重否决剔除;部署68.8%+现金31.2%;置信度中",
+    "headline": "退潮缩量题材结构市:Top1紫金矿业(回测近5窗口3/3非高位回调)27.6%+网宿砍半15.3%+恒为25.8%下单,中金/湖南观察staged,崇达/同兴达回测双重否决剔除;部署68.8%+现金31.2%;置信度中",
     "confidence": "中",
     "fetchedAt": "20260709"
+  },
+  {
+    "runId": "20260709_short-term-picks",
+    "asOf": "20260709",
+    "goal": "short-term-picks",
+    "path": "data/runs/20260709_short-term-picks/final.json",
+    "headline": "半导体成长+3万亿成交,45只候选六轮筛选仅余2只妥协方案:Top1颀中科技(回测2/1/胜率73.7%/回撤9.3%临界超8%)降仓15%+Top2京东方A(回撤13%超标/OCF极优)观察仓15%;32%仓位+68%现金;催化同源100%+Top1催化矛盾;置信度中偏低",
+    "confidence": "中偏低",
+    "fetchedAt": "20260709"
+  },
+  {
+    "runId": "20260710_short-term-picks",
+    "asOf": "20260710",
+    "goal": "short-term-picks",
+    "path": "data/runs/20260710_short-term-picks/final.json",
+    "headline": "弱复苏+万亿成交,宏观AI+稀土双主线因流动性/财务/回测门槛过滤无票可配,退而求其次医药:复星医药(综合底仓23.4%,回测2/3)+信立泰(回测最优3/3,首日半仓18.6%,m5转正补满37.2%)+浙江医药(观察仓11.8%,1/3);首日53.8%+现金46.2%;催化同源60.6%超限;置信度中",
+    "confidence": "中",
+    "fetchedAt": "20260710"
+  },
+  {
+    "runId": "20260710_single-stock-deep",
+    "asOf": "20260710",
+    "goal": "single-stock-deep",
+    "path": "data/runs/20260710_single-stock-deep/final.json",
+    "headline": "复星医药(600196)PE 5年11%分位估值安全边际突出,基本面通过(ROE连续改善+OCF含金量高),技术多头排列回调企稳;医药非宏观顺风+催化缺失+回测均收1.62%未达3%,中置信度防御型波段配置;对抗审查82/100(B+)0硬矛盾;22.50-23.00建仓2手(47%),止损21.00,目标25.50-28.00,2周强制复盘",
+    "confidence": "中",
+    "fetchedAt": "20260710"
   }
 ]
