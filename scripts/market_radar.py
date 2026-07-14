@@ -511,35 +511,56 @@ def format_summary(radar_data):
 # 主入口
 # ═══════════════════════════════════════════════════════════
 
-def run_radar(sections=None, ticker=None):
-    """执行全量扫描,返回结构化数据"""
+def run_radar(sections=None, ticker=None, fast=False):
+    """执行全量扫描,返回结构化数据。
+
+    fast=True 时跳过高延迟端点(longhu/capital),HTTP 调用并行化。
+    """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
     all_sections = sections or ["index", "rank", "sector", "zt", "longhu", "capital", "news"]
+    if fast:
+        all_sections = [s for s in all_sections if s not in ("longhu", "capital")]
+
     result = {
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
         "sections": all_sections,
+        "fast": fast,
     }
 
-    sys.stderr.write("[radar] 开始扫描...\n")
+    sys.stderr.write(f"[radar] 开始扫描({len(all_sections)} sections, fast={fast})...\n")
     t0 = time.time()
 
+    # 构建并行任务列表
+    tasks = {}
     if "index" in all_sections:
-        result["indices"] = fetch_indices()
+        tasks["indices"] = fetch_indices
     if "rank" in all_sections:
-        result["rankUp"] = fetch_rank_sina("changepercent", 30)
-        result["rankAmount"] = fetch_rank_sina("amount", 30)
+        tasks["rankUp"] = lambda: fetch_rank_sina("changepercent", 30)
+        tasks["rankAmount"] = lambda: fetch_rank_sina("amount", 30)
     if "sector" in all_sections:
-        result["conceptTop"] = fetch_sector_ranking("concept", 20)
-        result["industryTop"] = fetch_sector_ranking("industry", 15)
+        tasks["conceptTop"] = lambda: fetch_sector_ranking("concept", 20)
+        tasks["industryTop"] = lambda: fetch_sector_ranking("industry", 15)
     if "zt" in all_sections:
-        result["ztPool"] = fetch_zt_pool()
+        tasks["ztPool"] = fetch_zt_pool
     if "longhu" in all_sections:
-        result["longhu"] = fetch_longhu_bang()
+        tasks["longhu"] = fetch_longhu_bang
     if "capital" in all_sections:
-        result["capitalFlow"] = fetch_capital_flow(20)
+        tasks["capitalFlow"] = lambda: fetch_capital_flow(20)
     if "news" in all_sections:
-        result["news"] = fetch_news_sina_7x24(50)
+        tasks["news"] = lambda: fetch_news_sina_7x24(50)
     if ticker:
-        result["stock"] = fetch_stock_snapshot(ticker)
+        tasks["stock"] = lambda: fetch_stock_snapshot(ticker)
+
+    # 并行执行所有 HTTP 调用
+    with ThreadPoolExecutor(max_workers=min(len(tasks), 8)) as pool:
+        futures = {pool.submit(fn): key for key, fn in tasks.items()}
+        for future in as_completed(futures):
+            key = futures[future]
+            try:
+                result[key] = future.result()
+            except Exception as e:
+                result[key] = {"_error": str(e)[:120]}
 
     # 提取核心信号
     result["coreSignals"] = extract_signals(result)
@@ -556,10 +577,11 @@ def main():
     p.add_argument("--ticker", default="", help="加个股维度(6位代码)")
     p.add_argument("--run-id", default="", help="写入 data/runs/{run-id}/_radar.json")
     p.add_argument("--summary", action="store_true", help="只输出摘要到 stdout")
+    p.add_argument("--fast", action="store_true", help="快速模式:跳过 slow 端点(longhu/capital),HTTP 并行")
     args = p.parse_args()
 
     sections = args.section.split(",") if args.section else None
-    data = run_radar(sections=sections, ticker=args.ticker or None)
+    data = run_radar(sections=sections, ticker=args.ticker or None, fast=args.fast)
 
     if args.run_id:
         run_dir = f"data/runs/{args.run_id}"

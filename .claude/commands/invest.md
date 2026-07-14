@@ -58,9 +58,13 @@ argument-hint: "[目标关键词+参数,如:短周期 2周 账户1w | 600519 深
 
 ## 架构速查(供调试理解)
 
-- **专精层 7 agent**(`.claude/agents/`):governor(综合落盘)、macro-strategist(天时)、sector-analyst(撒网)、fundamentals-analyst(排雷+估值)、technical-liquidity(过关+动量)、catalyst-scanner(催化+情绪)、risk-portfolio(组合+回测)
+- **专精层 7 agent**(`.claude/agents/`):governor(综合落盘+对抗审查+MCP抽查)、macro-strategist(天时)、sector-analyst(撒网)、fundamentals-analyst(排雷+估值)、technical-liquidity(过关+动量)、catalyst-scanner(催化+情绪)、risk-portfolio(组合+回测)
 - **编排层 5 workflow**(`.claude/workflows/`):single-stock-deep / short-term-picks / hot-trends / portfolio-review / sentiment-trend-picks
+- **Phase 0 预取**:每个 workflow 启动时运行 `prefetch_shared.py`(指数/榜单/板块/市场雷达核心信号)+ `portfolio_tracker.py`(活跃推荐行情更新),合并单次 Bash 调用,结果写入 `_shared.json` 注入全部 agent 的 sharedCtx
 - **数据源 soft-fail**:iFind 主→wind(WIND_SSL_NO_VERIFY)→akshare/cn_fetch.py→web-scraping fetch.py(Scrapling,JS渲染/反爬)→curl -k→标缺失
+- **市场雷达**:`scripts/market_radar.py`(7通道:新浪7x24+腾讯指数+东方财富板块/涨停/龙虎榜/资金流),核心信号自动提取(🔴critical/🟡important/🟢normal)
+- **对抗审查已合并入 governor**:governor 先做矛盾检测+MCP抽查验证(≤3次),再裁决+写报告,不再单独 review agent
+- **组合追踪**:`scripts/portfolio_tracker.py`(record/update/summary),workflow 结束时自动 record 推荐,启动时 update 行情
 - **上下文接力**:workflow 维护 ctx 字符串,每步 agent prompt 内嵌「前序环节产出」块,schema 强结构输出
 - **回测纪律**:回测3项全不达标标的不得入TopN(驰宏锌锗教训),Top1须回测相对最优且非高位回调者
 - **盘中纪律**:数据若为盘中,操作卡价位为触发观察位,须收盘复核方为有效买入区间

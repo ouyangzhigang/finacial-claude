@@ -3,5 +3,9 @@ mcp-servers/*/mcp_config.json
 claude-for-finacial-services-cn
 finskills
 
+# Email config contains SMTP credentials
+config/email_config.yaml
+config/email_config.yml
+
 nul
 data/runs/

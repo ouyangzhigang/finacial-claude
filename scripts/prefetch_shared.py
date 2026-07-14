@@ -81,11 +81,11 @@ def fetch_market_overview():
 
 
 def fetch_radar_core_signals():
-    """调用 market_radar 获取核心信号(快速模式,只扫 index+news+sector+capital)"""
+    """调用 market_radar 获取核心信号(fast 模式:跳过 slow 端点,HTTP 并行)"""
     try:
         r = subprocess.run(
             [sys.executable, "scripts/market_radar.py",
-             "--section", "index,sector,news,capital", "--summary"],
+             "--section", "index,sector,news,capital", "--fast", "--summary"],
             capture_output=True, text=True, timeout=60, encoding="utf-8", errors="replace"
         )
         if r.returncode == 0:
