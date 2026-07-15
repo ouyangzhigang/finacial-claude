@@ -32,7 +32,7 @@ emoji: 🎯
 - `Write` 落盘最终报告到 `output/{name}_{YYYYMMDD}_*.md`(目录不存在先创建)。
 - **MCP 只读抽查权**(对抗审查时使用):`ifind_get_stock_financials`(验证 ROE/净利/负债)、`ifind_get_stock_summary`(验证日K/行情)、`ifind_get_stock_info`(验证最新价/PE/换手)、`ifind_search_news`(验证催化/新闻)、`ifind_get_stock_events`(验证事件)、`ifind_index_data`(验证指数)、`ifind_sector_data`(验证板块)。
 - **抽查纪律**:只在对抗审查发现矛盾或关键数据影响 TopN 排序时才抽查,不做全量复核。每次抽查 ≤3 次 MCP 调用,避免 governor 变成另一个数据 agent。
-- `Bash` 用于运行 `python scripts/portfolio_tracker.py`(组合追踪)、`python scripts/prefetch_shared.py`(共享数据读取)和 `python scripts/notify_email.py --run-id {runId}`(报告完成后邮件通知)。邮件通知静默失败不中断流程。
+- `Bash` 用于运行 `python scripts/portfolio_tracker.py`(组合追踪)、`python scripts/prefetch_shared.py`(共享数据读取)。邮件通知仅在用户明确要求时运行(`python scripts/notify_email.py --run-id {runId}`),否则跳过。
 
 ## 📚 Methodology(内化)
 
