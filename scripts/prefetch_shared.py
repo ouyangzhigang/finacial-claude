@@ -65,6 +65,22 @@ def fetch_rank(sort="changepercent", num=80):
         return {"_error": str(e)[:120]}
 
 
+def fetch_a_stock_data(run_id):
+    """调用 data_prefetch.py（a-stock-data 端点，不封IP）"""
+    try:
+        r = subprocess.run(
+            [sys.executable, "scripts/data_prefetch.py",
+             "--run-id", run_id,
+             "--section", "index,hot,zt,industry,north,dragon,sentiment"],
+            capture_output=True, text=True, timeout=60, encoding="utf-8", errors="replace"
+        )
+        if r.returncode == 0:
+            return {"source": "a-stock-data", "summary": r.stdout.strip()[:3000]}
+        return {"_error": f"data_prefetch exit={r.returncode}", "stderr": r.stderr[:200]}
+    except Exception as e:
+        return {"_error": str(e)[:120]}
+
+
 def fetch_market_overview():
     """东方财富市场概览 via sector_data.py"""
     try:
@@ -190,6 +206,7 @@ def main():
         "rankAmount": fetch_rank("amount", 50),
         "marketBreadth": fetch_market_overview(),
         "radarSignals": fetch_radar_core_signals(),
+        "aStockData": fetch_a_stock_data(args.run_id),
     }
 
     if "hot" in args.extra:
