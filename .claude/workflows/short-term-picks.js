@@ -1,12 +1,13 @@
 export const meta = {
   name: 'short-term-picks',
-  description: 'A股短周期选股——宏观→候选→流动性→catalyst∥fundamentals→risk→governor(审查+裁决+报告)。数据落盘不占上下文',
+  description: 'A股短周期选股——宏观→候选→流动性→catalyst∥fundamentals→量化引擎(factor+timing)→risk(回测+组合)→governor(审查+裁决+报告)',
   phases: [
-    {title: '宏观定调', detail: '顺风方向(含 prefetch)'},
+    {title: '宏观定调', detail: 'regime+顺风方向(含 prefetch)'},
     {title: '候选池', detail: 'sector 30-50只'},
     {title: '流动性过滤', detail: 'technical 批量硬门槛'},
     {title: '并行评分', detail: 'catalyst∥fundamentals'},
-    {title: '回测组合', detail: 'risk 评分+回测+组合'},
+    {title: '量化引擎', detail: 'factor_engine+timing_engine+regime'},
+    {title: '回测组合', detail: 'risk(portfolio_optimizer)+评分+回测'},
     {title: '综合落盘', detail: 'governor 审查+裁决+报告+portfolio+notify'},
   ],
 }
@@ -21,7 +22,7 @@ const history = args.history || ''
 const SHARED = 'data/runs/'+asOf+'_'+G+'/_shared.json'
 
 // ── 预取指令(仅 macro agent 执行) ──
-const PREFETCH = '⚠️ 前置步骤(必须在分析之前完成):\n1. 运行 Bash: python scripts/prefetch_shared.py --run-id '+asOf+'_'+G+' --extra hot 2>&1\n2. 运行 Bash: python scripts/portfolio_tracker.py update 2>&1\n3. Read '+SHARED+' 获取共享市场数据(指数/榜单/核心信号🔴🟡🟢)\n完成后再进入下方分析任务。\n\n'
+const PREFETCH = '⚠️ 前置步骤(必须在分析之前完成):\n1. 运行 Bash: python scripts/prefetch_shared.py --run-id '+asOf+'_'+G+' --extra hot 2>&1\n2. 运行 Bash: python scripts/portfolio_tracker.py update 2>&1\n3. 运行 Bash: PYTHONIOENCODING=utf-8 python scripts/regime_detector.py --output '+RD+'/regime.json 2>&1\n4. Read '+SHARED+' 获取共享市场数据(指数/榜单/核心信号)\n5. Read '+RD+'/regime.json 获取当前市场环境(regime/权重调整/风险预算)\n完成后再进入下方分析任务。\n\n'
 
 const S = async (name, fn) => {
   try { const r = await fn(); if (r) return r } catch (e) {
@@ -71,14 +72,38 @@ ctx += ap(cat,'催化') + ap(fund,'财务')
 log('催化: ' + (cat?.summary || '空'))
 log('财务: ' + (fund?.summary || '空'))
 
-// ── Phase 5: 回测组合(综合全链) ──
+// ── Phase 4.5: 量化引擎(factor_engine + timing_engine) ──
+phase('量化引擎')
+// 收集过关票代码(从 technical agent 的 pass 清单)
+const passCodes = tech?.keyFields?.passCodes || ''
+if (passCodes) {
+  log('量化引擎: 对 '+passCodes.split(',').length+' 只过关票运行 factor_engine + timing_engine')
+  // factor_engine: 七维因子计算 + z-score + 综合评分
+  await S('factor_engine', async () => {
+    const cmd = 'PYTHONIOENCODING=utf-8 python scripts/factor_engine.py --codes '+passCodes+' --data-dir '+RD+' --json \'{"regime":"'+(tech?.keyFields?.regime||'ranging')+'"}\' --output '+RD+'/factor_scores.json 2>&1'
+    await agent('运行 Bash: '+cmd, {label:'factor_engine', phase:'量化引擎'})
+    return {path: RD+'/factor_scores.json', summary:'因子评分完成'}
+  })
+  // timing_engine: 入场信号 + 动量质量 + 透支概率
+  await S('timing_engine', async () => {
+    const cmd = 'PYTHONIOENCODING=utf-8 python scripts/timing_engine.py --codes '+passCodes+' --output '+RD+'/timing_scores.json 2>&1'
+    await agent('运行 Bash: '+cmd, {label:'timing_engine', phase:'量化引擎'})
+    return {path: RD+'/timing_scores.json', summary:'入场评估完成'}
+  })
+  ctx += '\n【量化引擎】factor_engine + timing_engine 输出 → '+RD+'/factor_scores.json + '+RD+'/timing_scores.json'
+} else {
+  log('量化引擎: 无过关票代码,跳过(降级到LLM评分)')
+  ctx += '\n【量化引擎】⚠️ 跳过(无过关票代码)'
+}
+
+// ── Phase 5: 回测组合(综合全链 + portfolio_optimizer) ──
 phase('回测组合')
-const risk = await S('risk', () => agent(P('risk-portfolio','七维评分排序+回测+组合配置。','Read 全链 json(宏观方向+候选来源+技术因子+催化评分+排雷结论)。按七维权重(技术25/资金20/催化20/情绪15/基本面10/估值5/流动性5)评分排序Top'+topN+';对Top'+topN+' 做5日持有窗口回测(胜率>=55%/均收>=3%/回撤<=8%);3项全不达标一票否决不入TopN(驰宏锌锗纪律);组合分散(行业<=40%/催化同源<=50%/单票<=25%)。', ctx), {agentType:'risk-portfolio',schema:RET,label:'risk',phase:'回测组合'}))
+const risk = await S('risk', () => agent(P('risk-portfolio','综合评分排序+回测(环境分层)+组合配置。\n\n## 量化引擎产出(必读)\n1. Read '+RD+'/factor_scores.json → 七维因子z-score+综合评分\n2. Read '+RD+'/timing_scores.json → 入场信号+动量质量+透支概率+timing_score\n3. Read '+RD+'/regime.json → 市场环境+权重调整+风险预算\n\n## 你的任务\n1. 融合量化引擎产出 + LLM质化评分(催化/基本面/情绪),做最终排序\n2. 运行 Bash: PYTHONIOENCODING=utf-8 python scripts/portfolio_optimizer.py --codes {Top'+topN+'代码} --account '+acc.replace('w','0000')+' --risk-budget {regime.risk_budget} --output '+RD+'/backtest.json 2>&1\n3. Read '+RD+'/backtest.json 获取回测结果(3月非重叠窗口+环境分层胜率)\n4. timing_score < -10 的票不得排Top1(追涨票); 回测 verdict=rejected 不入TopN\n5. 组合分散(行业<=40%/催化同源<=50%/单票<=25%)', ctx), {agentType:'risk-portfolio',schema:RET,label:'risk',phase:'回测组合'}))
 ctx += ap(risk,'组合')
 log('组合: ' + (risk?.summary || '空'))
 
 // ── Phase 6: 综合落盘(含对抗审查+裁决+portfolio+notify) ──
 phase('综合落盘')
-const report = await S('governor', () => agent('综合全链产出写短周期选股报告+Top'+topN+'操作卡。\n\n## 投资目标\n'+goal+'\n\n## 全链产出(用 Read 读各 json)\n'+ctx+'\n'+history+'\n\n## 你的任务\n### 0. 收尾脚本(先跑)\nBash: python scripts/portfolio_tracker.py update 2>&1\n\n### 1. 对抗审查\n逐对检测矛盾,用 MCP 只读工具抽查验证:\n- Top1 回测是否真正最优?(驰宏锌锗教训:回测未背书不得排Top1)\n- 催化评分高 vs 已price-in?(查近5日涨幅)\n- 技术动量强 vs 基本面红旗?\n- 组合催化同源是否超50%?\n- 1w账户仓位是否诚实标注分层建仓?\n对每对矛盾用 ifind 抽查关键数据(ROE/日K/催化),标注 ✅核实/⚠️偏差/❌矛盾。\n\n### 2. 报告输出\nTop1须回测相对最优且非高位回调者。\n1. WRITE output/'+asOf+'_短周期2周推荐清单.md(结论先行→总体策略→各专项+逻辑关系→对抗审查结论+总督验证→操作→风险→免责),头一句话附核心假设置信度+回测达标。\n2. WRITE '+RD+'/final.json(envelope,data 含 oneLineConclusion/topN/totalPosition/confidence/keyRisks/contradictions/backtest/modules)。\n3. 更新 data/index.json(Read→push→Write)。\n4. 如果有 topN 推荐:WRITE '+RD+'/_rec.json 含 {topN, confidence},然后 Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1\n\n### 3. 邮件通知\nBash: python scripts/notify_email.py --run-id '+asOf+'_'+G+' 2>&1\n(失败不影响返回)\n\nschema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
+const report = await S('governor', () => agent('综合全链产出写短周期选股报告+Top'+topN+'操作卡。\n\n## 投资目标\n'+goal+'\n\n## 全链产出(用 Read 读各 json)\n'+ctx+'\n'+history+'\n\n## 你的任务\n### 0. 收尾脚本(先跑)\nBash: python scripts/portfolio_tracker.py update 2>&1\n\n### 1. 对抗审查\n逐对检测矛盾,用 MCP 只读工具抽查验证:\n- Top1入场优势是否够高?(九洲药业教训:入场优势<12/25=追涨票,查entryScore)\n- Top1回测综合胜率(环境加权)是否最优?(驰宏锌锗教训)\n- 催化评分高 vs 已price-in?(查近5日涨幅+催化时间)\n- 动量质量:均匀涨还是单日暴涨?(查每日涨跌分布)\n- 技术动量强 vs 基本面红旗?\n- 组合催化同源是否超50%?\n- 1w账户仓位是否诚实标注分层建仓?\n对每对矛盾用 ifind 抽查关键数据(ROE/日K/催化),标注 ✅核实/⚠️偏差/❌矛盾。\n\n### 2. 报告输出\nTop1须入场优势>=18/25(好价格)+回测综合胜率排名前列+非主升浪末期。\n1. WRITE output/'+asOf+'_短周期2周推荐清单.md(结论先行→总体策略→各专项+逻辑关系→对抗审查结论+总督验证→操作→风险→免责),头一句话附核心假设置信度+回测达标。\n2. WRITE '+RD+'/final.json(envelope,data 含 oneLineConclusion/topN/totalPosition/confidence/keyRisks/contradictions/backtest/modules)。\n3. 更新 data/index.json(Read→push→Write)。\n4. 如果有 topN 推荐:WRITE '+RD+'/_rec.json 含 {topN, confidence},然后 Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1\n\n### 3. 邮件通知\nBash: python scripts/notify_email.py --run-id '+asOf+'_'+G+' 2>&1\n(失败不影响返回)\n\nschema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
 
 return report

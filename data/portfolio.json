@@ -1,0 +1,70 @@
+{
+  "recommendations": [
+    {
+      "code": "603456",
+      "name": "九洲药业",
+      "recommendedAt": "20260715",
+      "recommendedPrice": null,
+      "role": "CRO/CDMO核心",
+      "workflow": "short-term-picks",
+      "confidence": "中",
+      "currentPrice": "15.89",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "5.37"
+    },
+    {
+      "code": "002294",
+      "name": "信立泰",
+      "recommendedAt": "20260715",
+      "recommendedPrice": null,
+      "role": "创新药进攻",
+      "workflow": "short-term-picks",
+      "confidence": "中",
+      "currentPrice": "38.65",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "6.39"
+    },
+    {
+      "code": "603369",
+      "name": "今世缘",
+      "recommendedAt": "20260715",
+      "recommendedPrice": null,
+      "role": "白酒价值观察",
+      "workflow": "short-term-picks",
+      "confidence": "中",
+      "currentPrice": "25.91",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "5.97"
+    },
+    {
+      "code": "002891",
+      "name": "中宠股份",
+      "recommendedAt": "20260715",
+      "recommendedPrice": null,
+      "role": "宠物投机观察",
+      "workflow": "short-term-picks",
+      "confidence": "中",
+      "currentPrice": "28.64",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "9.98"
+    },
+    {
+      "code": "603198",
+      "name": "迎驾贡酒",
+      "recommendedAt": "20260715",
+      "recommendedPrice": null,
+      "role": "白酒观察仓",
+      "workflow": "short-term-picks",
+      "confidence": "中",
+      "currentPrice": "33.82",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "5.62"
+    }
+  ],
+  "lastUpdated": "2026-07-15 16:11:56"
+}

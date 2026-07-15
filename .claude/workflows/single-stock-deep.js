@@ -16,10 +16,10 @@ const tk = args.ticker||'', nm = args.name||'', ac = args.account||'1w', hz = ar
 const G='single-stock-deep', RD='data/runs/'+asOf+'_'+G
 const goal='单股深评: '+tk+' '+nm+' | 账户'+ac+' 周期'+hz+' 风险'+rp+' 持仓'+ps+' | 基准日'+asOf
 const history = args.history || ''
-const SHARED = 'data/runs/'+asOf+'_'+G+'/_shared.json'
+let SHARED = 'data/runs/'+asOf+'_'+G+'/_shared.json'
 
 // ── 预取指令(仅 macro agent 执行,创建 _shared.json) ──
-const PREFETCH = '⚠️ 前置步骤(必须在分析之前完成):\n1. 运行 Bash: python scripts/prefetch_shared.py --run-id '+asOf+'_'+G+' --ticker '+tk+' 2>&1\n2. 运行 Bash: python scripts/portfolio_tracker.py update 2>&1\n3. Read '+SHARED+' 获取共享市场数据(核心信号🔴🟡🟢)\n完成后再进入下方分析任务。\n\n'
+let PREFETCH = '⚠️ 前置步骤(必须在分析之前完成):\n1. 运行 Bash: python scripts/prefetch_shared.py --run-id '+asOf+'_'+G+' --ticker '+tk+' 2>&1\n2. 运行 Bash: python scripts/portfolio_tracker.py update 2>&1\n3. Read '+SHARED+' 获取共享市场数据(核心信号🔴🟡🟢)\n完成后再进入下方分析任务。\n\n'
 
 // ── 通用 helper ──
 const S = async (name, fn) => {
@@ -38,7 +38,11 @@ const P = (ag, task, extra, ctx, target) => {
   const targetSec = target ? '\n\n## 目标标的\n'+target : ''
   return task+'\n\n## 投资目标\n'+goal+targetSec+'\n\n## 前序环节产出\n'+(ctx||'(本环节为起点,无前序)')+'\n\n## 你的任务\n'+extra+'\n\n## 数据落盘\n完整输出 WRITE 到 '+RD+'/'+ag+'.json,envelope:{"runId":"'+asOf+'_'+G+'","asOf":"'+asOf+'","goal":"'+G+'","agent":"'+ag+'","fetchedAt":"'+asOf+'","data":{完整输出},"summary":"一句话","keyFields":{小摘录}}\nschema 只返回 {path,summary,keyFields}。'
 }
-const ap = (r, l) => r ? '\n【'+l+'】'+r.summary+(r.path?' → '+r.path:'') : '\n【'+l+'】⚠️ 数据缺失(agent 失败)'
+const ap = (r, l) => {
+  if (!r) return '\n【'+l+'】⚠️ 数据缺失(agent 失败)'
+  const pathInfo = r.path ? ' → '+r.path : ''
+  return '\n【'+l+'】'+r.summary+pathInfo
+}
 
 // 目标标的字符串(传给每个 agent 的 P() 第5参数)
 const TGT = tk+' '+nm+' — 你分析的正是这只股票,所有数据查询和结论都围绕它展开。'

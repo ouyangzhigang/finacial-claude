@@ -17,10 +17,10 @@ const constraint=args.constraint||'热门板块潜力股综合推荐', topN=args
 const G='hot-trends', RD='data/runs/'+asOf+'_'+G
 const goal='热门板块/潜力股: Top'+topN+' 约束['+constraint+'] 账户'+acc+' | 基准日'+asOf
 const history = args.history || ''
-const SHARED = 'data/runs/'+asOf+'_'+G+'/_shared.json'
+let SHARED = 'data/runs/'+asOf+'_'+G+'/_shared.json'
 
 // ── 预取指令(仅 catalyst agent 执行) ──
-const PREFETCH = '⚠️ 前置步骤(必须在分析之前完成):\n1. 运行 Bash: python scripts/prefetch_shared.py --run-id '+asOf+'_'+G+' --extra hot 2>&1\n2. 运行 Bash: python scripts/portfolio_tracker.py update 2>&1\n3. Read '+SHARED+' 获取共享数据(板块/涨停池/核心信号🔴🟡🟢)\n完成后再进入下方分析任务。\n\n'
+let PREFETCH = '⚠️ 前置步骤(必须在分析之前完成):\n1. 运行 Bash: python scripts/prefetch_shared.py --run-id '+asOf+'_'+G+' --extra hot 2>&1\n2. 运行 Bash: python scripts/portfolio_tracker.py update 2>&1\n3. Read '+SHARED+' 获取共享数据(板块/涨停池/核心信号🔴🟡🟢)\n完成后再进入下方分析任务。\n\n'
 
 const S = async (name, fn) => {
   try {
@@ -33,7 +33,11 @@ const S = async (name, fn) => {
   return {path:'',summary:name+' 返回空',keyFields:{_error:'empty'}}
 }
 const P = (ag, task, extra, ctx) => task+'\n\n## 投资目标\n'+goal+'\n\n## 前序环节产出\n'+(ctx||'(本环节为起点,无前序)')+'\n\n## 你的任务\n'+extra+'\n\n## 数据落盘\n完整输出 WRITE 到 '+RD+'/'+ag+'.json,envelope:{"runId":"'+asOf+'_'+G+'","asOf":"'+asOf+'","goal":"'+G+'","agent":"'+ag+'","fetchedAt":"'+asOf+'","data":{完整输出},"summary":"一句话","keyFields":{小摘录}}\nschema 只返回 {path,summary,keyFields}。'
-const ap = (r, l) => r ? '\n【'+l+'】'+r.summary+(r.path?' → '+r.path:'') : '\n【'+l+'】⚠️ 数据缺失'
+const ap = (r, l) => {
+  if (!r) return '\n【'+l+'】⚠️ 数据缺失'
+  const pathInfo = r.path ? ' → '+r.path : ''
+  return '\n【'+l+'】'+r.summary+pathInfo
+}
 
 let ctx = ''
 
