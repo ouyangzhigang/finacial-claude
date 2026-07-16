@@ -8,10 +8,10 @@
       "role": "CRO/CDMO核心",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "15.89",
+      "currentPrice": "16.03",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "5.37"
+      "currentChangePct": "0.88"
     },
     {
       "code": "002294",
@@ -21,10 +21,10 @@
       "role": "创新药进攻",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "38.65",
+      "currentPrice": "41.37",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "6.39"
+      "currentChangePct": "7.04"
     },
     {
       "code": "603369",
@@ -34,10 +34,10 @@
       "role": "白酒价值观察",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "25.91",
+      "currentPrice": "26.58",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "5.97"
+      "currentChangePct": "2.59"
     },
     {
       "code": "002891",
@@ -47,10 +47,10 @@
       "role": "宠物投机观察",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "28.64",
+      "currentPrice": "29.58",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "9.98"
+      "currentChangePct": "3.28"
     },
     {
       "code": "603198",
@@ -60,11 +60,59 @@
       "role": "白酒观察仓",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "33.82",
+      "currentPrice": "35.08",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "5.62"
+      "currentChangePct": "3.73"
+    },
+    {
+      "code": "002007",
+      "name": "华兰生物",
+      "recommendedAt": "20260716",
+      "recommendedPrice": null,
+      "role": "防御底仓(回测观察级)",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "002027",
+      "name": "分众传媒",
+      "recommendedAt": "20260716",
+      "recommendedPrice": null,
+      "role": "价值核心(回测未背书-投机)",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "600196",
+      "name": "复星医药",
+      "recommendedAt": "20260716",
+      "recommendedPrice": null,
+      "role": "创新药弹性(回测未背书-投机)",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "300015",
+      "name": "爱尔眼科",
+      "recommendedAt": "20260716",
+      "recommendedPrice": null,
+      "role": "龙头观察(回测未背书-投机)",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
     }
   ],
-  "lastUpdated": "2026-07-15 16:11:56"
+  "lastUpdated": "2026-07-16 17:25:09"
 }

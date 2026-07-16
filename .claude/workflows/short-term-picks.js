@@ -20,6 +20,7 @@ const G='short-term-picks', RD='data/runs/'+asOf+'_'+G
 const goal='短周期选股: Top'+topN+' 周期'+period+' 风险'+rp+' 账户'+acc+' 持仓'+pos+' | 基准日'+asOf
 const history = args.history || ''
 const SHARED = 'data/runs/'+asOf+'_'+G+'/_shared.json'
+const startTime = Date.now()
 
 // ── 预取指令(仅 macro agent 执行) ──
 const PREFETCH = '⚠️ 前置步骤(必须在分析之前完成):\n1. 运行 Bash: python scripts/prefetch_shared.py --run-id '+asOf+'_'+G+' --extra hot 2>&1\n2. 运行 Bash: python scripts/portfolio_tracker.py update 2>&1\n3. 运行 Bash: PYTHONIOENCODING=utf-8 python scripts/regime_detector.py --output '+RD+'/regime.json 2>&1\n4. Read '+SHARED+' 获取共享市场数据(指数/榜单/核心信号)\n5. Read '+RD+'/regime.json 获取当前市场环境(regime/权重调整/风险预算)\n完成后再进入下方分析任务。\n\n'
@@ -46,38 +47,52 @@ let ctx = ''
 
 // ── Phase 1: 宏观定调(含 prefetch) ──
 phase('宏观定调')
+log('🔄 启动宏观定调 — agent: macro-strategist')
+const macroStart = Date.now()
 const macro = await S('macro', () => agent(PREFETCH+P('macro-strategist','未来2周"天时"五维定调,输出顺风方向2-3。','用工具链取宏观读数+政策节点+情绪,锁定顺风方向(政策周期+市场热度双确认)。顺风方向将决定后续候选池的行业选择。', ctx), {agentType:'macro-strategist',schema:RET,label:'macro',phase:'宏观定调'}))
 ctx = ap(macro,'宏观')
-log('宏观: ' + (macro?.summary || '空'))
+const macroTime = Math.round((Date.now() - macroStart) / 1000)
+log('✅ 宏观定调完成 ('+macroTime+'s) — ' + (macro?.summary || '空'))
 
 // ── Phase 2: 候选池(承接宏观顺风方向) ──
 phase('候选池')
+log('🔄 启动候选池生成 — agent: sector-analyst')
+const sectorStart = Date.now()
 const sector = await S('sector', () => agent(P('sector-analyst','在顺风方向内撒网,生成候选池>=30只。','Read '+macro.path+' 的 data.tailwinds 确定顺风行业。用 ifind_search_stocks(NL选股)+ifind_sector_data+cn_fetch.py rank 多源汇总30-50只去重,标注来源。cn_fetch 不覆盖的用 web-scraping fetch.py。1w账户优先<40元。', ctx), {agentType:'sector-analyst',schema:RET,label:'sector',phase:'候选池'}))
 ctx += ap(sector,'候选池')
-log('候选: ' + (sector?.summary || '空'))
+const sectorTime = Math.round((Date.now() - sectorStart) / 1000)
+log('✅ 候选池完成 ('+sectorTime+'s) — ' + (sector?.summary || '空'))
 
 // ── Phase 3: 流动性过滤(读候选池) ──
 phase('流动性过滤')
+log('🔄 启动流动性过滤 — agent: technical-liquidity')
+const techStart = Date.now()
 const tech = await S('technical', () => agent(P('technical-liquidity','对全部候选批量做流动性硬门槛过滤+短线因子。','用 Read 读 '+sector.path+' 的 data.candidates 获取候选清单;用 ifind_get_stock_summary 或 cn_fetch.py factors 批量算5/10/20日动量+MA20+量价突破+amt20;硬门槛(成交额>=1亿/换手1-7%/市值>=30亿/非ST/近5-10-20日>30%透支剔除)。返pass/reject/factors。', ctx), {agentType:'technical-liquidity',schema:RET,label:'technical',phase:'流动性过滤'}))
 ctx += ap(tech,'流动性')
-log('流动性: ' + (tech?.summary || '空'))
+const techTime = Math.round((Date.now() - techStart) / 1000)
+log('✅ 流动性过滤完成 ('+techTime+'s) — ' + (tech?.summary || '空'))
 
 // ── Phase 4: 并行评分(catalyst ∥ fundamentals,都读 tech 的 pass 清单) ──
 phase('并行评分')
+log('🔄 启动并行评分 — catalyst-scanner ∥ fundamentals-analyst')
+const parallelStart = Date.now()
 const [cat, fund] = await parallel([
   () => S('catalyst', () => agent(P('catalyst-scanner','对过关票批量做催化兑现度+情绪+资金。','用 Read 读 '+tech.path+' 的 data.pass 获取过关票清单;用 ifind_search_news(必带time_start/end)+china-news get_stock_news 取催化+情绪+资金,判断兑现度。非结构化页面用 web-scraping fetch.py。返每只催化+整体情绪。', ctx), {agentType:'catalyst-scanner',schema:RET,label:'catalyst',phase:'并行评分'})),
   () => S('fundamentals', () => agent(P('fundamentals-analyst','对过关票批量做财务排雷+估值锚。','用 Read 读 '+tech.path+' 的 data.pass 获取过关票清单;用 ifind_get_stock_financials(年报日期优先,max5主体可分批)+ifind_get_stock_shareholders 批量排雷+估值分位。硬雷点一票否决。', ctx), {agentType:'fundamentals-analyst',schema:RET,label:'fundamentals',phase:'并行评分'})),
 ])
 ctx += ap(cat,'催化') + ap(fund,'财务')
-log('催化: ' + (cat?.summary || '空'))
-log('财务: ' + (fund?.summary || '空'))
+const parallelTime = Math.round((Date.now() - parallelStart) / 1000)
+log('✅ 并行评分完成 ('+parallelTime+'s)')
+log('  催化: ' + (cat?.summary || '空'))
+log('  财务: ' + (fund?.summary || '空'))
 
 // ── Phase 4.5: 量化引擎(factor_engine + timing_engine) ──
 phase('量化引擎')
 // 收集过关票代码(从 technical agent 的 pass 清单)
 const passCodes = tech?.keyFields?.passCodes || ''
 if (passCodes) {
-  log('量化引擎: 对 '+passCodes.split(',').length+' 只过关票运行 factor_engine + timing_engine')
+  log('🔄 启动量化引擎 — 对 '+passCodes.split(',').length+' 只过关票运行 factor_engine + timing_engine')
+  const quantStart = Date.now()
   // factor_engine: 七维因子计算 + z-score + 综合评分
   await S('factor_engine', async () => {
     const cmd = 'PYTHONIOENCODING=utf-8 python scripts/factor_engine.py --codes '+passCodes+' --data-dir '+RD+' --json \'{"regime":"'+(tech?.keyFields?.regime||'ranging')+'"}\' --output '+RD+'/factor_scores.json 2>&1'
@@ -90,20 +105,37 @@ if (passCodes) {
     await agent('运行 Bash: '+cmd, {label:'timing_engine', phase:'量化引擎'})
     return {path: RD+'/timing_scores.json', summary:'入场评估完成'}
   })
+  const quantTime = Math.round((Date.now() - quantStart) / 1000)
+  log('✅ 量化引擎完成 ('+quantTime+'s) — factor_scores.json + timing_scores.json')
   ctx += '\n【量化引擎】factor_engine + timing_engine 输出 → '+RD+'/factor_scores.json + '+RD+'/timing_scores.json'
 } else {
-  log('量化引擎: 无过关票代码,跳过(降级到LLM评分)')
+  log('⚠️ 量化引擎跳过 — 无过关票代码,降级到LLM评分')
   ctx += '\n【量化引擎】⚠️ 跳过(无过关票代码)'
 }
 
 // ── Phase 5: 回测组合(综合全链 + portfolio_optimizer) ──
 phase('回测组合')
+log('🔄 启动回测组合 — agent: risk-portfolio')
+const riskStart = Date.now()
 const risk = await S('risk', () => agent(P('risk-portfolio','综合评分排序+回测(环境分层)+组合配置。\n\n## 量化引擎产出(必读)\n1. Read '+RD+'/factor_scores.json → 七维因子z-score+综合评分\n2. Read '+RD+'/timing_scores.json → 入场信号+动量质量+透支概率+timing_score\n3. Read '+RD+'/regime.json → 市场环境+权重调整+风险预算\n\n## 你的任务\n1. 融合量化引擎产出 + LLM质化评分(催化/基本面/情绪),做最终排序\n2. 运行 Bash: PYTHONIOENCODING=utf-8 python scripts/portfolio_optimizer.py --codes {Top'+topN+'代码} --account '+acc.replace('w','0000')+' --risk-budget {regime.risk_budget} --output '+RD+'/backtest.json 2>&1\n3. Read '+RD+'/backtest.json 获取回测结果(3月非重叠窗口+环境分层胜率)\n4. timing_score < -10 的票不得排Top1(追涨票); 回测 verdict=rejected 不入TopN\n5. 组合分散(行业<=40%/催化同源<=50%/单票<=25%)', ctx), {agentType:'risk-portfolio',schema:RET,label:'risk',phase:'回测组合'}))
 ctx += ap(risk,'组合')
-log('组合: ' + (risk?.summary || '空'))
+const riskTime = Math.round((Date.now() - riskStart) / 1000)
+log('✅ 回测组合完成 ('+riskTime+'s) — ' + (risk?.summary || '空'))
 
 // ── Phase 6: 综合落盘(含对抗审查+裁决+portfolio+notify) ──
 phase('综合落盘')
+log('🔄 启动综合落盘 — agent: governor (对抗审查+裁决+报告)')
+const govStart = Date.now()
 const report = await S('governor', () => agent('综合全链产出写短周期选股报告+Top'+topN+'操作卡。\n\n## 投资目标\n'+goal+'\n\n## 全链产出(用 Read 读各 json)\n'+ctx+'\n'+history+'\n\n## 你的任务\n### 0. 收尾脚本(先跑)\nBash: python scripts/portfolio_tracker.py update 2>&1\n\n### 1. 对抗审查\n逐对检测矛盾,用 MCP 只读工具抽查验证:\n- Top1入场优势是否够高?(九洲药业教训:入场优势<12/25=追涨票,查entryScore)\n- Top1回测综合胜率(环境加权)是否最优?(驰宏锌锗教训)\n- 催化评分高 vs 已price-in?(查近5日涨幅+催化时间)\n- 动量质量:均匀涨还是单日暴涨?(查每日涨跌分布)\n- 技术动量强 vs 基本面红旗?\n- 组合催化同源是否超50%?\n- 1w账户仓位是否诚实标注分层建仓?\n对每对矛盾用 ifind 抽查关键数据(ROE/日K/催化),标注 ✅核实/⚠️偏差/❌矛盾。\n\n### 2. 报告输出\nTop1须入场优势>=18/25(好价格)+回测综合胜率排名前列+非主升浪末期。\n1. WRITE output/'+asOf+'_短周期2周推荐清单.md(结论先行→总体策略→各专项+逻辑关系→对抗审查结论+总督验证→操作→风险→免责),头一句话附核心假设置信度+回测达标。\n2. WRITE '+RD+'/final.json(envelope,data 含 oneLineConclusion/topN/totalPosition/confidence/keyRisks/contradictions/backtest/modules)。\n3. 更新 data/index.json(Read→push→Write)。\n4. 如果有 topN 推荐:WRITE '+RD+'/_rec.json 含 {topN, confidence},然后 Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1\n\n### 3. 组合记录\nBash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1\n(失败不影响返回)\n\nschema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
+const govTime = Math.round((Date.now() - govStart) / 1000)
+const totalTime = Math.round((Date.now() - startTime) / 1000)
+log('✅ 综合落盘完成 ('+govTime+'s)')
+log('🎉 Workflow 全部完成! 总耗时 '+Math.floor(totalTime/60)+'min '+(totalTime%60)+'s')
+if (report?.path) {
+  log('📄 报告: '+report.path)
+}
+if (report?.topN?.length) {
+  log('📊 Top'+report.topN.length+': '+report.topN.map(t => t.code+' '+t.name).join(', '))
+}
 
 return report
