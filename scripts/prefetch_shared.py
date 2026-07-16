@@ -185,52 +185,99 @@ def fetch_stock_snapshot(code):
 
 
 def main():
-    p = argparse.ArgumentParser(description="共享数据预取")
-    p.add_argument("--run-id", required=True, help="运行 ID,如 20260709_short-term-picks")
-    p.add_argument("--extra", default="", help="额外数据类型: hot(涨停池+板块排名), stock(个股快照)")
-    p.add_argument("--ticker", default="", help="个股代码(extra=stock 时用)")
+    p = argparse.ArgumentParser(description="共享数据预取(50并发异步引擎)")
+    p.add_argument("--run-id", required=True, help="运行 ID,如 20260716_short-term-picks")
+    p.add_argument("--extra", default="hot", help="额外数据: hot(涨停池+板块), stock(个股快照)")
+    p.add_argument("--ticker", default="", help="个股代码")
+    p.add_argument("--max-workers", type=int, default=50, help="并发数(默认50)")
     args = p.parse_args()
 
     run_dir = f"data/runs/{args.run_id}"
     os.makedirs(run_dir, exist_ok=True)
     out_path = os.path.join(run_dir, "_shared.json")
 
-    sys.stderr.write(f"[prefetch] 开始预取 → {out_path}\n")
+    sys.stderr.write(f"[prefetch] 启动 50 并发异步预取 → {out_path}\n")
     t0 = time.time()
 
+    # ── 第一步: 调用 data_prefetch.py (50并发, 覆盖 index/hot/zt/industry/north/dragon/news/capital/sentiment) ──
+    section = "all"
+    if args.extra and "hot" in args.extra:
+        section = "index,hot,zt,industry,north,dragon,news,capital,sentiment,sector"
+    prefetch_cmd = [
+        sys.executable, "scripts/data_prefetch.py",
+        "--run-id", args.run_id,
+        "--section", section,
+        "--max-workers", str(args.max_workers),
+    ]
+    if args.ticker:
+        prefetch_cmd.extend(["--ticker", args.ticker])
+
+    try:
+        r = subprocess.run(prefetch_cmd, capture_output=True, text=True,
+                           timeout=60, encoding="utf-8", errors="replace")
+        prefetch_ok = r.returncode == 0
+        prefetch_stdout = r.stdout.strip()
+        prefetch_stderr = r.stderr.strip()
+    except subprocess.TimeoutExpired:
+        prefetch_ok = False
+        prefetch_stdout = ""
+        prefetch_stderr = "timeout(60s)"
+
+    # ── 第二步: 读取 data_prefetch.py 的输出 _prefetch.json ──
+    prefetch_path = os.path.join(run_dir, "_prefetch.json")
+    prefetch_data = {}
+    if os.path.exists(prefetch_path):
+        try:
+            with open(prefetch_path, "r", encoding="utf-8") as f:
+                prefetch_data = json.load(f)
+        except Exception:
+            pass
+
+    # ── 第三步: 补充数据(新浪榜单 + 市场概览, 走 cn_fetch.py) ──
+    rank_data = fetch_rank("changepercent", 50)
+    market_data = fetch_market_overview()
+
+    # ── 合并输出 _shared.json ──
     shared = {
         "runId": args.run_id,
         "fetchedAt": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "indices": fetch_index_realtime(),
-        "rankChangePct": fetch_rank("changepercent", 50),
-        "rankAmount": fetch_rank("amount", 50),
-        "marketBreadth": fetch_market_overview(),
-        "radarSignals": fetch_radar_core_signals(),
-        "aStockData": fetch_a_stock_data(args.run_id),
+        # 来自 data_prefetch.py (50 并发)
+        "indices": prefetch_data.get("indices", {}),
+        "limit_up_sentiment": prefetch_data.get("limit_up_sentiment", {}),
+        "northbound": prefetch_data.get("northbound", {}),
+        "hot_tags": prefetch_data.get("hot_tags", []),
+        "dragon_tiger": prefetch_data.get("dragon_tiger", {}),
+        "news_headlines": prefetch_data.get("news_headlines", []),
+        "coreSignals": prefetch_data.get("coreSignals", []),
+        "prefetch_stats": prefetch_data.get("_stats", {}),
+        # 来自 cn_fetch.py / sector_data.py
+        "rankChangePct": rank_data,
+        "marketBreadth": market_data,
     }
 
-    if "hot" in args.extra:
-        shared["ztPool"] = fetch_zt_pool()
-        shared["sectorRanking"] = fetch_sector_ranking()
-
-    if args.ticker:
-        shared["stock"] = fetch_stock_snapshot(args.ticker)
-
     elapsed = round(time.time() - t0, 1)
-    ok_count = sum(1 for v in shared.values() if isinstance(v, dict) and "_error" not in v)
-    total = sum(1 for v in shared.values() if isinstance(v, dict) and not isinstance(v, str))
-    sys.stderr.write(f"[prefetch] 完成: {ok_count}/{total} 成功, 耗时 {elapsed}s\n")
+    stats = shared.get("prefetch_stats", {})
+    sys.stderr.write(
+        f"[prefetch] 完成: {stats.get('ok', '?')}/{stats.get('total', '?')} 成功, "
+        f"异步耗时 {stats.get('elapsed', '?')}s, 总耗时 {elapsed}s\n"
+    )
 
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(shared, f, ensure_ascii=False, indent=2)
 
     # stdout 输出摘要供 workflow ctx 引用
-    summary_parts = []
+    summary_lines = []
     idx = shared.get("indices", {})
-    if isinstance(idx, dict) and "data" in idx:
-        for code, info in idx["data"].items():
-            summary_parts.append(f"{info.get('name','?')} {info.get('price','?')} ({info.get('changePct','?')}%)")
-    print(f"预取完成({elapsed}s): {'; '.join(summary_parts[:4]) or '指数数据见 _shared.json'}")
+    if isinstance(idx, dict):
+        for code in ["000001", "399001", "399006"]:
+            info = idx.get(code, {})
+            if info:
+                summary_lines.append(f"{info.get('name','?')} {info.get('price','?')}({info.get('changePct','?')}%)")
+    signals = shared.get("coreSignals", [])
+    for s in signals[:5]:
+        summary_lines.append(f"{s.get('level','')} {s.get('text','')}")
+
+    print(f"预取完成({elapsed}s): {' | '.join(summary_lines[:4]) or '数据见 _shared.json'}")
 
 
 if __name__ == "__main__":

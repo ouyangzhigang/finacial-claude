@@ -38,7 +38,13 @@ def rank(sort='changepercent', num=80, page=1, node='hs_a'):
 def kline(symbol, datalen=30):
     url = f"http://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param={symbol},day,,,{datalen},qfq"
     j = json.loads(_get(url))
-    arr = j.get('data', {}).get(symbol, {}).get('qfqday')
+    data = j.get('data')
+    if not isinstance(data, dict):
+        return []
+    sym_data = data.get(symbol)
+    if not isinstance(sym_data, dict):
+        return []
+    arr = sym_data.get('qfqday') or sym_data.get('day', [])
     return arr or []
 
 # ---------- 短线因子 ----------
