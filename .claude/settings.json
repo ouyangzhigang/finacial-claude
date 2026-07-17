@@ -12,23 +12,10 @@
       "Write"
     ]
   },
-    "enabledMcpjsonServers": [
+  "enabledMcpjsonServers": [
     "china-news",
     "akshare",
     "ifind",
     "wind"
-  ],
-  "hooks": {
-    "PreCompact": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "shell": "bash",
-            "command": "if ls output/*.md > /dev/null 2>&1; then echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreCompact\",\"additionalContext\":\"务必保留:输出目录(output/)下的推荐清单 .md 文件,这些是本次会话生成的选股结果,压缩后请继续保留,勿覆盖或删除。\"}}'; fi"
-          }
-        ]
-      }
-    ]
-  }
+  ]
 }

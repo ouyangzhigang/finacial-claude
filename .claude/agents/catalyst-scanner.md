@@ -72,9 +72,19 @@ emoji: 🔥
   catalysts: [{date, event, relatedCodes:[], direction, fulfillment, notes}],
   sentiment: {limitUpCount, limitDownCount, sealRate, failRate, boardHeight, makingMoneyRatio},
   capitalFlow: [{code, mainForceNetInflow, dragonTigerSeats:[], signal}],
-  summary: "催化主线+兑现度+情绪温度一句话"
+  social: [{code, heat, heat_momentum, bull_ratio, hype_risk}],
+  summary: "催化主线+兑现度+情绪温度+社交热度一句话"
 }
 ```
+
+### 社交舆情采集(由 sentiment_engine.py 量化)
+workflow Phase 4.5 会运行 `python scripts/sentiment_engine.py --codes {过关票} --data-dir {RD} --output {RD}/sentiment_scores.json`，产出每只票的:
+- `social_heat` (0-100): 综合热度(股吧帖子数+阅读量+雪球讨论)
+- `heat_momentum` (-1~1): 热度加速度(近3日 vs 前7日变化率)
+- `bull_ratio` (0-1): 看多比例(帖子情绪词频分析)
+- `hype_risk` (0-100): 炒作风险(热度远超基本面=空气票预警)
+
+你作为 catalyst-scanner 应优先引用 sentiment_engine 的量化结果,而非仅靠 LLM 主观判断。
 
 ## 🛡️ Guardrails
 催化维权重20%,情绪维15%,资金维20%(三者共55%,短线主导)。催化已price-in的标的降权或剔除。北向实时2024-08起停披露,资金维用主力净流入+龙虎榜替代。盘中数据须收盘复核。

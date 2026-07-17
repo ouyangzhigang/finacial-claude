@@ -8,10 +8,10 @@
       "role": "CRO/CDMO核心",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "16.03",
+      "currentPrice": "14.90",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "0.88"
+      "currentChangePct": "-7.05"
     },
     {
       "code": "002294",
@@ -21,10 +21,10 @@
       "role": "创新药进攻",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "41.37",
+      "currentPrice": "38.33",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "7.04"
+      "currentChangePct": "-7.35"
     },
     {
       "code": "603369",
@@ -34,10 +34,10 @@
       "role": "白酒价值观察",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "26.58",
+      "currentPrice": "25.73",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "2.59"
+      "currentChangePct": "-3.20"
     },
     {
       "code": "002891",
@@ -47,10 +47,10 @@
       "role": "宠物投机观察",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "29.58",
+      "currentPrice": "29.17",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "3.28"
+      "currentChangePct": "-1.39"
     },
     {
       "code": "603198",
@@ -60,10 +60,10 @@
       "role": "白酒观察仓",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "35.08",
+      "currentPrice": "33.65",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "3.73"
+      "currentChangePct": "-4.08"
     },
     {
       "code": "002007",
@@ -73,9 +73,10 @@
       "role": "防御底仓(回测观察级)",
       "workflow": "short-term-picks",
       "confidence": "中偏低",
-      "currentPrice": null,
+      "currentPrice": "13.28",
       "changePct": null,
-      "status": "active"
+      "status": "active",
+      "currentChangePct": "-2.78"
     },
     {
       "code": "002027",
@@ -85,9 +86,10 @@
       "role": "价值核心(回测未背书-投机)",
       "workflow": "short-term-picks",
       "confidence": "中偏低",
-      "currentPrice": null,
+      "currentPrice": "5.01",
       "changePct": null,
-      "status": "active"
+      "status": "active",
+      "currentChangePct": "-1.76"
     },
     {
       "code": "600196",
@@ -97,9 +99,10 @@
       "role": "创新药弹性(回测未背书-投机)",
       "workflow": "short-term-picks",
       "confidence": "中偏低",
-      "currentPrice": null,
+      "currentPrice": "23.65",
       "changePct": null,
-      "status": "active"
+      "status": "active",
+      "currentChangePct": "-4.29"
     },
     {
       "code": "300015",
@@ -109,10 +112,71 @@
       "role": "龙头观察(回测未背书-投机)",
       "workflow": "short-term-picks",
       "confidence": "中偏低",
+      "currentPrice": "8.73",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "-2.02"
+    },
+    {
+      "code": "sz002001",
+      "name": "新和成",
+      "recommendedAt": "20260717",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "sz000899",
+      "name": "赣能股份",
+      "recommendedAt": "20260717",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "sh600236",
+      "name": "桂冠电力",
+      "recommendedAt": "20260717",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "sh600011",
+      "name": "华能国际",
+      "recommendedAt": "20260717",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "sh601877",
+      "name": "正泰电器",
+      "recommendedAt": "20260717",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
       "currentPrice": null,
       "changePct": null,
       "status": "active"
     }
   ],
-  "lastUpdated": "2026-07-16 17:25:09"
+  "lastUpdated": "2026-07-17 14:17:02"
 }

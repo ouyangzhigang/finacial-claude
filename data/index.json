@@ -88,5 +88,14 @@
     "headline": "弱复苏+风格急转(科创50跌4%->价值消费切换),医药创新与影视消费双确认顺风,Top4:华兰生物(10%观察仓,回测唯一回撤达标DD=-7.93%)+分众传媒(5%投机,综合85.5分+入场18/25)+复星医药(7%投机,逆风防御)+爱尔眼科(7%投机,龙头低价);总仓位29.3%/现金70.7%;置信度中偏低(回测7只仅1只observation)",
     "confidence": "中偏低",
     "fetchedAt": "20260716"
+  },
+  {
+    "runId": "20260717_short-term-picks",
+    "asOf": "20260717",
+    "goal": "short-term-picks",
+    "path": "data/runs/20260717_short-term-picks/final.json",
+    "headline": "Shock regime(创业板-3.86%/breadth 25.2%)极度保守: Top1新和成(入场优势20/25+ROE21.8%+PE13.37x+催化未price-in, 回测1/3 observation级)29.4%仓位+70.6%现金; 4只观察仓(赣能/桂冠/华能/正泰)回测全否决须触发条件; 置信度中偏低(回测0/5 fully approved)",
+    "confidence": "中偏低",
+    "fetchedAt": "20260717"
   }
 ]

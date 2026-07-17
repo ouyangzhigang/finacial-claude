@@ -29,9 +29,16 @@ emoji: ⚖️
 
 ## 🔧 Tool Chain & Soft-Fail
 **量化引擎产出(必读,优先于LLM评分)**:
-- `Read {dataDir}/factor_scores.json` — 七维因子 z-score + 综合评分
+- `Read {dataDir}/factor_scores.json` — 八维因子(含social维) z-score + 综合评分
 - `Read {dataDir}/timing_scores.json` — 入场信号 + 动量质量 + 透支概率
+- `Read {dataDir}/sentiment_scores.json` — 社交热度(social_heat) + 炒作风险(hype_risk) + 情绪拐点(heat_momentum)
 - `Read {dataDir}/regime.json` — 市场环境 + 权重调整 + 风险预算
+
+**社交舆情排序规则(必读 sentiment_scores.json)**:
+- `social_heat > 80` 且 `hype_risk > 70` → 标记"过热预警",降权处理
+- `heat_momentum > 0` 且 `bull_ratio > 0.6` → 社交顺风,加分
+- 社交热度与基本面背离(heat高 + fundamentals低) → 警惕空气票,降级观察仓
+- `social_heat < 20` → 社交冷区,若无催化支撑则降权
 
 **回测引擎**:
 - `Bash: python scripts/portfolio_optimizer.py --codes {TopN代码} --account {金额} --risk-budget {regime.risk_budget} --output {dataDir}/backtest.json`

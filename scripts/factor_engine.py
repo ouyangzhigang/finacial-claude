@@ -28,12 +28,13 @@ from cn_fetch import kline as _kline, factors as _cn_factors
 # 基础权重 (旧版七维作为起点)
 # ════════════════════════════════════════════
 BASE_WEIGHTS = {
-    'momentum':     0.25,  # 技术动量
-    'capital':      0.20,  # 资金推动
-    'sentiment':    0.15,  # 情绪板块
+    'momentum':     0.22,  # 技术动量
+    'capital':      0.18,  # 资金推动
+    'sentiment':    0.05,  # 市场情绪(封板率等, market_radar)
+    'social':       0.10,  # 社交舆情热度(sentiment_engine)
     'catalyst':     0.20,  # 催化确定性
-    'fundamentals': 0.10,  # 基本面底线
-    'valuation':    0.05,  # 估值安全
+    'fundamentals': 0.12,  # 基本面底线
+    'valuation':    0.08,  # 估值安全
     'liquidity':    0.05,  # 流动性适配
 }
 
@@ -42,20 +43,24 @@ BASE_WEIGHTS = {
 # ════════════════════════════════════════════
 REGIME_ADJUSTMENTS = {
     'trending': {
-        'momentum': 1.5, 'capital': 1.2, 'sentiment': 1.0,
+        'momentum': 1.5, 'capital': 1.2, 'sentiment': 1.0, 'social': 1.3,
         'catalyst': 1.0, 'fundamentals': 0.8, 'valuation': 0.7, 'liquidity': 1.0,
     },
     'ranging': {
-        'momentum': 0.7, 'capital': 1.0, 'sentiment': 0.8,
+        'momentum': 0.7, 'capital': 1.0, 'sentiment': 0.8, 'social': 0.8,
         'catalyst': 1.2, 'fundamentals': 1.2, 'valuation': 1.5, 'liquidity': 1.0,
     },
     'high_volatility': {
-        'momentum': 0.5, 'capital': 0.8, 'sentiment': 0.7,
+        'momentum': 0.5, 'capital': 0.8, 'sentiment': 0.7, 'social': 0.6,
         'catalyst': 1.0, 'fundamentals': 1.5, 'valuation': 1.0, 'liquidity': 1.3,
     },
     'style_rotation': {
-        'momentum': 0.5, 'capital': 0.7, 'sentiment': 0.6,
+        'momentum': 0.5, 'capital': 0.7, 'sentiment': 0.6, 'social': 0.7,
         'catalyst': 1.0, 'fundamentals': 1.2, 'valuation': 1.0, 'liquidity': 1.0,
+    },
+    'shock': {
+        'momentum': 0.3, 'capital': 0.5, 'sentiment': 0.4, 'social': 0.5,
+        'catalyst': 0.8, 'fundamentals': 1.8, 'valuation': 1.5, 'liquidity': 1.5,
     },
 }
 
@@ -210,7 +215,10 @@ def compute_composite_factors(kline_factors: dict, llm_factors: dict = None) -> 
     # 3. 情绪因子 (LLM提供, 0-100)
     raw['sentiment'] = lf.get('sentiment_score', 50)
 
-    # 4. 催化因子 (LLM提供, 0-100)
+    # 4. 社交舆情因子 (sentiment_engine提供, 0-100)
+    raw['social'] = lf.get('social_heat', 50)
+
+    # 5. 催化因子 (LLM提供, 0-100)
     raw['catalyst'] = lf.get('catalyst_score', 50)
 
     # 5. 基本面因子 (LLM提供, 0-100)
@@ -433,6 +441,22 @@ def main():
                                 })
                 except Exception:
                     pass
+
+        # 2b. 读取 sentiment_engine 产出 (社交舆情量化因子)
+        sentiment_path = os.path.join(args.data_dir, 'sentiment_scores.json')
+        if os.path.exists(sentiment_path):
+            try:
+                with open(sentiment_path, 'r', encoding='utf-8') as f:
+                    sdata = json.load(f)
+                for item in sdata.get('stocks', []):
+                    code = str(item.get('code', ''))
+                    if code:
+                        llm_factors_map.setdefault(code, {}).update({
+                            'social_heat': item.get('social_heat', 50),
+                            'hype_risk': item.get('hype_risk', 0),
+                        })
+            except Exception:
+                pass
 
     # 3. 综合因子计算
     all_stocks = []
