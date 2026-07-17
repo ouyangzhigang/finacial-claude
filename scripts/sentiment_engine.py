@@ -2,16 +2,14 @@
 # -*- coding: utf-8 -*-
 """
 sentiment_engine.py — 社交舆情量化引擎 (Layer 1.5: Social Sentiment)
+V2.0 — 基于 a-stock-data skill 生产级端点
 
-借鉴: 雪球热度因子 + 股吧情绪指标 + 社交动量策略
-核心: 将社交舆情从 LLM 质化判断升级为量化评分。
-     讨论量+情绪+拐点 → 社交热度分 + 炒作风险分。
-
-数据源(免密钥):
-  - 东方财富股吧: 帖子数/阅读量/情绪词频
-  - 雪球讨论: 讨论帖数/评论数(需 stealthy 通道)
-  - 新浪股吧: 热帖/讨论密度
-  - market_radar: 涨停/封板率/炸板率/连板高度(从 _shared.json 读取)
+数据源(全部免密钥, 来自 a-stock-data skill V3.4):
+  - 同花顺热榜 (ths_hot_list): 人气值+概念标签+排名变化
+  - 东财人气榜 (em_hot_rank): 排名+排名变化
+  - 东财概念命中 (em_hot_concept): 个股被归到哪些概念在炒
+  - 打板情绪 (limit_up_sentiment): 涨停/炸板/跌停/连板梯队/炸板率
+  - market_radar: 从 _shared.json 读取补充信号
 
 用法:
   python scripts/sentiment_engine.py --codes 600519,002001 --output sentiment_scores.json
@@ -25,9 +23,8 @@ import os
 import re
 import math
 import argparse
-import urllib.request
-import ssl
 import time
+import random
 from typing import Optional
 
 try:
@@ -36,184 +33,222 @@ try:
 except Exception:
     pass
 
-CTX = ssl._create_unverified_context()
+# ════════════════════════════════════════════
+# 依赖: requests (a-stock-data skill 要求)
+# ════════════════════════════════════════════
+try:
+    import requests as _requests
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
+
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 
 # ════════════════════════════════════════════
-# 情绪词典
+# 东财防封: em_get 统一限流入口 (来自 a-stock-data skill)
 # ════════════════════════════════════════════
-BULL_WORDS = [
-    '看多', '看涨', '利好', '涨停', '突破', '新高', '加仓', '满仓', '牛市',
-    '起飞', '暴涨', '翻倍', '低估', '价值', '主力', '拉升', '启动', '放量',
-    '金叉', '底部', '反弹', '回调买入', '抄底', '机构', '增持',
-]
-BEAR_WORDS = [
-    '看空', '看跌', '利空', '跌停', '破位', '新低', '减仓', '清仓', '熊市',
-    '崩盘', '暴跌', '腰斩', '高估', '泡沫', '出货', '砸盘', '套牢', '缩量',
-    '死叉', '顶部', '割肉', '跑路', '散户', '减持', '质押', '暴雷',
-]
+EM_MIN_INTERVAL = 1.0
+_em_last_call = [0.0]
+
+if HAS_REQUESTS:
+    EM_SESSION = _requests.Session()
+    EM_SESSION.headers.update({"User-Agent": UA})
+    try:
+        from requests.adapters import HTTPAdapter
+        from urllib3.util.retry import Retry
+        _em_adapter = HTTPAdapter(max_retries=Retry(
+            total=3, connect=3, backoff_factor=0.6,
+            status_forcelist=[429, 500, 502, 503, 504], allowed_methods=["GET"]))
+        EM_SESSION.mount("https://", _em_adapter)
+        EM_SESSION.mount("http://", _em_adapter)
+    except Exception:
+        pass
+else:
+    EM_SESSION = None
+
+
+def em_get(url: str, params=None, headers=None, timeout=15, **kwargs):
+    """东财统一限流请求(来自 a-stock-data skill)。"""
+    if not HAS_REQUESTS:
+        return None
+    wait = EM_MIN_INTERVAL - (time.time() - _em_last_call[0])
+    if wait > 0:
+        time.sleep(wait + random.uniform(0.1, 0.5))
+    try:
+        return EM_SESSION.get(url, params=params, headers=headers, timeout=timeout, **kwargs)
+    except Exception:
+        return None
+    finally:
+        _em_last_call[0] = time.time()
 
 
 # ════════════════════════════════════════════
-# HTTP 工具
+# a-stock-data 端点函数 (从 skill 提取, 生产级)
 # ════════════════════════════════════════════
 
-def _http(url, encoding="utf-8", timeout=15, headers=None):
-    """GET → raw string, with retry."""
-    h = {"User-Agent": UA}
-    if headers:
-        h.update(headers)
-    for attempt in range(2):
-        try:
-            req = urllib.request.Request(url, headers=h)
-            with urllib.request.urlopen(req, timeout=timeout, context=CTX) as resp:
-                return resp.read().decode(encoding, "ignore")
-        except Exception:
-            if attempt == 1:
-                return None
-            time.sleep(0.5)
-    return None
-
-
-# ════════════════════════════════════════════
-# 数据源采集器
-# ════════════════════════════════════════════
-
-def fetch_guba_eastmoney(code: str) -> Optional[dict]:
-    """东方财富股吧: 帖子列表 → 讨论量 + 情绪分析。
-    URL: https://guba.eastmoney.com/list,{code}.html
+def ths_hot_list(period="hour"):
+    """同花顺热榜: 人气值+概念标签+排名变化。
+    返回: [{rank, code, name, heat, pct, rank_chg, concepts, tag}]
     """
-    url = f"https://guba.eastmoney.com/list,{code}.html"
-    html = _http(url, encoding="utf-8")
-    if not html:
-        return None
+    if not HAS_REQUESTS:
+        return []
+    try:
+        r = _requests.get("https://dq.10jqka.com.cn/fuyao/hot_list_data/out/hot_list/v1/stock",
+            params={"stock_type": "a", "type": period, "list_type": "normal"},
+            headers={"User-Agent": UA}, timeout=10)
+        lst = (r.json().get("data") or {}).get("stock_list") or []
+    except Exception as e:
+        sys.stderr.write(f"[sentiment] THS热榜失败: {e}\n")
+        return []
+    out = []
+    for it in lst:
+        tag = it.get("tag") or {}
+        out.append({
+            "rank": it.get("order"),
+            "code": it.get("code"),
+            "name": it.get("name"),
+            "heat": it.get("rate"),
+            "pct": it.get("rise_and_fall"),
+            "rank_chg": it.get("hot_rank_chg"),
+            "concepts": tag.get("concept_tag") or [],
+            "tag": tag.get("popularity_tag", ""),
+        })
+    return out
 
-    # 提取帖子标题和阅读量
-    posts = []
-    # 东方财富股吧帖子格式: <span class="l3">标题</span> ... <span class="l4">阅读</span>
-    title_pattern = re.findall(r'class="l3[^"]*"[^>]*>([^<]+)<', html)
-    read_pattern = re.findall(r'class="l4[^"]*"[^>]*>(\d+)<', html)
 
-    for i, title in enumerate(title_pattern[:30]):  # 取前30帖
-        reads = int(read_pattern[i]) if i < len(read_pattern) else 0
-        posts.append({'title': title.strip(), 'reads': reads})
+EM_HOT_BODY = {"appId": "appId01", "globalId": "786e4c21-70dc-435a-93bb-38"}
 
-    if not posts:
-        # 备用: 尝试 JSON API
-        api_url = f"https://guba.eastmoney.com/interface/GetData?path=guba/newfeedlist&param=ps%3D30%26code%3D{code}"
-        raw = _http(api_url)
-        if raw:
-            try:
-                data = json.loads(raw)
-                for item in data.get('re', [])[:30]:
-                    posts.append({
-                        'title': item.get('post_title', ''),
-                        'reads': item.get('post_click_count', 0),
-                    })
-            except Exception:
-                pass
+def em_hot_rank(top=100):
+    """东财人气榜: 排名+排名变化+名称价格。
+    返回: [{rank, code, name, price, pct, rank_chg}]
+    """
+    if not HAS_REQUESTS:
+        return []
+    try:
+        r = _requests.post("https://emappdata.eastmoney.com/stockrank/getAllCurrentList",
+            json={**EM_HOT_BODY, "marketType": "", "pageNo": 1, "pageSize": top},
+            headers={"User-Agent": UA}, timeout=10)
+        data = r.json().get("data") or []
+        if not data:
+            return []
+        secids = [("0." if it["sc"].startswith("SZ") else "1.") + it["sc"][2:] for it in data]
+        u = _requests.get("https://push2.eastmoney.com/api/qt/ulist.np/get",
+            params={"ut": "f057cbcbce2a86e2866ab8877db1d059", "fltt": 2, "invt": 2,
+                    "fields": "f14,f3,f12,f2", "secids": ",".join(secids)},
+            headers={"User-Agent": UA, "Referer": "https://quote.eastmoney.com/"}, timeout=10)
+        diff = (u.json().get("data") or {}).get("diff") or []
+        if isinstance(diff, dict):
+            diff = list(diff.values())
+        nm = {x["f12"]: (x.get("f14"), x.get("f2"), x.get("f3")) for x in diff}
+    except Exception as e:
+        sys.stderr.write(f"[sentiment] 东财人气榜失败: {e}\n")
+        return []
+    out = []
+    for it in data:
+        code = it["sc"][2:]
+        name, price, pct = nm.get(code, ("", None, None))
+        out.append({
+            "rank": it["rk"],
+            "code": code,
+            "name": name,
+            "price": price,
+            "pct": pct,
+            "rank_chg": it.get("hisRc"),
+        })
+    return out
 
-    if not posts:
-        return None
 
-    # 情绪分析
-    bull_count = 0
-    bear_count = 0
-    total_reads = 0
-    for p in posts:
-        title = p['title']
-        total_reads += p['reads']
-        for w in BULL_WORDS:
-            if w in title:
-                bull_count += 1
-                break
-        for w in BEAR_WORDS:
-            if w in title:
-                bear_count += 1
-                break
+def em_hot_concept(code):
+    """东财个股热门概念命中: 这只票当下被归到哪些概念在炒。
+    返回: [{concept, bk, hit}] 按热度降序。
+    """
+    if not HAS_REQUESTS:
+        return []
+    try:
+        prefix = "SH" if code.startswith("6") else "SZ"
+        r = _requests.post("https://emappdata.eastmoney.com/stockrank/getHotStockRankList",
+            json={**EM_HOT_BODY, "srcSecurityCode": prefix + code},
+            headers={"User-Agent": UA}, timeout=10)
+        data = r.json().get("data") or []
+    except Exception as e:
+        sys.stderr.write(f"[sentiment] 东财概念命中失败({code}): {e}\n")
+        return []
+    return [{"concept": x.get("conceptName"), "bk": x.get("conceptId"),
+             "hit": x.get("hitCount")} for x in data]
 
-    total = bull_count + bear_count
-    bull_ratio = bull_count / max(total, 1)
 
+# ── 打板层 (东财 push2ex) ──
+
+ZTB_UT = "7eea3edcaed734bea9cbfc24409ed989"
+
+def _fmt_zt_time(t):
+    s = str(t).zfill(6)
+    return f"{s[0:2]}:{s[2:4]}:{s[4:6]}"
+
+def _em_zt_api(endpoint, sort, date):
+    if not HAS_REQUESTS:
+        return []
+    url = f"https://push2ex.eastmoney.com/{endpoint}"
+    params = {"ut": ZTB_UT, "dpt": "wz.ztzt", "Pageindex": 0,
+              "pagesize": 10000, "sort": sort, "date": date}
+    headers = {"User-Agent": UA, "Referer": "https://quote.eastmoney.com/"}
+    try:
+        r = em_get(url, params=params, headers=headers, timeout=10)
+        if r is None:
+            return []
+        return (r.json().get("data") or {}).get("pool") or []
+    except Exception as e:
+        sys.stderr.write(f"[sentiment] 涨停板池 {endpoint} 失败: {e}\n")
+        return []
+
+def em_zt_pool(date):
+    out = []
+    for p in _em_zt_api("getTopicZTPool", "fbt:asc", date):
+        out.append({"code": p["c"], "name": p["n"], "price": p["p"] / 1000,
+            "pct": round(p["zdp"], 2), "limit_days": p["lbc"],
+            "seal_fund": p["fund"], "break_times": p["zbc"],
+            "industry": p.get("hybk", "")})
+    return out
+
+def em_zb_pool(date):
+    out = []
+    for p in _em_zt_api("getTopicZBPool", "fbt:asc", date):
+        out.append({"code": p["c"], "name": p["n"], "price": p["p"] / 1000,
+            "break_times": p["zbc"], "industry": p.get("hybk", "")})
+    return out
+
+def em_dt_pool(date):
+    out = []
+    for p in _em_zt_api("getTopicDTPool", "fund:asc", date):
+        out.append({"code": p["c"], "name": p["n"], "price": p["p"] / 1000,
+            "pct": round(p["zdp"], 2), "industry": p.get("hybk", "")})
+    return out
+
+
+def limit_up_sentiment(date):
+    """打板情绪温度计: 连板梯队+炸板率+涨跌停对比。"""
+    zt, zb, dt = em_zt_pool(date), em_zb_pool(date), em_dt_pool(date)
+    ladder = {}
+    for s in zt:
+        ladder[s["limit_days"]] = ladder.get(s["limit_days"], 0) + 1
+    zt_n, zb_n = len(zt), len(zb)
     return {
-        'source': 'guba_eastmoney',
-        'post_count': len(posts),
-        'total_reads': total_reads,
-        'avg_reads': total_reads // max(len(posts), 1),
-        'bull_count': bull_count,
-        'bear_count': bear_count,
-        'bull_ratio': round(bull_ratio, 3),
-        'titles': [p['title'] for p in posts[:5]],
+        "date": date,
+        "zt_count": zt_n,
+        "zb_count": zb_n,
+        "dt_count": len(dt),
+        "break_rate": round(zb_n / (zt_n + zb_n) * 100, 1) if (zt_n + zb_n) else 0,
+        "max_height": max((s["limit_days"] for s in zt), default=0),
+        "ladder": dict(sorted(ladder.items())),
     }
 
 
-def fetch_sina_guba(code: str) -> Optional[dict]:
-    """新浪股吧: 讨论密度。
-    URL: https://guba.sina.com.cn/?symbol={code}
-    """
-    # 新浪股吧 API
-    prefix = "sh" if code.startswith(('6', '9')) else "sz"
-    url = f"https://guba.sina.com.cn/interface/GetData?path=bar/barlist&param=bar_code%3D{prefix}{code}%26num%3D30"
-    raw = _http(url)
-    if not raw:
-        return None
+# ════════════════════════════════════════════
+# 读取 _shared.json 补充信号
+# ════════════════════════════════════════════
 
-    try:
-        data = json.loads(raw)
-        items = data.get('result', {}).get('data', [])
-        if not items:
-            return None
-
-        post_count = len(items)
-        total_comments = sum(item.get('comment_count', 0) for item in items)
-        return {
-            'source': 'sina_guba',
-            'post_count': post_count,
-            'total_comments': total_comments,
-            'avg_comments': total_comments // max(post_count, 1),
-        }
-    except Exception:
-        return None
-
-
-def fetch_xueqiu_social(code: str) -> Optional[dict]:
-    """雪球社交: 关注人数 + 讨论量(通过雪球 API)。
-    注意: 雪球反爬强, 此处用轻量 API 而非页面爬取。
-    """
-    prefix = "SH" if code.startswith(('6', '9')) else "SZ"
-    # 雪球讨论 API (轻量, 不需要 stealthy)
-    url = f"https://stock.xueqiu.com/v5/stock/portfolio/stock/list.json?symbol={prefix}{code}&size=30&page=1"
-    headers = {
-        "User-Agent": UA,
-        "Referer": f"https://xueqiu.com/S/{prefix}{code}",
-        "Origin": "https://xueqiu.com",
-    }
-    raw = _http(url, headers=headers)
-    if not raw:
-        return None
-
-    try:
-        data = json.loads(raw)
-        items = data.get('data', {}).get('items', [])
-        if not items:
-            return None
-
-        post_count = len(items)
-        total_reply = sum(item.get('reply_count', 0) for item in items)
-        total_retweet = sum(item.get('retweet_count', 0) for item in items)
-        return {
-            'source': 'xueqiu',
-            'post_count': post_count,
-            'total_replies': total_reply,
-            'total_retweets': total_retweet,
-            'engagement': total_reply + total_retweet * 2,
-        }
-    except Exception:
-        return None
-
-
-def read_market_emotion(data_dir: str) -> Optional[dict]:
-    """从 _shared.json 或 market_radar 输出读取市场情绪指标。"""
+def read_market_emotion(data_dir):
+    """从 _shared.json 读取 market_radar 补充信号。"""
     shared_path = os.path.join(data_dir, '_shared.json') if data_dir else ''
     if shared_path and os.path.exists(shared_path):
         try:
@@ -221,32 +256,10 @@ def read_market_emotion(data_dir: str) -> Optional[dict]:
                 data = json.load(f)
             radar = data.get('data', data).get('market_radar', {})
             signals = radar.get('core_signals', [])
-            # 提取情绪相关信号
-            zt_count = 0
-            seal_rate = 0.5
-            fail_rate = 0.2
-            board_height = 3
             for sig in signals:
                 text = sig.get('text', '') if isinstance(sig, dict) else str(sig)
-                # 尝试从信号文本提取数值
-                m = re.search(r'涨停(\d+)家', text)
-                if m:
-                    zt_count = int(m.group(1))
-                m = re.search(r'封板率(\d+)%', text)
-                if m:
-                    seal_rate = int(m.group(1)) / 100
-                m = re.search(r'炸板率(\d+)%', text)
-                if m:
-                    fail_rate = int(m.group(1)) / 100
-                m = re.search(r'连板高度(\d+)', text)
-                if m:
-                    board_height = int(m.group(1))
-            return {
-                'limit_up_count': zt_count,
-                'seal_rate': round(seal_rate, 3),
-                'fail_rate': round(fail_rate, 3),
-                'board_height': board_height,
-            }
+                if any(kw in text for kw in ['critical', 'important', '涨停', '炸板']):
+                    return {"_shared_signals": signals[:10]}
         except Exception:
             pass
     return None
@@ -256,74 +269,129 @@ def read_market_emotion(data_dir: str) -> Optional[dict]:
 # 综合评分计算
 # ════════════════════════════════════════════
 
-def compute_social_scores(code: str, guba: Optional[dict], sina: Optional[dict],
-                          xueqiu: Optional[dict], market_emotion: Optional[dict]) -> dict:
-    """综合多源社交数据 → 量化评分。"""
+def compute_social_scores(code, ths_map, em_map, concepts, market_emotion):
+    """综合多源社交数据 → 量化评分。
+
+    Args:
+        code: 股票代码
+        ths_map: 同花顺热榜 {code: {rank, heat, rank_chg, concepts, tag}}
+        em_map: 东财人气榜 {code: {rank, name, pct, rank_chg}}
+        concepts: em_hot_concept(code) 结果 [{concept, bk, hit}]
+        market_emotion: limit_up_sentiment() 结果
+    """
 
     # ── 1. 社交热度 (0-100) ──
-    # 综合: 帖子数 + 阅读量 + 评论数 + 转发数
-    heat_raw = 0
+    ths_data = ths_map.get(code)
+    em_data = em_map.get(code)
+
+    heat_score = 0
     source_count = 0
 
-    if guba:
-        heat_raw += guba['post_count'] * 2 + guba['avg_reads'] * 0.01
+    # 同花顺热榜: rank 越小越热, heat 值越大越热
+    if ths_data:
         source_count += 1
-    if sina:
-        heat_raw += sina['post_count'] * 1.5 + sina['avg_comments'] * 0.5
-        source_count += 1
-    if xueqiu:
-        heat_raw += xueqiu['post_count'] * 2 + xueqiu['engagement'] * 0.02
-        source_count += 1
+        rank = ths_data.get('rank', 999) or 999
+        heat_val = ths_data.get('heat', 0) or 0
+        # rank 1-10 → 90-100分, rank 11-50 → 60-89分, rank 50+ → 0-59分
+        if rank <= 10:
+            heat_score = max(heat_score, 90 + (10 - rank))
+        elif rank <= 50:
+            heat_score = max(heat_score, 60 + (50 - rank) * 0.75)
+        elif rank <= 100:
+            heat_score = max(heat_score, 30 + (100 - rank) * 0.6)
+        else:
+            heat_score = max(heat_score, min(30, heat_val / 100))
 
-    # 归一化到 0-100 (经验值: heat_raw=50 为中位热度)
-    social_heat = min(100, max(0, heat_raw * 1.5))
+    # 东财人气榜: rank 越小越热
+    if em_data:
+        source_count += 1
+        rank = em_data.get('rank', 999) or 999
+        if rank <= 10:
+            heat_score = max(heat_score, 85 + (10 - rank))
+        elif rank <= 50:
+            heat_score = max(heat_score, 55 + (50 - rank) * 0.75)
+        elif rank <= 100:
+            heat_score = max(heat_score, 25 + (100 - rank) * 0.6)
+        else:
+            heat_score = max(heat_score, 10)
+
+    # 概念命中加成: 被归到多个热门概念 = 额外热度
+    if concepts:
+        source_count += 1
+        concept_count = len(concepts)
+        total_hits = sum(c.get('hit', 0) or 0 for c in concepts)
+        heat_score = min(100, heat_score + min(15, concept_count * 3 + total_hits * 0.01))
+
     if source_count == 0:
-        social_heat = 50  # 无数据时中性
+        heat_score = 50  # 无数据时中性
 
-    # ── 2. 看多比例 (0-1) ──
-    bull_ratio = 0.5  # 默认中性
-    if guba and guba.get('bull_count', 0) + guba.get('bear_count', 0) > 0:
-        bull_ratio = guba['bull_ratio']
+    social_heat = round(min(100, max(0, heat_score)), 1)
 
-    # ── 3. 热度动量 (-1 到 1) ──
-    # 当前无法获取历史数据对比, 用帖子活跃度估算
+    # ── 2. 热度动量 (-1 到 1) ──
     heat_momentum = 0.0
-    if guba and guba['avg_reads'] > 500:
-        heat_momentum = min(1.0, (guba['avg_reads'] - 200) / 800)
-    if xueqiu and xueqiu.get('engagement', 0) > 50:
-        heat_momentum = max(heat_momentum, min(1.0, xueqiu['engagement'] / 200))
+    if ths_data:
+        rank_chg = ths_data.get('rank_chg', 0) or 0
+        # rank_chg > 0 = 排名上升(热度增加), < 0 = 排名下降
+        heat_momentum = max(-1.0, min(1.0, rank_chg / 50))
+    if em_data and heat_momentum == 0:
+        rank_chg = em_data.get('rank_chg', 0) or 0
+        heat_momentum = max(-1.0, min(1.0, rank_chg / 50))
+
+    # ── 3. 看多比例 (0-1) ──
+    # 从概念命中和排名变化推断: 排名上升+多概念命中 = 市场看多
+    bull_ratio = 0.5
+    if heat_momentum > 0.2 and concepts:
+        bull_ratio = min(0.9, 0.5 + heat_momentum * 0.3 + len(concepts) * 0.03)
+    elif heat_momentum < -0.2:
+        bull_ratio = max(0.1, 0.5 + heat_momentum * 0.3)
 
     # ── 4. 炒作风险 (0-100) ──
-    # 社交热度高但情绪极端看多 → 炒作风险高
     hype_risk = 0
-    if social_heat > 60 and bull_ratio > 0.7:
-        hype_risk = min(100, int((social_heat - 50) * 1.5 + (bull_ratio - 0.5) * 100))
+    # 极端热度 + 排名快速上升 = 短期炒作信号
     if social_heat > 80:
-        hype_risk = min(100, hype_risk + 20)  # 极端热度额外加风险
+        hype_risk += 30
+    if social_heat > 60 and heat_momentum > 0.5:
+        hype_risk += 25  # 热度快速上升
+    if concepts and len(concepts) > 5:
+        hype_risk += 15  # 被归到太多概念 = 万金油炒作
+    # 打板情绪过热也加风险
+    if market_emotion:
+        break_rate = market_emotion.get('break_rate', 0) or 0
+        max_height = market_emotion.get('max_height', 0) or 0
+        if break_rate > 40:  # 炸板率>40% = 分歧严重
+            hype_risk += 10
+        if max_height >= 7:  # 7连板以上 = 市场极端亢奋
+            hype_risk += 10
+    hype_risk = min(100, hype_risk)
 
     # ── 5. 讨论加速度 ──
-    discussion_accel = heat_momentum * 0.8  # 简化版
+    discussion_accel = heat_momentum * 0.8
 
-    # ── 6. 市场情绪 (从 market_radar) ──
-    emotion = market_emotion or {
-        'limit_up_count': 0,
-        'seal_rate': 0.5,
-        'fail_rate': 0.2,
-        'board_height': 3,
+    # ── 6. 市场情绪 ──
+    emotion = {
+        'limit_up_count': market_emotion.get('zt_count', 0) if market_emotion else 0,
+        'seal_rate': round(1 - (market_emotion.get('break_rate', 50) if market_emotion else 50) / 100, 3),
+        'fail_rate': round((market_emotion.get('break_rate', 0) if market_emotion else 0) / 100, 3),
+        'board_height': market_emotion.get('max_height', 0) if market_emotion else 0,
     }
 
     return {
         'code': code,
-        'social_heat': round(social_heat, 1),
+        'social_heat': social_heat,
         'heat_momentum': round(heat_momentum, 3),
         'bull_ratio': round(bull_ratio, 3),
         'discussion_accel': round(discussion_accel, 3),
         'hype_risk': round(hype_risk, 1),
         'sources_available': source_count,
         'raw': {
-            'guba': {k: v for k, v in (guba or {}).items() if k != 'titles'} if guba else None,
-            'sina': sina,
-            'xueqiu': xueqiu,
+            'ths_rank': ths_data.get('rank') if ths_data else None,
+            'ths_heat': ths_data.get('heat') if ths_data else None,
+            'ths_rank_chg': ths_data.get('rank_chg') if ths_data else None,
+            'ths_concepts': ths_data.get('concepts', []) if ths_data else [],
+            'em_rank': em_data.get('rank') if em_data else None,
+            'em_rank_chg': em_data.get('rank_chg') if em_data else None,
+            'concept_hits': len(concepts) if concepts else 0,
+            'top_concepts': [c['concept'] for c in (concepts or [])[:5]],
         },
         'market_emotion': emotion,
     }
@@ -334,7 +402,7 @@ def compute_social_scores(code: str, guba: Optional[dict], sina: Optional[dict],
 # ════════════════════════════════════════════
 
 def main():
-    parser = argparse.ArgumentParser(description='社交舆情量化引擎')
+    parser = argparse.ArgumentParser(description='社交舆情量化引擎 V2 (a-stock-data)')
     parser.add_argument('--codes', required=True, help='逗号分隔的股票代码')
     parser.add_argument('--data-dir', default='', help='读取 _shared.json 等上下文的目录')
     parser.add_argument('--json', default='{}', help='额外参数 JSON (regime)')
@@ -345,25 +413,40 @@ def main():
     params = json.loads(args.json) if args.json else {}
     regime = params.get('regime', 'ranging')
 
-    # 读取市场情绪
-    market_emotion = read_market_emotion(args.data_dir)
+    if not HAS_REQUESTS:
+        sys.stderr.write("[sentiment] WARNING: requests 库未安装, 全部降级为中性评分\n")
 
-    # 批量采集 + 计算
+    # 1. 获取全市场热榜 (一次调用, 所有股票共享)
+    sys.stderr.write("[sentiment] 获取同花顺热榜...")
+    ths_list = ths_hot_list()
+    ths_map = {s['code']: s for s in ths_list if s.get('code')}
+    sys.stderr.write(f"OK ({len(ths_map)}只)\n")
+
+    sys.stderr.write("[sentiment] 获取东财人气榜...")
+    em_list = em_hot_rank(100)
+    em_map = {s['code']: s for s in em_list if s.get('code')}
+    sys.stderr.write(f"OK ({len(em_map)}只)\n")
+
+    # 2. 打板情绪 (全市场)
+    today = time.strftime("%Y%m%d")
+    sys.stderr.write("[sentiment] 获取打板情绪...")
+    market_emotion = limit_up_sentiment(today)
+    sys.stderr.write(f"OK (涨停{market_emotion.get('zt_count',0)} "
+                     f"炸板{market_emotion.get('zb_count',0)} "
+                     f"跌停{market_emotion.get('dt_count',0)} "
+                     f"最高{market_emotion.get('max_height',0)}连板)\n")
+
+    # 3. 补充 _shared.json
+    shared = read_market_emotion(args.data_dir)
+
+    # 4. 逐票采集概念命中 + 计算评分
     results = []
     for code in codes:
-        sys.stderr.write(f'[sentiment] {code}: 采集股吧...')
-        guba = fetch_guba_eastmoney(code)
-        sys.stderr.write(f'{"OK" if guba else "FAIL"}; ')
+        sys.stderr.write(f"[sentiment] {code}: 概念命中...")
+        concepts = em_hot_concept(code)
+        sys.stderr.write(f"{'OK' if concepts else 'NONE'} ({len(concepts)}个)\n")
 
-        sys.stderr.write(f'采集新浪...')
-        sina = fetch_sina_guba(code)
-        sys.stderr.write(f'{"OK" if sina else "FAIL"}; ')
-
-        sys.stderr.write(f'采集雪球...')
-        xueqiu = fetch_xueqiu_social(code)
-        sys.stderr.write(f'{"OK" if xueqiu else "FAIL"}\n')
-
-        scores = compute_social_scores(code, guba, sina, xueqiu, market_emotion)
+        scores = compute_social_scores(code, ths_map, em_map, concepts, market_emotion)
         results.append(scores)
 
     # 排序(按 social_heat 降序)
@@ -380,7 +463,16 @@ def main():
     output = {
         'regime': regime,
         'stocks': results,
-        'market_emotion': market_emotion or {},
+        'market_emotion': {
+            'zt_count': market_emotion.get('zt_count', 0),
+            'zb_count': market_emotion.get('zb_count', 0),
+            'dt_count': market_emotion.get('dt_count', 0),
+            'break_rate': market_emotion.get('break_rate', 0),
+            'max_height': market_emotion.get('max_height', 0),
+            'ladder': market_emotion.get('ladder', {}),
+        },
+        'ths_hot_count': len(ths_map),
+        'em_rank_count': len(em_map),
         'summary': summary,
         'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
     }
@@ -390,11 +482,11 @@ def main():
         os.makedirs(os.path.dirname(args.output) or '.', exist_ok=True)
         with open(args.output, 'w', encoding='utf-8') as f:
             f.write(output_json)
-        sys.stderr.write(f'[sentiment] 输出到 {args.output}\n')
+        sys.stderr.write(f"[sentiment] 输出到 {args.output}\n")
     else:
         print(output_json)
 
-    sys.stderr.write(f'[sentiment] {summary}\n')
+    sys.stderr.write(f"[sentiment] {summary}\n")
 
 
 if __name__ == '__main__':
