@@ -94,7 +94,7 @@
     "asOf": "20260717",
     "goal": "short-term-picks",
     "path": "data/runs/20260717_short-term-picks/final.json",
-    "headline": "Shock regime(创业板-3.86%/breadth 25.2%)极度保守: Top1新和成(入场优势20/25+ROE21.8%+PE13.37x+催化未price-in, 回测1/3 observation级)29.4%仓位+70.6%现金; 4只观察仓(赣能/桂冠/华能/正泰)回测全否决须触发条件; 置信度中偏低(回测0/5 fully approved)",
+    "headline": "Shock regime(风格急转退潮期,创业板-4.36%/84.6%下跌)电力红利唯一正收益: Top1国电电力(ROE18.6%+利润+75%+回测cautious WR56.6%/DD-7.66%全池最优,入场优势17/25边界值)4.8%+华电国际9.3%+皖能电力7.7%+陕鼓/赣能0%观察;总仓位20.9%/现金79.1%;赣能涨停日占5日涨幅90%追涨陷阱剔除;腾讯K线抽查4项一致1项追涨确认;置信度中偏低(回测5只仅1只cautious)",
     "confidence": "中偏低",
     "fetchedAt": "20260717"
   }

@@ -8,10 +8,10 @@
       "role": "CRO/CDMO核心",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "14.90",
+      "currentPrice": "14.46",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-7.05"
+      "currentChangePct": "-9.79"
     },
     {
       "code": "002294",
@@ -21,10 +21,10 @@
       "role": "创新药进攻",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "38.33",
+      "currentPrice": "37.26",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-7.35"
+      "currentChangePct": "-9.93"
     },
     {
       "code": "603369",
@@ -34,10 +34,10 @@
       "role": "白酒价值观察",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "25.73",
+      "currentPrice": "25.63",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-3.20"
+      "currentChangePct": "-3.57"
     },
     {
       "code": "002891",
@@ -47,10 +47,10 @@
       "role": "宠物投机观察",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "29.17",
+      "currentPrice": "28.88",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-1.39"
+      "currentChangePct": "-2.37"
     },
     {
       "code": "603198",
@@ -60,10 +60,10 @@
       "role": "白酒观察仓",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "33.65",
+      "currentPrice": "33.45",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-4.08"
+      "currentChangePct": "-4.65"
     },
     {
       "code": "002007",
@@ -73,10 +73,10 @@
       "role": "防御底仓(回测观察级)",
       "workflow": "short-term-picks",
       "confidence": "中偏低",
-      "currentPrice": "13.28",
+      "currentPrice": "13.18",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-2.78"
+      "currentChangePct": "-3.51"
     },
     {
       "code": "002027",
@@ -86,10 +86,10 @@
       "role": "价值核心(回测未背书-投机)",
       "workflow": "short-term-picks",
       "confidence": "中偏低",
-      "currentPrice": "5.01",
+      "currentPrice": "5.00",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-1.76"
+      "currentChangePct": "-1.96"
     },
     {
       "code": "600196",
@@ -99,10 +99,10 @@
       "role": "创新药弹性(回测未背书-投机)",
       "workflow": "short-term-picks",
       "confidence": "中偏低",
-      "currentPrice": "23.65",
+      "currentPrice": "23.40",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-4.29"
+      "currentChangePct": "-5.30"
     },
     {
       "code": "300015",
@@ -112,10 +112,10 @@
       "role": "龙头观察(回测未背书-投机)",
       "workflow": "short-term-picks",
       "confidence": "中偏低",
-      "currentPrice": "8.73",
+      "currentPrice": "8.68",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-2.02"
+      "currentChangePct": "-2.58"
     },
     {
       "code": "sz002001",
@@ -176,7 +176,55 @@
       "currentPrice": null,
       "changePct": null,
       "status": "active"
+    },
+    {
+      "code": "sh600795",
+      "name": "国电电力",
+      "recommendedAt": "20260717",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "sh600027",
+      "name": "华电国际",
+      "recommendedAt": "20260717",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "sz000543",
+      "name": "皖能电力",
+      "recommendedAt": "20260717",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "sh601369",
+      "name": "陕鼓动力",
+      "recommendedAt": "20260717",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
     }
   ],
-  "lastUpdated": "2026-07-17 14:17:02"
+  "lastUpdated": "2026-07-17 17:36:30"
 }
