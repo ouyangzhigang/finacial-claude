@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 """
 sentiment_engine.py — 社交舆情量化引擎 (Layer 1.5: Social Sentiment)
-V2.0 — 基于 a-stock-data skill 生产级端点
+V2.1 — 基于 a-stock-data skill 生产级端点, 共享 astock_data 基础模块
 
-数据源(全部免密钥, 来自 a-stock-data skill V3.4):
+数据源(全部免密钥):
   - 同花顺热榜 (ths_hot_list): 人气值+概念标签+排名变化
   - 东财人气榜 (em_hot_rank): 排名+排名变化
   - 东财概念命中 (em_hot_concept): 个股被归到哪些概念在炒
   - 打板情绪 (limit_up_sentiment): 涨停/炸板/跌停/连板梯队/炸板率
-  - market_radar: 从 _shared.json 读取补充信号
+  - astock_data: 共享 em_get/em_post 限流 + eastmoney_datacenter
 
 用法:
   python scripts/sentiment_engine.py --codes 600519,002001 --output sentiment_scores.json
@@ -24,7 +24,6 @@ import re
 import math
 import argparse
 import time
-import random
 from typing import Optional
 
 try:
@@ -34,52 +33,60 @@ except Exception:
     pass
 
 # ════════════════════════════════════════════
-# 依赖: requests (a-stock-data skill 要求)
+# 共享模块: 从 astock_data 导入基础工具
 # ════════════════════════════════════════════
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 try:
-    import requests as _requests
-    HAS_REQUESTS = True
-except ImportError:
-    HAS_REQUESTS = False
-
-UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-
-# ════════════════════════════════════════════
-# 东财防封: em_get 统一限流入口 (来自 a-stock-data skill)
-# ════════════════════════════════════════════
-EM_MIN_INTERVAL = 1.0
-_em_last_call = [0.0]
-
-if HAS_REQUESTS:
-    EM_SESSION = _requests.Session()
-    EM_SESSION.headers.update({"User-Agent": UA})
-    try:
-        from requests.adapters import HTTPAdapter
-        from urllib3.util.retry import Retry
-        _em_adapter = HTTPAdapter(max_retries=Retry(
-            total=3, connect=3, backoff_factor=0.6,
-            status_forcelist=[429, 500, 502, 503, 504], allowed_methods=["GET"]))
-        EM_SESSION.mount("https://", _em_adapter)
-        EM_SESSION.mount("http://", _em_adapter)
-    except Exception:
-        pass
-else:
-    EM_SESSION = None
-
-
-def em_get(url: str, params=None, headers=None, timeout=15, **kwargs):
-    """东财统一限流请求(来自 a-stock-data skill)。"""
+    from astock_data import em_get, em_post, UA, HAS_REQUESTS
+    _requests = None  # 不直接 import requests, 走 astock_data
     if not HAS_REQUESTS:
-        return None
-    wait = EM_MIN_INTERVAL - (time.time() - _em_last_call[0])
-    if wait > 0:
-        time.sleep(wait + random.uniform(0.1, 0.5))
+        import requests as _requests
+except ImportError:
+    # astock_data 不可用时自行降级
     try:
-        return EM_SESSION.get(url, params=params, headers=headers, timeout=timeout, **kwargs)
-    except Exception:
-        return None
-    finally:
-        _em_last_call[0] = time.time()
+        import requests as _requests
+        HAS_REQUESTS = True
+    except ImportError:
+        HAS_REQUESTS = False
+    UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+
+    EM_MIN_INTERVAL = 1.0
+    _em_last_call = [0.0]
+    import random
+
+    if HAS_REQUESTS:
+        EM_SESSION = _requests.Session()
+        EM_SESSION.headers.update({"User-Agent": UA})
+    else:
+        EM_SESSION = None
+
+    def em_get(url, params=None, headers=None, timeout=15, **kwargs):
+        if not HAS_REQUESTS:
+            return None
+        wait = EM_MIN_INTERVAL - (time.time() - _em_last_call[0])
+        if wait > 0:
+            time.sleep(wait + random.uniform(0.1, 0.5))
+        try:
+            r = EM_SESSION.get(url, params=params, headers=headers, timeout=timeout, **kwargs)
+            return r
+        except Exception:
+            return None
+        finally:
+            _em_last_call[0] = time.time()
+
+    def em_post(url, json_data=None, headers=None, timeout=15):
+        if not HAS_REQUESTS:
+            return None
+        wait = EM_MIN_INTERVAL - (time.time() - _em_last_call[0])
+        if wait > 0:
+            time.sleep(wait + random.uniform(0.1, 0.5))
+        try:
+            r = EM_SESSION.post(url, json=json_data, headers=headers, timeout=timeout)
+            return r
+        except Exception:
+            return None
+        finally:
+            _em_last_call[0] = time.time()
 
 
 # ════════════════════════════════════════════
