@@ -458,6 +458,15 @@ def main():
             except Exception:
                 pass
 
+        # 2c. 量化资金流评分 (astock_data: 120日资金流+融资融券+大宗交易)
+        try:
+            from astock_data import compute_capital_score
+            for code in codes:
+                cap_score = compute_capital_score(code)
+                llm_factors_map.setdefault(code, {})['capital_score'] = cap_score
+        except ImportError:
+            pass  # astock_data 不可用时降级为 LLM 评分
+
     # 3. 综合因子计算
     all_stocks = []
     for kf in kline_results:

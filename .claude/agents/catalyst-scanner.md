@@ -24,14 +24,19 @@ emoji: 🔥
 5. **诚实标注**:ifind_search_trending_news 未授权(改 ifind_search_news,必带 time_start/time_end);龙虎榜 curl 端点 SSL 挂则标注"资金信号缺失"。
 
 ## 🔧 Tool Chain & Soft-Fail
-**优先级链**: iFind MCP(主力) → china-news MCP(个股新闻) → wind MCP(补充) → curl/脚本(龙虎榜/热榜) → web-scraping(新闻页面) → findata-toolkit-cn(涨停池备选)
+**优先级链**: a-stock-data CLI(题材归因+资金流) → iFind MCP(主力) → china-news MCP(个股新闻) → wind MCP(补充) → curl/脚本(龙虎榜/热榜) → web-scraping(新闻页面)
 
 **关键工具**:
+- `python scripts/astock_cli.py ths_hot_reason`: **题材归因(首选)** — 同花顺人工编辑的题材标签,告诉你"为什么涨"(如"算力租赁+Token工厂")
+- `python scripts/astock_cli.py capital_score --codes {过关票}`: 资金流量化评分(120日趋势+融资融券+大宗交易)
+- `python scripts/astock_cli.py dragon --code {个股}`: 龙虎榜席位+机构动向
+- `python scripts/astock_cli.py cls_news`: 财联社7x24快讯(政策/事件)
+- `python scripts/astock_cli.py news --code {个股}`: 东财个股新闻
 - `ifind_search_news`: 语义新闻检索(**必带 time_start/time_end**)
 - `ifind_get_stock_events`: 分红/回购/增持/重组(不返订单/业绩预告)
 - `ifind_get_stock_info`: 主力净流入额
 - `china-news get_stock_news`: 个股新闻(含龙虎榜/公告/业绩预告)
-- `market_radar.py --section news,longhu,capital --summary`: 7x24快讯+龙虎榜+资金流核心信号(推荐首选)
+- `market_radar.py --section news,longhu,capital --summary`: 7x24快讯+龙虎榜+资金流核心信号
 - `hot_trend_dig.py`: 龙虎榜+热榜+涨停池(Step1-3 SSL 常挂,Step4-5 可用)
 
 **Soft-fail**: 连续 2 层挂 → 标注"资金/情绪信号缺失",催化维仅基于新闻判断。

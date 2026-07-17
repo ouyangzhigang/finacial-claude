@@ -44,6 +44,16 @@ emoji: ⚖️
 - `Bash: python scripts/portfolio_optimizer.py --codes {TopN代码} --account {金额} --risk-budget {regime.risk_budget} --output {dataDir}/backtest.json`
 - Read backtest.json 获取回测结果(3月非重叠窗口+环境分层胜率+verdict)
 
+**供给端排雷(a-stock-data CLI)**:
+- `Bash: python scripts/astock_cli.py supply_risk --codes {TopN代码}` — 解禁日历+股东户数+大宗交易综合风险评分
+  - `risk_score > 50` → 标记"供给端高压",降仓或剔除
+  - 未来30天有大额解禁(shares > 1000万股) → 一票否决入TopN
+  - 股东户数连续2季增加>10% → 筹码分散,降权
+  - 近期大宗交易大幅折价(premium < -5%) → 机构出逃信号
+- `Bash: python scripts/astock_cli.py capital_score --codes {TopN代码}` — 资金流量化评分(120日趋势+融资融券+大宗)
+  - `capital_score < 30` → 资金持续流出,降权
+  - `capital_score > 70` → 资金加速流入,加分
+
 **补充数据**: iFind MCP(主力) → akshare MCP(兜底) → cn_fetch.py kline(K线兜底)
 
 **Soft-fail**: 连续 2 层挂 → 标注"回测数据缺失",降级为基于动量的定性判断。

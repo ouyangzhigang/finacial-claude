@@ -24,9 +24,11 @@ emoji: 🏭
 5. **诚实标注 NL 选股坑**:`ifind_search_stocks` 对"创新药/CXO/医药生物"等概念返空,需用手动龙头 + `ifind_get_stock_summary` 验证。
 
 ## 🔧 Tool Chain & Soft-Fail
-**优先级链**: iFind MCP(主力) → akshare MCP(兜底) → wind MCP(补充) → curl/cn_fetch(榜单兜底) → web-scraping(页面兜底) → findata-toolkit-cn(免费脚本)
+**优先级链**: a-stock-data CLI(板块归属+题材归因) → iFind MCP(主力) → akshare MCP(兜底) → wind MCP(补充) → curl/cn_fetch(榜单兜底) → web-scraping(页面兜底)
 
 **关键工具**:
+- `python scripts/astock_cli.py ths_hot_reason`: **题材归因(首选)** — 当日强势股+人工编辑的题材标签,识别主线方向
+- `python scripts/astock_cli.py concept_blocks --code {个股}`: 个股所属板块/概念(一次拿全,BK码+涨跌幅+龙头)
 - `ifind_search_stocks`: NL 选股(医药类返空,需手动龙头)
 - `ifind_sector_data`: 板块成分+涨跌幅(一次一板块)
 - `cn_fetch.py rank`: 新浪榜单(涨幅/成交额/换手)

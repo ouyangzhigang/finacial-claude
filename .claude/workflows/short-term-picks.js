@@ -1,12 +1,12 @@
 export const meta = {
   name: 'short-term-picks',
-  description: 'A股短周期选股——宏观→候选→流动性→catalyst∥fundamentals→量化引擎(factor+timing+sentiment)→risk(回测+组合)→governor(审查+裁决+报告)',
+  description: 'A股短周期选股——宏观→候选→流动性→catalyst∥fundamentals→量化引擎(factor+timing+sentiment+supply_risk+capital)→risk(回测+组合)→governor(审查+裁决+报告)',
   phases: [
     {title: '宏观定调', detail: 'regime+顺风方向(含 prefetch)'},
     {title: '候选池', detail: 'sector 30-50只'},
     {title: '流动性过滤', detail: 'technical 批量硬门槛'},
     {title: '并行评分', detail: 'catalyst∥fundamentals'},
-    {title: '量化引擎', detail: 'factor_engine+timing_engine+regime'},
+    {title: '量化引擎', detail: 'factor_engine+timing_engine+sentiment_engine+supply_risk+capital_score'},
     {title: '回测组合', detail: 'risk(portfolio_optimizer)+评分+回测'},
     {title: '综合落盘', detail: 'governor 审查+裁决+报告+portfolio+notify'},
   ],
@@ -101,8 +101,20 @@ if (passCodes) {
     await agent('运行 Bash: '+cmd, {label:'sentiment_engine', phase:'量化引擎'})
     return {path: RD+'/sentiment_scores.json', summary:'舆情评分完成'}
   })
-  log('✅ 量化引擎完成 — factor_scores.json + timing_scores.json + sentiment_scores.json')
-  ctx += '\n【量化引擎】factor_engine + timing_engine + sentiment_engine 输出 → '+RD+'/factor_scores.json + '+RD+'/timing_scores.json + '+RD+'/sentiment_scores.json'
+  // supply_risk: 供给端排雷(解禁+股东户数+大宗交易)
+  await S('supply_risk', async () => {
+    const cmd = 'PYTHONIOENCODING=utf-8 python scripts/astock_cli.py supply_risk --codes '+passCodes+' > '+RD+'/supply_risk.json 2>&1'
+    await agent('运行 Bash: '+cmd, {label:'supply_risk', phase:'量化引擎'})
+    return {path: RD+'/supply_risk.json', summary:'供给端风险评分完成'}
+  })
+  // capital_score: 资金流量化评分(120日趋势+融资融券+大宗交易)
+  await S('capital_score', async () => {
+    const cmd = 'PYTHONIOENCODING=utf-8 python scripts/astock_cli.py capital_score --codes '+passCodes+' > '+RD+'/capital_scores.json 2>&1'
+    await agent('运行 Bash: '+cmd, {label:'capital_score', phase:'量化引擎'})
+    return {path: RD+'/capital_scores.json', summary:'资金流评分完成'}
+  })
+  log('✅ 量化引擎完成 — factor + timing + sentiment + supply_risk + capital_score')
+  ctx += '\n【量化引擎】factor_engine + timing_engine + sentiment_engine + supply_risk + capital_score → '+RD+'/'
 } else {
   log('⚠️ 量化引擎跳过 — 无过关票代码,降级到LLM评分')
   ctx += '\n【量化引擎】⚠️ 跳过(无过关票代码)'
@@ -111,7 +123,7 @@ if (passCodes) {
 // ── Phase 5: 回测组合(综合全链 + portfolio_optimizer) ──
 phase('回测组合')
 log('🔄 启动回测组合 — agent: risk-portfolio')
-const risk = await S('risk', () => agent(P('risk-portfolio','综合评分排序+回测(环境分层)+组合配置。\n\n## 量化引擎产出(必读)\n1. Read '+RD+'/factor_scores.json → 八维因子(含social维)z-score+综合评分\n2. Read '+RD+'/timing_scores.json → 入场信号+动量质量+透支概率+timing_score\n3. Read '+RD+'/sentiment_scores.json → 社交热度(social_heat)+炒作风险(hype_risk)+情绪拐点(heat_momentum)\n4. Read '+RD+'/regime.json → 市场环境+权重调整+风险预算\n\n## 你的任务\n1. 融合量化引擎产出 + LLM质化评分(催化/基本面/情绪),做最终排序\n2. 社交排序规则:\n   - social_heat>80 且 hype_risk>70 → 标记"过热预警",降权\n   - heat_momentum正 且 bull_ratio>0.6 → 社交顺风加分\n   - 社交热度与基本面背离(heat高+fundamentals低) → 警惕空气票\n3. 运行 Bash: PYTHONIOENCODING=utf-8 python scripts/portfolio_optimizer.py --codes {Top'+topN+'代码} --account '+acc.replace('w','0000')+' --risk-budget {regime.risk_budget} --output '+RD+'/backtest.json 2>&1\n4. Read '+RD+'/backtest.json 获取回测结果(3月非重叠窗口+环境分层胜率)\n5. timing_score < -10 的票不得排Top1(追涨票); 回测 verdict=rejected 不入TopN\n6. 组合分散(行业<=40%/催化同源<=50%/单票<=25%)', ctx), {agentType:'risk-portfolio',schema:RET,label:'risk',phase:'回测组合'}))
+const risk = await S('risk', () => agent(P('risk-portfolio','综合评分排序+回测(环境分层)+组合配置。\n\n## 量化引擎产出(必读)\n1. Read '+RD+'/factor_scores.json → 八维因子(含social维)z-score+综合评分\n2. Read '+RD+'/timing_scores.json → 入场信号+动量质量+透支概率+timing_score\n3. Read '+RD+'/sentiment_scores.json → 社交热度(social_heat)+炒作风险(hype_risk)+情绪拐点(heat_momentum)\n4. Read '+RD+'/supply_risk.json → 供给端风险(解禁日历+股东户数+大宗交易)\n5. Read '+RD+'/capital_scores.json → 资金流量化评分(120日趋势+融资融券+大宗)\n6. Read '+RD+'/regime.json → 市场环境+权重调整+风险预算\n\n## 你的任务\n1. 融合量化引擎产出 + LLM质化评分(催化/基本面/情绪),做最终排序\n2. 社交排序规则:\n   - social_heat>80 且 hype_risk>70 → 标记"过热预警",降权\n   - heat_momentum正 且 bull_ratio>0.6 → 社交顺风加分\n   - 社交热度与基本面背离(heat高+fundamentals低) → 警惕空气票\n3. 供给端排序规则:\n   - supply_risk.risk_score>50 → 标记"供给端高压",降仓\n   - 未来30天有大额解禁 → 一票否决入TopN\n   - 股东户数连续增加 → 筹码分散降权\n4. 资金流排序规则:\n   - capital_score<30 → 资金持续流出,降权\n   - capital_score>70 → 资金加速流入,加分\n5. 运行 Bash: PYTHONIOENCODING=utf-8 python scripts/portfolio_optimizer.py --codes {Top'+topN+'代码} --account '+acc.replace('w','0000')+' --risk-budget {regime.risk_budget} --output '+RD+'/backtest.json 2>&1\n6. Read '+RD+'/backtest.json 获取回测结果(3月非重叠窗口+环境分层胜率)\n7. timing_score < -10 的票不得排Top1(追涨票); 回测 verdict=rejected 不入TopN\n8. 组合分散(行业<=40%/催化同源<=50%/单票<=25%)', ctx), {agentType:'risk-portfolio',schema:RET,label:'risk',phase:'回测组合'}))
 ctx += ap(risk,'组合')
 log('✅ 回测组合完成 — ' + (risk?.summary || '空'))
 
