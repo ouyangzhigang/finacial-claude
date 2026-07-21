@@ -87,4 +87,12 @@ Key scripts (from root):
 
 - Python 3.13 on Windows; `python` is on PATH, `python3` is not.
 - Local network can't reach some financial APIs directly: the East Money global-headline endpoint fails SSL verification, and FMP returns 403 (likely geo/IP block). AkShare A-share endpoints work; other overseas/paid endpoints are unverified from here — plan on a proxy.
-- Local MCP reachability (verified by the existing commands): **iFind + AkShare + china-news work; Wind needs `WIND_SSL_NO_VERIFY=1`; FMP and East Money push2his fail.** When an MCP field is missing or SSL-blocked, fall back to `python scripts/cn_fetch.py` (新浪/腾讯 HTTP, keyless) → `python .claude/skills/web-scraping/scripts/fetch.py` (Scrapling, JS渲染/反爬/非结构化页面) → `curl` 东方财富 push2 镜像 (`19/29.push2`) + 腾讯 `qt.gtimg.cn` / `web.ifzq.gtimg.cn`. WebFetch/WebSearch are blocked locally.
+- Local MCP reachability (verified 2026-07-21): **iFind/AkShare/china-news/wind MCP 全 SSL 挂**（本机 Whistle 代理拦截 HTTPS 返 502）。**唯一稳定通道: 腾讯 `qt.gtimg.cn`/`web.ifzq.gtimg.cn`（HTTP 绕代理）+ 通达信 mootdx（TCP 7709，不经过 HTTP 代理）。** 东财系接口（push2his/datacenter/push2）直连可能通但 flaky。
+- **数据源优先级（2026-07 全面改造后）**:
+  1. **腾讯**（HTTP 绕代理，最稳定）: 行情/PE/PB/市值/换手/K线 → `scripts/cn_fetch.py` 或 `scripts/astock_data.py::tencent_quote()`
+  2. **通达信 mootdx**（TCP 7709）: 财务数据/F10/盘口 → `scripts/astock_data.py` 引用 a-stock-data skill
+  3. **东财**（需绕过 Whistle 代理，`EM_SESSION.trust_env=False`）: 龙虎榜/解禁/融资融券/资金流等独有数据 → `scripts/astock_data.py::em_get()`
+  4. **curl -k**（兜底）: 东财 push2 镜像 (`19/29.push2`)
+- **全局数据缓存**: `scripts/utils.py` 提供 `@disk_cached(ttl=300)` 装饰器，跨脚本共享缓存（同股票 5 分钟内不重复请求）。cn_fetch/factor_engine/sector_analyst_pool 已接入。
+- **自适应阈值**: `scripts/utils.py::AdaptiveThresholds` 根据市场环境(regime)动态调整流动性过滤条件，替代硬编码阈值。
+- WebFetch/WebSearch are blocked locally.

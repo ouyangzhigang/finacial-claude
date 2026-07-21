@@ -29,7 +29,9 @@ const S = async (name, fn) => {
   }
   return {path:'',summary:name+' 返回空',keyFields:{_error:'empty'}}
 }
-const P = (ag, task, extra, ctx) => task+'\n\n## 投资目标\n'+goal+'\n\n## 前序环节产出\n'+(ctx||'(本环节为起点,无前序)')+'\n\n## 你的任务\n'+extra+'\n\n## 数据落盘\n完整输出 WRITE 到 '+RD+'/'+ag+'.json,envelope:{"runId":"'+asOf+'_'+G+'","asOf":"'+asOf+'","goal":"'+G+'","agent":"'+ag+'","fetchedAt":"'+asOf+'","data":{完整输出},"summary":"一句话","keyFields":{小摘录}}\nschema 只返回 {path,summary,keyFields}。'
+// 压缩版P/O模板: 数据落盘格式提取为O(), 减少~60%模板字符
+const O = (ag) => `\nWRITE ${RD}/${ag}.json; envelope:{"agent":"${ag}","asOf":"${asOf}","data":{...}}; schema→{path,summary,keyFields}`
+const P = (ag, task, extra, ctx) => `${task}\n# 目标\n${goal}\n# 前序\n${ctx||'(起点)'}\n# 任务\n${extra}${O(ag)}`
 const ap = (r, l) => r ? '\n【'+l+'】'+r.summary+(r.path?' → '+r.path:'') : '\n【'+l+'】⚠️ 数据缺失'
 
 // ── 空持仓早退 ──

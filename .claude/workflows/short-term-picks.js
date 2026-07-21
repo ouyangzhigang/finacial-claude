@@ -1,4 +1,4 @@
-export const meta = {
+﻿export const meta = {
   name: 'short-term-picks',
   description: 'A股短周期选股——宏观→候选→流动性→catalyst∥fundamentals→量化引擎(factor+timing+sentiment+supply_risk+capital)→risk(回测+组合)→governor(审查+裁决+报告)',
   phases: [
@@ -31,7 +31,9 @@ const S = async (name, fn) => {
   }
   return {path:'',summary:name+' 返回空',keyFields:{_error:'empty'}}
 }
-const P = (ag, task, extra, ctx) => task+'\n\n## 投资目标\n'+goal+'\n\n## 前序环节产出\n'+(ctx||'(本环节为起点,无前序)')+'\n\n## 你的任务\n'+extra+'\n\n## 数据落盘\n完整输出 WRITE 到 '+RD+'/'+ag+'.json,envelope:{"runId":"'+asOf+'_'+G+'","asOf":"'+asOf+'","goal":"'+G+'","agent":"'+ag+'","fetchedAt":"'+asOf+'","data":{完整输出},"summary":"一句话","keyFields":{小摘录}}\nschema 只返回 {path,summary,keyFields}。'
+// 压缩版P/O模板: 数据落盘格式提取为O(), 减少~60%模板字符
+const O = (ag) => `\nWRITE ${RD}/${ag}.json; envelope:{"agent":"${ag}","asOf":"${asOf}","data":{...}}; schema→{path,summary,keyFields}`
+const P = (ag, task, extra, ctx) => `${task}\n# 目标\n${goal}\n# 前序\n${ctx||'(起点)'}\n# 任务\n${extra}${O(ag)}`
 const ap = (r, l) => r ? '\n【'+l+'】'+r.summary+(r.path?' → '+r.path:'') : '\n【'+l+'】⚠️ 数据缺失'
 
 // ── 周期下限硬约束 ──
@@ -69,7 +71,7 @@ log('✅ 流动性过滤完成 — ' + (tech?.summary || '空'))
 phase('并行评分')
 log('🔄 启动并行评分 — catalyst-scanner ∥ fundamentals-analyst')
 const [cat, fund] = await parallel([
-  () => S('catalyst', () => agent(P('catalyst-scanner','对过关票批量做催化兑现度+情绪+资金。','用 Read 读 '+tech.path+' 的 data.pass 获取过关票清单;用 ifind_search_news(必带time_start/end)+china-news get_stock_news 取催化+情绪+资金,判断兑现度。非结构化页面用 web-scraping fetch.py。返每只催化+整体情绪。', ctx), {agentType:'catalyst-scanner',schema:RET,label:'catalyst',phase:'并行评分'})),
+  () => S('catalyst', () => agent(P('catalyst-scanner','对过关票批量做催化兑现度+情绪+资金。','⚠️ 数据通道纪律（严格执行）: 1) 先试 ifind_search_news；如果任何 MCP 工具调用 >60s 无返回，立即放弃该工具改走以下备选；2) 备选 A: python scripts/cn_fetch.py --keyword <词> 取新浪/腾讯资讯；3) 备选 B: python scripts/hot_trend_dig.py 取龙虎榜；4) 备选 C: 基于前序环节已知信息 + LLM 常识推断，明确标注"推断路径替代MCP"。不要在任何单一工具上无限等待。返每只催化+整体情绪。', ctx), {agentType:'catalyst-scanner',schema:RET,label:'catalyst',phase:'并行评分'})),
   () => S('fundamentals', () => agent(P('fundamentals-analyst','对过关票批量做财务排雷+估值锚。','用 Read 读 '+tech.path+' 的 data.pass 获取过关票清单;用 ifind_get_stock_financials(年报日期优先,max5主体可分批)+ifind_get_stock_shareholders 批量排雷+估值分位。硬雷点一票否决。', ctx), {agentType:'fundamentals-analyst',schema:RET,label:'fundamentals',phase:'并行评分'})),
 ])
 ctx += ap(cat,'催化') + ap(fund,'财务')
@@ -81,40 +83,42 @@ log('  财务: ' + (fund?.summary || '空'))
 phase('量化引擎')
 // 收集过关票代码(从 technical agent 的 pass 清单)
 const passCodes = tech?.keyFields?.passCodes || ''
+// W4修复: regime 从 macro keyFields 取, 同时让 agent 先读 regime.json 兜底
+// 之前仅从 macro keyFields 取, macro 若未放入 keyFields 则落到 Python 默认 ranging
+const regime = macro?.keyFields?.regime || 'trending'
 if (passCodes) {
-  log('🔄 启动量化引擎 — 对 '+passCodes.split(',').length+' 只过关票运行 factor_engine + timing_engine')
-  // factor_engine: 七维因子计算 + z-score + 综合评分
-  await S('factor_engine', async () => {
-    const cmd = 'PYTHONIOENCODING=utf-8 python scripts/factor_engine.py --codes '+passCodes+' --data-dir '+RD+' --json \'{"regime":"'+(tech?.keyFields?.regime||'ranging')+'"}\' --output '+RD+'/factor_scores.json 2>&1'
-    await agent('运行 Bash: '+cmd, {label:'factor_engine', phase:'量化引擎'})
-    return {path: RD+'/factor_scores.json', summary:'因子评分完成'}
-  })
-  // timing_engine: 入场信号 + 动量质量 + 透支概率
-  await S('timing_engine', async () => {
-    const cmd = 'PYTHONIOENCODING=utf-8 python scripts/timing_engine.py --codes '+passCodes+' --output '+RD+'/timing_scores.json 2>&1'
-    await agent('运行 Bash: '+cmd, {label:'timing_engine', phase:'量化引擎'})
-    return {path: RD+'/timing_scores.json', summary:'入场评估完成'}
-  })
-  // sentiment_engine: 社交舆情热度 + 炒作风险 + 情绪拐点
-  await S('sentiment_engine', async () => {
-    const cmd = 'PYTHONIOENCODING=utf-8 python scripts/sentiment_engine.py --codes '+passCodes+' --data-dir '+RD+' --output '+RD+'/sentiment_scores.json 2>&1'
-    await agent('运行 Bash: '+cmd, {label:'sentiment_engine', phase:'量化引擎'})
-    return {path: RD+'/sentiment_scores.json', summary:'舆情评分完成'}
-  })
-  // supply_risk: 供给端排雷(解禁+股东户数+大宗交易)
-  await S('supply_risk', async () => {
-    const cmd = 'PYTHONIOENCODING=utf-8 python scripts/astock_cli.py supply_risk --codes '+passCodes+' > '+RD+'/supply_risk.json 2>&1'
-    await agent('运行 Bash: '+cmd, {label:'supply_risk', phase:'量化引擎'})
-    return {path: RD+'/supply_risk.json', summary:'供给端风险评分完成'}
-  })
-  // capital_score: 资金流量化评分(120日趋势+融资融券+大宗交易)
-  await S('capital_score', async () => {
-    const cmd = 'PYTHONIOENCODING=utf-8 python scripts/astock_cli.py capital_score --codes '+passCodes+' > '+RD+'/capital_scores.json 2>&1'
-    await agent('运行 Bash: '+cmd, {label:'capital_score', phase:'量化引擎'})
-    return {path: RD+'/capital_scores.json', summary:'资金流评分完成'}
-  })
-  log('✅ 量化引擎完成 — factor + timing + sentiment + supply_risk + capital_score')
-  ctx += '\n【量化引擎】factor_engine + timing_engine + sentiment_engine + supply_risk + capital_score → '+RD+'/'
+  log('🔄 启动量化引擎 — 对 '+passCodes.split(',').length+' 只过关票并行运行 5 引擎')
+  const RUN = '⚠️ 只运行以下命令, 然后 Read 输出文件确认写入成功, 直接返回。不要调试, 不要分析为什么结果为空, 0结果也直接返回。'
+  const [fe, te, se, sr, cs] = await parallel([
+    () => S('factor_engine', async () => {
+      // W4修复: 先读 regime.json 获取权威 regime, 再拼入 factor_engine 命令
+      const cmd = 'PYTHONIOENCODING=utf-8 python scripts/factor_engine.py --codes '+passCodes+' --data-dir '+RD+' --json \'{"regime":"'+regime+'"}\' --output '+RD+'/factor_scores.json 2>&1'
+      await agent(RUN+'\n⚠️ 先 Read '+RD+'/regime.json 确认 regime(若与命令中不同, 用 regime.json 的值替换命令重跑)。\n运行 Bash: '+cmd+'\n然后 Read '+RD+'/factor_scores.json 确认写入成功。', {label:'factor_engine', phase:'量化引擎'})
+      return {path: RD+'/factor_scores.json', summary:'因子评分完成'}
+    }),
+    () => S('timing_engine', async () => {
+      const cmd = 'PYTHONIOENCODING=utf-8 python scripts/timing_engine.py --codes '+passCodes+' --output '+RD+'/timing_scores.json 2>&1'
+      await agent(RUN+'\n运行 Bash: '+cmd+'\n然后 Read '+RD+'/timing_scores.json 确认写入成功。', {label:'timing_engine', phase:'量化引擎'})
+      return {path: RD+'/timing_scores.json', summary:'入场评估完成'}
+    }),
+    () => S('sentiment_engine', async () => {
+      const cmd = 'PYTHONIOENCODING=utf-8 python scripts/sentiment_engine.py --codes '+passCodes+' --data-dir '+RD+' --output '+RD+'/sentiment_scores.json 2>&1'
+      await agent(RUN+'\n运行 Bash: '+cmd+'\n然后 Read '+RD+'/sentiment_scores.json 确认写入成功。', {label:'sentiment_engine', phase:'量化引擎'})
+      return {path: RD+'/sentiment_scores.json', summary:'舆情评分完成'}
+    }),
+    () => S('supply_risk', async () => {
+      const cmd = 'PYTHONIOENCODING=utf-8 python scripts/astock_cli.py supply_risk --codes '+passCodes+' > '+RD+'/supply_risk.json 2>&1'
+      await agent(RUN+'\n运行 Bash: '+cmd+'\n然后 Read '+RD+'/supply_risk.json 确认写入成功。', {label:'supply_risk', phase:'量化引擎'})
+      return {path: RD+'/supply_risk.json', summary:'供给端风险评分完成'}
+    }),
+    () => S('capital_score', async () => {
+      const cmd = 'PYTHONIOENCODING=utf-8 python scripts/astock_cli.py capital_score --codes '+passCodes+' > '+RD+'/capital_scores.json 2>&1'
+      await agent(RUN+'\n运行 Bash: '+cmd+'\n然后 Read '+RD+'/capital_scores.json 确认写入成功。', {label:'capital_score', phase:'量化引擎'})
+      return {path: RD+'/capital_scores.json', summary:'资金流评分完成'}
+    }),
+  ])
+  log('✅ 量化引擎完成 — factor('+(fe?'✓':'✗')+') + timing('+(te?'✓':'✗')+') + sentiment('+(se?'✓':'✗')+') + supply_risk('+(sr?'✓':'✗')+') + capital_score('+(cs?'✓':'✗')+')')
+  ctx += '\n【量化引擎】5引擎并行 → '+RD+'/'
 } else {
   log('⚠️ 量化引擎跳过 — 无过关票代码,降级到LLM评分')
   ctx += '\n【量化引擎】⚠️ 跳过(无过关票代码)'
@@ -130,7 +134,7 @@ log('✅ 回测组合完成 — ' + (risk?.summary || '空'))
 // ── Phase 6: 综合落盘(含对抗审查+裁决+portfolio+notify) ──
 phase('综合落盘')
 log('🔄 启动综合落盘 — agent: governor (对抗审查+裁决+报告)')
-const report = await S('governor', () => agent('综合全链产出写短周期选股报告+Top'+topN+'操作卡。\n\n## 投资目标\n'+goal+'\n\n## 全链产出(用 Read 读各 json)\n'+ctx+'\n'+history+'\n\n## 你的任务\n### 0. 收尾脚本(先跑)\nBash: python scripts/portfolio_tracker.py update 2>&1\n\n### 1. 对抗审查\n逐对检测矛盾,用 MCP 只读工具抽查验证:\n- Top1入场优势是否够高?(九洲药业教训:入场优势<12/25=追涨票,查entryScore)\n- Top1回测综合胜率(环境加权)是否最优?(驰宏锌锗教训)\n- 催化评分高 vs 已price-in?(查近5日涨幅+催化时间)\n- 动量质量:均匀涨还是单日暴涨?(查每日涨跌分布)\n- 技术动量强 vs 基本面红旗?\n- 组合催化同源是否超50%?\n- 1w账户仓位是否诚实标注分层建仓?\n- 社交热度高 vs 基本面空气?(hype_risk>70 且 fundamentals_score<40 → 纯炒作风险)\n- 社交热度拐点 vs 技术动量?(heat_momentum转负但价格仍涨 = 量价背离先兆)\n- Top1的social_heat排名是否合理?(过热票排Top1须额外审查hype_risk)\n对每对矛盾用 ifind 抽查关键数据(ROE/日K/催化),标注 ✅核实/⚠️偏差/❌矛盾。\n\n### 2. 报告输出\nTop1须入场优势>=18/25(好价格)+回测综合胜率排名前列+非主升浪末期。\n1. WRITE output/'+asOf+'_短周期2周推荐清单.md(结论先行→总体策略→各专项+逻辑关系→对抗审查结论+总督验证→操作→风险→免责),头一句话附核心假设置信度+回测达标。\n2. WRITE '+RD+'/final.json(envelope,data 含 oneLineConclusion/topN/totalPosition/confidence/keyRisks/contradictions/backtest/modules)。\n3. 更新 data/index.json(Read→push→Write)。\n4. 如果有 topN 推荐:WRITE '+RD+'/_rec.json 含 {topN, confidence},然后 Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1\n\n### 3. 组合记录\nBash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1\n(失败不影响返回)\n\nschema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
+const report = await S('governor', () => agent('综合全链产出写短周期选股报告+Top'+topN+'操作卡。\n\n## 投资目标\n'+goal+'\n\n## 全链产出(用 Read 读各 json)\n'+ctx+'\n'+history+'\n\n## ⚠️ 硬约束(违反任何一条视为未完成,不得落盘)\n\n### 回测纪律(驰宏锌锗教训·不可逾越)\n- 回测3项全不达标(胜率<55%+均收<3%+回撤>8%)→ 该标的**剔出TopN**,不得靠\"降仓位+严止损\"硬留\n- 2项不达标→ 仓位砍半+信心列标\"低·回测未背书\"\n- 1项不达标→ 正常保留但标注短板\n- Top1须回测综合胜率(环境加权)排名前列+非高位回调者\n\n### 板块纪律(W1修复·不可丢弃前序产出)\n- 前序环节(catalyst/sector/tech/fundamentals)筛选出的标的**不得因个人偏好丢弃**\n- 若某个板块(如半导体)是前序确认的主线,即便该板块数据有瑕疵,也须保留至少1只入TopN\n- 丢弃前序标的须在报告中说明具体原因\n\n### 数据判断纪律(W3修复·不可误判)\n- Read sentiment_scores.json/capital_scores.json 等文件前先检查文件是否存在\n- 文件存在但数据全中性值(如social_heat全15/risk_score全0/capital_score全50)→ 标注\"数据源降级:全中性值,无区分度\",不标注\"未执行\"\n- supply_risk.json 前228行是SSL warning, 真正的JSON在末尾→ 解析时跳过warning行\n\n## 第一步：对抗审查(4项核心,逐项标注✅/⚠️/❌)\n1. Top1回测综合胜率是否最优? 回测纪律是否执行?\n2. Top1入场优势是否够高?(优势<12/25=追涨票, 理想>=18/25)\n3. 组合催化同源是否超50%? 行业集中度是否合理?\n4. Top1社交热度是否与基本面背离?\n每项标注✅/⚠️/❌, ❌则调整排名或仓位。\n\n## 第二步：写报告\nWRITE output/'+asOf+'_短周期2周推荐清单.md\n结构: 结论先行→总体策略→TopN逐一说明(含回测达标情况)→风险免责\n\n## 第三步：落盘数据\n1. WRITE '+RD+'/final.json(envelope,data含oneLineConclusion/topN/totalPosition/confidence/keyRisks)\n2. WRITE '+RD+'/_rec.json 含 {topN, confidence}\n3. Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1\n\n## 第四步: 返回 schema\nschema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。\n注意: 已移除 StructuredOutput 工具引用(W6修复), 直接按 schema 返回即可。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
 log('✅ 综合落盘完成')
 log('🎉 Workflow 全部完成!')
 if (report?.path) {

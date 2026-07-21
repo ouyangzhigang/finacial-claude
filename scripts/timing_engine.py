@@ -390,7 +390,7 @@ def compute_timing_score(symbol: str, catalyst_info: dict = None) -> dict:
 
     return {
         'symbol': symbol,
-        'code': code,
+        'code': symbol,
         'entry_signal': signal,
         'momentum_quality': quality,
         'exhaustion_prob': exhaustion,

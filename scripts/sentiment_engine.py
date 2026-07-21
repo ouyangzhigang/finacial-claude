@@ -48,6 +48,23 @@ except ImportError:
     except ImportError:
         HAS_REQUESTS = False
     UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    # 降级: 用原始 requests 替代 em_get/em_post (无代理绕过, 无证书跳过)
+    def em_get(url, params=None, headers=None, timeout=15, **kwargs):
+        if not HAS_REQUESTS:
+            return None
+        try:
+            return _requests.get(url, params=params, headers=headers or {},
+                                timeout=timeout, verify=False, **kwargs)
+        except Exception:
+            return None
+    def em_post(url, json_data=None, headers=None, timeout=15):
+        if not HAS_REQUESTS:
+            return None
+        try:
+            return _requests.post(url, json=json_data, headers=headers or {},
+                                 timeout=timeout, verify=False)
+        except Exception:
+            return None
 
 
 # ════════════════════════════════════════════
@@ -61,9 +78,11 @@ def ths_hot_list(period="hour"):
     if not HAS_REQUESTS:
         return []
     try:
-        r = _requests.get("https://dq.10jqka.com.cn/fuyao/hot_list_data/out/hot_list/v1/stock",
+        r = em_get("https://dq.10jqka.com.cn/fuyao/hot_list_data/out/hot_list/v1/stock",
             params={"stock_type": "a", "type": period, "list_type": "normal"},
-            headers={"User-Agent": UA}, timeout=10)
+            timeout=10)
+        if r is None:
+            return []
         lst = (r.json().get("data") or {}).get("stock_list") or []
     except Exception as e:
         sys.stderr.write(f"[sentiment] THS热榜失败: {e}\n")
@@ -93,17 +112,22 @@ def em_hot_rank(top=100):
     if not HAS_REQUESTS:
         return []
     try:
-        r = _requests.post("https://emappdata.eastmoney.com/stockrank/getAllCurrentList",
-            json={**EM_HOT_BODY, "marketType": "", "pageNo": 1, "pageSize": top},
-            headers={"User-Agent": UA}, timeout=10)
+        r = em_post("https://emappdata.eastmoney.com/stockrank/getAllCurrentList",
+            json_data={**EM_HOT_BODY, "marketType": "", "pageNo": 1, "pageSize": top},
+            timeout=10)
+        if r is None:
+            return []
         data = r.json().get("data") or []
         if not data:
             return []
         secids = [("0." if it["sc"].startswith("SZ") else "1.") + it["sc"][2:] for it in data]
-        u = _requests.get("https://push2.eastmoney.com/api/qt/ulist.np/get",
+        u = em_get("https://push2.eastmoney.com/api/qt/ulist.np/get",
             params={"ut": "f057cbcbce2a86e2866ab8877db1d059", "fltt": 2, "invt": 2,
                     "fields": "f14,f3,f12,f2", "secids": ",".join(secids)},
-            headers={"User-Agent": UA, "Referer": "https://quote.eastmoney.com/"}, timeout=10)
+            headers={"Referer": "https://quote.eastmoney.com/"}, timeout=10)
+        if u is None:
+            sys.stderr.write(f"[sentiment] push2 批量报价失败 (SSL重协商/代理502), 人气榜仅返回排名无价格\n")
+            return []
         diff = (u.json().get("data") or {}).get("diff") or []
         if isinstance(diff, dict):
             diff = list(diff.values())
@@ -133,10 +157,18 @@ def em_hot_concept(code):
     if not HAS_REQUESTS:
         return []
     try:
-        prefix = "SH" if code.startswith("6") else "SZ"
-        r = _requests.post("https://emappdata.eastmoney.com/stockrank/getHotStockRankList",
-            json={**EM_HOT_BODY, "srcSecurityCode": prefix + code},
-            headers={"User-Agent": UA}, timeout=10)
+        # 提取纯数字代码: sh688728 → 688728, sz002156 → 002156
+        code_lower = code.lower()
+        if code_lower.startswith("sh") or code_lower.startswith("sz"):
+            num = code[2:]
+        else:
+            num = code
+        prefix = "SH" if num.startswith(("6", "68")) else "SZ"
+        r = em_post("https://emappdata.eastmoney.com/stockrank/getHotStockRankList",
+            json_data={**EM_HOT_BODY, "srcSecurityCode": prefix + num},
+            timeout=10)
+        if r is None:
+            return []
         data = r.json().get("data") or []
     except Exception as e:
         sys.stderr.write(f"[sentiment] 东财概念命中失败({code}): {e}\n")

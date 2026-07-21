@@ -5,13 +5,15 @@ Date: 2026-07-20 (YYYYMMDD=20260720)
 Data source: East Money push2 HTTP-only (bypasses Whistle HTTPS proxy)
 Output: data/runs/20260720_short-term-picks/sector-analyst.json
 """
-import json, sys, os
+import json, sys, os, time
 # Disable system proxy (Whistle intercepts all outbound connections on this machine)
 os.environ["NO_PROXY"] = "*"
 os.environ["no_proxy"] = "*"
 
 from urllib.request import urlopen, Request
 from urllib.parse import urlencode
+# ── 全局缓存与自适应阈值(跨脚本共享,消除重复HTTP) ──
+from utils import disk_cached, AdaptiveThresholds
 
 # --- Config ---
 ASOF = "20260720"
@@ -22,19 +24,26 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 THRESHOLD_PRICE_1W = 40  # 1w账户可配股价上限（一手<4000元）
 
 # === Data fetching helpers ===
-def em_request(url_str, timeout=15):
-    """GET from East Money push2 HTTP (whistle-free). Returns parsed dict."""
-    try:
-        req = Request(url_str)
-        req.add_header("User-Agent", "Mozilla/5.0")
-        req.add_header("Referer", "http://quote.eastmoney.com")
-        resp = urlopen(req, timeout=timeout)
-        raw = resp.read().decode("utf-8")
-        return json.loads(raw)
-    except Exception as e:
-        print(f"[WARN] em_request failed: {e}", file=sys.stderr)
-        return None
+def em_request(url_str, timeout=15, retry=3):
+    """GET from East Money push2 HTTP (whistle-free). Returns parsed dict.
+    带指数退避重试, 应对 push2 偶发 502/curl56 断连。"""
+    last_err = None
+    for attempt in range(1, retry + 1):
+        try:
+            req = Request(url_str)
+            req.add_header("User-Agent", "Mozilla/5.0")
+            req.add_header("Referer", "http://quote.eastmoney.com")
+            resp = urlopen(req, timeout=timeout)
+            raw = resp.read().decode("utf-8")
+            return json.loads(raw)
+        except Exception as e:
+            last_err = e
+            if attempt < retry:
+                time.sleep(0.5 * (2 ** (attempt - 1)))  # 指数退避
+    print(f"[WARN] em_request failed after {retry} retries: {last_err}", file=sys.stderr)
+    return None
 
+@disk_cached(ttl=300, suffix='.json')
 def fetch_rank(sort_field, order=1, pn=1, pz=120, extra_fields=""):
     """Fetch ranked A-share list."""
     base = "http://push2.eastmoney.com/api/qt/clist/get"
@@ -50,6 +59,7 @@ def fetch_rank(sort_field, order=1, pn=1, pz=120, extra_fields=""):
         return result.get("data", {}).get("diff") or []
     return []
 
+@disk_cached(ttl=600, suffix='.json')
 def fetch_industry_board(pz=80):
     """Fetch industry sector boards with performance data."""
     base = "http://push2.eastmoney.com/api/qt/clist/get"

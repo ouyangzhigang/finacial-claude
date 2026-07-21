@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 astock_data.py — a-stock-data skill 共享数据模块
@@ -29,8 +29,12 @@ import sys
 import os
 import time
 import random
+import warnings
 from typing import Optional
 from datetime import datetime, timedelta
+
+# 抑制 urllib3 SSL warning 洪水(Q3/Q4修复)
+warnings.filterwarnings('ignore', message='Unverified HTTPS request')
 
 # ════════════════════════════════
 # HTTP/SSL 工具 (Windows金融数据缺根证书，默认放行verify)
@@ -76,6 +80,11 @@ if HAS_REQUESTS:
     EM_SESSION.headers.update({"User-Agent": UA})
     # Windows 上东方财富/同花顺等证书链常不完整，统一放行 verify
     EM_SESSION.verify = False
+    # ⚠️ 绕过系统代理(Whistle): 本机 zaneouyang-pc2 的 Whistle 代理拦截 HTTPS 返回 502
+    # trust_env=False 告诉 requests 不要读 Windows 注册表/IE 代理设置
+    EM_SESSION.trust_env = False
+    # 显式禁用代理(双重保险)
+    EM_SESSION.proxies.update({'http': None, 'https': None})
     try:
         from requests.adapters import HTTPAdapter
         from urllib3.util.retry import Retry
@@ -120,6 +129,86 @@ def em_post(url, json_data=None, headers=None, timeout=15):
         return None
     finally:
         _em_last_call[0] = time.time()
+
+
+# ════════════════════════════════════════════
+# 数据源健康检查 + 腾讯优先路由层
+# 本机 Whistle 代理拦截 HTTPS → 东财/同花顺/新浪常 502
+# 腾讯(HTTP)绕代理稳定 → 行情/K线/估值优先走腾讯
+# ════════════════════════════════════════════
+
+HEALTH_STATUS = {}
+
+def check_source_health(force=False):
+    """快速检测各数据源可达性, 结果缓存 5 分钟。"""
+    global HEALTH_STATUS
+    now = time.time()
+    if not force and HEALTH_STATUS.get('_ts', 0) > now - 300:
+        return HEALTH_STATUS
+
+    results = {'_ts': now}
+    try:
+        t0 = time.time()
+        r = _requests.get('http://qt.gtimg.cn/q=sh600519', timeout=5,
+                          headers={'User-Agent': UA},
+                          proxies={'http': None, 'https': None})
+        results['tencent'] = r.status_code == 200 and b'600519' in r.content
+    except Exception:
+        results['tencent'] = False
+
+    try:
+        r = EM_SESSION.get(
+            'https://datacenter-web.eastmoney.com/api/data/v1/get'
+            '?reportName=RPT_LHBSTKDETAIL&pageSize=1&pageNumber=1',
+            timeout=8)
+        results['eastmoney'] = r is not None and r.status_code == 200
+    except Exception:
+        results['eastmoney'] = False
+
+    HEALTH_STATUS = results
+    return results
+
+
+def tencent_quote(codes):
+    """腾讯行情 — 最稳定通道。codes: 'sh600519,sz300458'
+    返回: {code: {name, price, pe, mktcap, turnover, ...}}
+    """
+    url = f'http://qt.gtimg.cn/q={codes}'
+    try:
+        r = _requests.get(url, timeout=10, headers={'User-Agent': UA},
+                          proxies={'http': None, 'https': None})
+        if r.status_code != 200:
+            return {}
+        raw = r.content.decode('gbk', errors='ignore')
+        result = {}
+        import re
+        for m in re.finditer(r'v_(\w+)="([^"]*)"', raw):
+            sym = m.group(1)
+            data = m.group(2).split('~')
+            if len(data) < 50:
+                continue
+            code = data[2]
+            result[code] = {
+                'name': data[1],
+                'price': float(data[3]) if data[3] else 0,
+                'prev_close': float(data[4]) if data[4] else 0,
+                'open': float(data[5]) if data[5] else 0,
+                'volume': float(data[6]) if data[6] else 0,
+                'pe': float(data[39]) if len(data) > 39 and data[39] else None,
+                'mktcap': float(data[45]) if len(data) > 45 and data[45] else None,
+                'turnover': float(data[38]) if len(data) > 38 and data[38] else None,
+            }
+        return result
+    except Exception:
+        return {}
+
+
+def smart_quote(codes, prefer='tencent'):
+    """智能行情: 优先走腾讯, 失败时标记不可得。"""
+    tc = ','.join(f'sh{c}' if c.startswith(('6','9')) else f'sz{c}'
+                  for c in codes.split(',') if c.strip())
+    result = tencent_quote(tc)
+    return result if result else {'_error': '所有行情源不可达'}
 
 
 # ════════════════════════════════════════════
@@ -617,61 +706,6 @@ def compute_supply_risk(code):
 # ════════════════════════════════════════════
 # 新增端点 (V3.5+) — 替换 MCP/SSL 失败路径
 # ════════════════════════════════════════════
-
-# ---------- Layer 1: 实时报价与K线 ----------
-
-def tencent_quote(codes):
-    """腾讯批量报价快照 (HTTP GBK, 不封IP)。
-    Args: codes - 股票代码列表,如 ['600519', '000858', '300750']
-    Returns: {code: {name, price, pe_ttm, pb, mcap_yi, float_mcap_yi, turnover_pct, ...}}
-    PE/PB 为空时返回 None (非零),避免下游误判低估。"""
-    if not HAS_REQUESTS:
-        return {}
-    q = ','.join(codes)
-    url = f"http://qt.gtimg.cn/q={q}"
-    ua_headers = {"User-Agent": UA}
-    txt = None
-    # Windows 环境金融数据接口常缺根证书，_SSL_CTX 在模块级别初始化
-    for _retry in range(3):
-        try:
-            req = _urllib_req.Request(url, headers=ua_headers)
-            with _urllib_req.urlopen(req, timeout=15, context=_SSL_CTX) as r:
-                txt = r.read().decode('gbk', errors='ignore')
-            break
-        except Exception:
-            time.sleep(0.5)
-    if not txt:
-        return {}
-    out = {}
-    for line in txt.strip().split(';'):
-        line = line.strip()
-        if not line:
-            continue
-        m = line.split('~')
-        if len(m) < 50:
-            continue
-        try:
-            out[m[2]] = {
-                'code': m[2], 'name': m[1],
-                'price': float(m[3]) if m[3] else 0,
-                'prev_close': float(m[4]) if m[4] else 0,
-                'open': float(m[5]) if m[5] else 0,
-                'vol_hand': float(m[6]) if m[6] else 0,
-                'chg': float(m[31]) if m[31] else 0,
-                'pct': float(m[32]) if m[32] else 0,
-                'high': float(m[33]) if m[33] else 0,
-                'low': float(m[34]) if m[34] else 0,
-                'amount_yi': round(float(m[37]) / 1e8, 2) if m[37] else 0,
-                'turnover_pct': float(m[38]) if m[38] else 0,
-                'pe_ttm': float(m[39]) if m[39] else None,
-                'mktcap_yi': round(float(m[45]) / 1e8, 2) if m[45] else None,
-                'float_mcap_yi': round(float(m[44]) / 1e8, 2) if m[44] else None,
-                'time': m[30] if len(m) > 30 else '',
-            }
-        except Exception:
-            continue
-    return out
-
 
 def baidu_kline_with_ma(code, days=120):
     """百度 K 线 + 内置 MA5/MA10/MA20 (HTTP JSON, 不封IP)。

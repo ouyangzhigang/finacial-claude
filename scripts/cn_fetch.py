@@ -5,6 +5,10 @@ MCP/wind/ifind/akshare 在本环境 SSL 证书失败或无网络,故全走 HTTP�
 用法见 main()。
 """
 import urllib.request, json, sys, time, ssl, os
+# ── 确保 scripts/ 目录在 sys.path 中, 支持 from utils import ... ──
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# ── 全局磁盘缓存(跨脚本共享, 消除重复HTTP请求) ──
+from utils import disk_cached
 
 UA = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
 # SSL 验证控制：腾讯 qt.gtimg.cn / web.ifzq.gtimg.cn 在 Windows 常缺 AKI 致证书链失败，
@@ -35,6 +39,7 @@ def rank(sort='changepercent', num=80, page=1, node='hs_a'):
     return json.loads(_get(url))
 
 # ---------- 腾讯K线(前复权日K) ----------
+@disk_cached(ttl=300, suffix='.json')
 def kline(symbol, datalen=30):
     url = f"http://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param={symbol},day,,,{datalen},qfq"
     j = json.loads(_get(url))
@@ -48,6 +53,7 @@ def kline(symbol, datalen=30):
     return arr or []
 
 # ---------- 短线因子 ----------
+@disk_cached(ttl=300, suffix='.json')
 def factors(symbol, n=25):
     arr = kline(symbol, n + 5)
     if not arr or len(arr) < 20:

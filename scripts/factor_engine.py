@@ -68,9 +68,15 @@ REGIME_ADJUSTMENTS = {
 # 因子计算
 # ════════════════════════════════════════════
 
-def compute_kline_factors(symbol: str, datalen: int = 60) -> Optional[dict]:
+def compute_kline_factors(symbol: str, datalen: int = 60, factors_cache: Optional[dict] = None) -> Optional[dict]:
     """从K线数据计算量化因子 (动量/量价/流动性)。
-    复用 cn_fetch.kline() 获取数据。"""
+    复用 cn_fetch.kline() 获取数据。
+
+    Args:
+        symbol: 股票代码 (sh/sz前缀)
+        datalen: K线数据长度
+        factors_cache: 可选的 cn_fetch.factors() 预计算缓存 (含 avgAmount20d)
+    """
     arr = _kline(symbol, datalen)
     if not arr or len(arr) < 20:
         return None
@@ -118,8 +124,22 @@ def compute_kline_factors(symbol: str, datalen: int = 60) -> Optional[dict]:
     v20 = sum(vols[-20:]) / 20 if len(vols) >= 20 else vols[-1]
     breakout = last['close'] > ma20 and last['vol'] > v5 * 1.5
 
-    # 20日均成交额 (手*100*价格)
-    amt20 = sum(rows[i]['vol'] * 100 * rows[i]['close'] for i in range(-20, 0)) / 20
+    # ── 20日均成交额（优先使用cn_fetch.factors()预计算值） ────────────
+    # 原始k线重算可能因数据长度不足产生偏差，优先取cn_fetch.quote接口的amt20字段（腾讯行情直出，单位亿）
+    amt20_cn = factors_cache.get('avgAmount20d') if factors_cache else None  # cn_fetch返回单位已是亿元
+
+    if amt20_cn is not None and amt20_cn > 0:
+        # 使用cn_fetch预计算的金额（已转亿元），更可靠
+        amt20 = float(amt20_cn)
+        amt20_source = 'cn_factors'
+    else:
+        # Fallback: 从k线重新计算（注意vol单位为手×100股）
+        amt20 = sum(rows[i]['vol'] * 100 * rows[i]['close'] for i in range(-20, 0)) / 20
+        amt20 = amt20 / 1e8  # 转为亿元
+        amt20_source = 'kline_recalc'
+        # 记录警告以便调试
+        if len(rows) < 20:
+            print(f"⚠️ factor_engine: {symbol} k线数据仅{len(rows)}日(<20), avgAmount20d fallback为K线重算值", file=sys.stderr)
 
     # ── 动量质量因子 (新增) ──
     # 5日每日涨跌
@@ -409,11 +429,17 @@ def main():
     params = json.loads(args.json) if args.json else {}
     regime = params.get('regime', 'ranging')
 
-    # 1. 计算K线因子
+    # 1. 计算K线因子 (传入 cn_fetch.factors() 预计算缓存, 消除重复HTTP)
     kline_results = []
     for code in codes:
-        sym = f"sh{code}" if code.startswith(('6', '9')) else f"sz{code}"
-        kf = compute_kline_factors(sym)
+        sym = code if code.startswith(('sh', 'sz')) else (f"sh{code}" if code.startswith(('6', '9')) else f"sz{code}")
+        # 预取 cn_fetch.factors() 缓存 (含 avgAmount20d, 避免 compute_kline_factors 内重算)
+        try:
+            fc = _cn_factors(sym)
+            factors_cache = fc if isinstance(fc, dict) else None
+        except Exception:
+            factors_cache = None  # 获取失败时降级为 None, 函数内走 kline 重算 fallback
+        kf = compute_kline_factors(sym, factors_cache=factors_cache)
         if kf:
             kline_results.append(kf)
 

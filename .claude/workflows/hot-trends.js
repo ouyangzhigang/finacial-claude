@@ -32,7 +32,9 @@ const S = async (name, fn) => {
   }
   return {path:'',summary:name+' 返回空',keyFields:{_error:'empty'}}
 }
-const P = (ag, task, extra, ctx) => task+'\n\n## 投资目标\n'+goal+'\n\n## 前序环节产出\n'+(ctx||'(本环节为起点,无前序)')+'\n\n## 你的任务\n'+extra+'\n\n## 数据落盘\n完整输出 WRITE 到 '+RD+'/'+ag+'.json,envelope:{"runId":"'+asOf+'_'+G+'","asOf":"'+asOf+'","goal":"'+G+'","agent":"'+ag+'","fetchedAt":"'+asOf+'","data":{完整输出},"summary":"一句话","keyFields":{小摘录}}\nschema 只返回 {path,summary,keyFields}。'
+// 压缩版P/O模板: 数据落盘格式提取为O(), 减少~60%模板字符
+const O = (ag) => `\nWRITE ${RD}/${ag}.json; envelope:{"agent":"${ag}","asOf":"${asOf}","data":{...}}; schema→{path,summary,keyFields}`
+const P = (ag, task, extra, ctx) => `${task}\n# 目标\n${goal}\n# 前序\n${ctx||'(起点)'}\n# 任务\n${extra}${O(ag)}`
 const ap = (r, l) => {
   if (!r) return '\n【'+l+'】⚠️ 数据缺失'
   const pathInfo = r.path ? ' → '+r.path : ''
@@ -77,7 +79,7 @@ log('✅ 组合配置完成 — ' + (risk?.summary || '空'))
 // ── Phase 5: 综合落盘 ──
 phase('综合落盘')
 log('🔄 启动综合落盘 — agent: governor (对抗审查+裁决+报告)')
-const report = await S('governor', () => agent('综合全链写热门板块潜力股报告。\n\n## 投资目标\n'+goal+'\n\n## 全链产出(用 Read 读各 json)\n'+ctx+'\n'+history+'\n\n## 你的任务\n### 0. 收尾脚本(先跑)\nBash: python scripts/portfolio_tracker.py update 2>&1\n\n### 1. 对抗审查\n检测矛盾并用 MCP 只读工具抽查验证:\n- 情绪高温但基本面排雷未通过的票是否仍在 TopN?\n- 板块主线强劲但个股流动性边缘?\n- 催化临近但已 price-in?(查近5日涨幅)\n- TopN 中催化同源是否超50%?\n对每对矛盾用 ifind 抽查关键数据,标注 ✅核实/⚠️偏差/❌矛盾。\n\n### 2. 报告输出\n1. WRITE output/'+asOf+'_热门板块潜力股综合推荐.md,governor 报告结构(结论先行→总体策略→各专项+逻辑关系→对抗审查结论+总督验证→操作→风险→免责),头一句话结论附情绪温度+置信度+回测达标。\n2. WRITE '+RD+'/final.json(envelope,data 含 oneLineConclusion/topN/totalPosition/confidence/keyRisks/contradictions/mainThemes/modules)。\n3. 更新 data/index.json(Read→push→Write)。\n4. 如果有 topN 推荐:WRITE '+RD+'/_rec.json 含 {topN, confidence},然后 Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1\n\n### 3. 邮件通知\nBash: python scripts/notify_email.py --run-id '+asOf+'_'+G+' 2>&1\n(失败不影响返回)\n\nschema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
+const report = await S('governor', () => agent('综合全链写热门板块潜力股报告。\n\n## 投资目标\n'+goal+'\n\n## 全链产出(用 Read 读各 json)\n'+ctx+'\n'+history+'\n\n## 第一步：对抗审查(精简为3项核心矛盾)\n1. TopN中情绪高温但基本面排雷未通过的票是否仍在?\n2. TopN催化同源是否超50%? 行业集中度是否合理?\n3. 任一标的催化临近但已price-in?(查近5日涨幅)\n每项标注 ✅/⚠️/❌, ❌则剔除或降权。\n\n## 第二步：写报告文件\nWRITE output/'+asOf+'_热门板块潜力股综合推荐.md, 结构: 结论先行→总体策略→TopN逐一说明→风险免责\n头一句话: 情绪温度 + 置信度 + 回测达标情况。\n\n## 第三步：落盘数据文件\n1. WRITE '+RD+'/final.json(envelope,data含oneLineConclusion/topN/totalPosition/confidence/keyRisks/contradictions/mainThemes/modules)\n2. WRITE '+RD+'/_rec.json 含 {topN, confidence}\n3. Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1 (失败不影响)\n4. Bash: python scripts/notify_email.py --run-id '+asOf+'_'+G+' 2>&1\n\nschema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。\n注意: 已移除 StructuredOutput 工具引用(W6修复), 直接按 schema 返回即可。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
 log('✅ 综合落盘完成')
 log('🎉 Workflow 全部完成!')
 if (report?.path) {

@@ -31,7 +31,9 @@ const S = async (name, fn) => {
   }
   return {path:'',summary:name+' 返回空',keyFields:{_error:'empty'}}
 }
-const P = (ag, task, extra, ctx) => task+'\n\n## 投资目标\n'+goal+'\n\n## 前序环节产出\n'+(ctx||'(本环节为起点,无前序)')+'\n\n## 你的任务\n'+extra+'\n\n## 数据落盘\n完整输出 WRITE 到 '+RD+'/'+ag+'.json,envelope:{"runId":"'+asOf+'_'+G+'","asOf":"'+asOf+'","goal":"'+G+'","agent":"'+ag+'","fetchedAt":"'+asOf+'","data":{完整输出},"summary":"一句话","keyFields":{小摘录}}\nschema 只返回 {path,summary,keyFields}。'
+// 压缩版P/O模板: 数据落盘格式提取为O(), 减少~60%模板字符
+const O = (ag) => `\nWRITE ${RD}/${ag}.json; envelope:{"agent":"${ag}","asOf":"${asOf}","data":{...}}; schema→{path,summary,keyFields}`
+const P = (ag, task, extra, ctx) => `${task}\n# 目标\n${goal}\n# 前序\n${ctx||'(起点)'}\n# 任务\n${extra}${O(ag)}`
 const ap = (r, l) => {
   if (!r) return '\n【'+l+'】⚠️ 数据缺失'
   const pathInfo = r.path ? ' → '+r.path : ''
@@ -70,6 +72,6 @@ ctx += ap(risk,'组合')
 
 // ── Phase 6: 综合落盘 ──
 phase('综合落盘')
-const report = await S('governor', () => agent('综合全链写舆情趋势预判选股报告。\n\n## 投资目标\n'+goal+'\n\n## 全链产出(用 Read 读各 json)\n'+ctx+'\n'+history+'\n\n## 你的任务\n### 0. 收尾脚本(先跑)\nBash: python scripts/portfolio_tracker.py update 2>&1\n\n### 1. 对抗审查\n检测矛盾并用 MCP 只读工具抽查验证:\n- 舆情热度高但宏观逆风?(逆风炒作风险)\n- 趋势强度强但基本面空气?(无业绩支撑)\n- 技术启动但催化已price-in?(查近5日涨幅)\n- 排雷通过但回测未背书?\n对每对矛盾用 ifind 抽查关键数据,标注 ✅核实/⚠️偏差/❌矛盾。\n\n### 2. 报告输出\n预判置信度基于趋势强度+宏观对齐+回测达标。\n1. WRITE output/'+asOf+'_舆情趋势预判选股.md(结论先行→总体策略→各专项+逻辑关系→对抗审查结论+总督验证→操作→风险→免责),风险含趋势证伪触发条件。\n2. WRITE '+RD+'/final.json(envelope,data 含 oneLineConclusion/topN/totalPosition/confidence/keyRisks/contradictions/trends/modules)。\n3. 更新 data/index.json(Read→push→Write)。\n4. 如果有 topN 推荐:WRITE '+RD+'/_rec.json 含 {topN, confidence},然后 Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1\n\n### 3. 邮件通知\nBash: python scripts/notify_email.py --run-id '+asOf+'_'+G+' 2>&1\n(失败不影响返回)\n\nschema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
+const report = await S('governor', () => agent('综合全链写舆情趋势预判选股报告。\n\n## 投资目标\n'+goal+'\n\n## 全链产出(用 Read 读各 json)\n'+ctx+'\n'+history+'\n\n## 第一步：对抗审查(精简为3项核心矛盾)\n1. Top1舆情热度高但回测全面跑输?\n2. 趋势信号强但催化已price-in?(查近5日涨幅)\n3. 宏观逆风但标的仍在TopN?\n每项标注 ✅/⚠️/❌, ❌则剔除或降权。\n\n## 第二步：写报告文件\nWRITE output/'+asOf+'_舆情趋势预判选股.md, 结构: 结论先行→总体策略→TopN逐一说明→风险免责\n头一句话: 趋势强度 + 置信度 + 回测达标情况。\n\n## 第三步：落盘数据文件\n1. WRITE '+RD+'/final.json(envelope,data含oneLineConclusion/topN/totalPosition/confidence/keyRisks/contradictions/trends/modules)\n2. WRITE '+RD+'/_rec.json 含 {topN, confidence}\n3. Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1 (失败不影响)\n4. Bash: python scripts/notify_email.py --run-id '+asOf+'_'+G+' 2>&1\n\nschema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。\n注意: 已移除 StructuredOutput 工具引用(W6修复), 直接按 schema 返回即可。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
 
 return report
