@@ -8,10 +8,10 @@
       "role": "CRO/CDMO核心",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "14.46",
+      "currentPrice": "14.65",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-9.79"
+      "currentChangePct": "-2.85"
     },
     {
       "code": "002294",
@@ -21,10 +21,10 @@
       "role": "创新药进攻",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "37.26",
+      "currentPrice": "34.70",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-9.93"
+      "currentChangePct": "-7.00"
     },
     {
       "code": "603369",
@@ -34,10 +34,10 @@
       "role": "白酒价值观察",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "25.63",
+      "currentPrice": "26.66",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-3.57"
+      "currentChangePct": "-0.15"
     },
     {
       "code": "002891",
@@ -47,10 +47,10 @@
       "role": "宠物投机观察",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "28.88",
+      "currentPrice": "30.40",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-2.37"
+      "currentChangePct": "3.19"
     },
     {
       "code": "603198",
@@ -60,10 +60,10 @@
       "role": "白酒观察仓",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "33.45",
+      "currentPrice": "35.03",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-4.65"
+      "currentChangePct": "0.00"
     },
     {
       "code": "002007",
@@ -73,10 +73,10 @@
       "role": "防御底仓(回测观察级)",
       "workflow": "short-term-picks",
       "confidence": "中偏低",
-      "currentPrice": "13.18",
+      "currentPrice": "13.50",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-3.51"
+      "currentChangePct": "1.28"
     },
     {
       "code": "002027",
@@ -86,10 +86,10 @@
       "role": "价值核心(回测未背书-投机)",
       "workflow": "short-term-picks",
       "confidence": "中偏低",
-      "currentPrice": "5.00",
+      "currentPrice": "5.24",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-1.96"
+      "currentChangePct": "1.75"
     },
     {
       "code": "600196",
@@ -99,10 +99,10 @@
       "role": "创新药弹性(回测未背书-投机)",
       "workflow": "short-term-picks",
       "confidence": "中偏低",
-      "currentPrice": "23.40",
+      "currentPrice": "23.62",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-5.30"
+      "currentChangePct": "-1.58"
     },
     {
       "code": "300015",
@@ -112,10 +112,10 @@
       "role": "龙头观察(回测未背书-投机)",
       "workflow": "short-term-picks",
       "confidence": "中偏低",
-      "currentPrice": "8.68",
+      "currentPrice": "8.88",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-2.58"
+      "currentChangePct": "-0.56"
     },
     {
       "code": "sz002001",
@@ -224,7 +224,198 @@
       "currentPrice": null,
       "changePct": null,
       "status": "active"
+    },
+    {
+      "code": "sh600900",
+      "name": "长江电力",
+      "recommendedAt": "20260717",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "sh601985",
+      "name": "中国核电",
+      "recommendedAt": "20260717",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "sz003816",
+      "name": "中国广核",
+      "recommendedAt": "20260717",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "sh601225",
+      "name": "陕西煤业",
+      "recommendedAt": "20260717",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "short-term-picks",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "000543",
+      "name": "皖能电力",
+      "recommendedAt": "20260720",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "short-term-picks",
+      "confidence": "低",
+      "currentPrice": "8.07",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "-2.06"
+    },
+    {
+      "code": "601369",
+      "name": "陕鼓动力",
+      "recommendedAt": "20260720",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "short-term-picks",
+      "confidence": "低",
+      "currentPrice": "9.48",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "-2.07"
+    },
+    {
+      "code": "000899",
+      "name": "赣能股份",
+      "recommendedAt": "20260720",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "short-term-picks",
+      "confidence": "低",
+      "currentPrice": "11.08",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "-5.78"
+    },
+    {
+      "code": "000983",
+      "name": "山西焦煤",
+      "recommendedAt": "20260720",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "hot-trends",
+      "confidence": "低",
+      "currentPrice": "6.33",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "0.64"
+    },
+    {
+      "code": "600674",
+      "name": "川投能源",
+      "recommendedAt": "20260720",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "hot-trends",
+      "confidence": "低",
+      "currentPrice": "16.39",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "1.30"
+    },
+    {
+      "code": "000548",
+      "name": "四川九洲",
+      "recommendedAt": "20260720",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "hot-trends",
+      "confidence": "低",
+      "currentPrice": "4.03",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "-3.36"
+    },
+    {
+      "code": "601985",
+      "name": "中国核电",
+      "recommendedAt": "20260720",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "hot-trends",
+      "confidence": "低",
+      "currentPrice": "9.13",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "0.66"
+    },
+    {
+      "code": "601101",
+      "name": "恒逸石化",
+      "recommendedAt": "20260720",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "hot-trends",
+      "confidence": "低",
+      "currentPrice": "10.56",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "-5.21"
+    },
+    {
+      "code": "600864",
+      "name": "哈尔滨空调",
+      "recommendedAt": "20260720",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "hot-trends",
+      "confidence": "低",
+      "currentPrice": "5.43",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "0.56"
+    },
+    {
+      "code": "601666",
+      "name": "平煤股份",
+      "recommendedAt": "20260720",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "hot-trends",
+      "confidence": "低",
+      "currentPrice": "7.96",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "-0.25"
+    },
+    {
+      "code": "600188",
+      "name": "兖矿能源",
+      "recommendedAt": "20260720",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "hot-trends",
+      "confidence": "低",
+      "currentPrice": "21.02",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "1.11"
     }
   ],
-  "lastUpdated": "2026-07-17 17:36:30"
+  "lastUpdated": "2026-07-21 10:18:36"
 }

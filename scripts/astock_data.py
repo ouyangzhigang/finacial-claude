@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 astock_data.py — a-stock-data skill 共享数据模块
@@ -32,6 +32,22 @@ import random
 from typing import Optional
 from datetime import datetime, timedelta
 
+# ════════════════════════════════
+# HTTP/SSL 工具 (Windows金融数据缺根证书，默认放行verify)
+# ════════════════════════════════
+try:
+    import ssl as _ssl
+    import urllib.request as _urllib_req
+    _SSL_CTX = _ssl._create_unverified_context()
+    HAS_SSL = True
+except Exception:
+    _ssl = None
+    _urllib_req = None
+    _SSL_CTX = None
+    HAS_SSL = False
+
+
+
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
@@ -58,6 +74,8 @@ _em_last_call = [0.0]
 if HAS_REQUESTS:
     EM_SESSION = _requests.Session()
     EM_SESSION.headers.update({"User-Agent": UA})
+    # Windows 上东方财富/同花顺等证书链常不完整，统一放行 verify
+    EM_SESSION.verify = False
     try:
         from requests.adapters import HTTPAdapter
         from urllib3.util.retry import Retry
@@ -594,3 +612,361 @@ def compute_supply_risk(code):
         "risk_score": max(0, min(100, risk)),
         "details": details,
     }
+
+
+# ════════════════════════════════════════════
+# 新增端点 (V3.5+) — 替换 MCP/SSL 失败路径
+# ════════════════════════════════════════════
+
+# ---------- Layer 1: 实时报价与K线 ----------
+
+def tencent_quote(codes):
+    """腾讯批量报价快照 (HTTP GBK, 不封IP)。
+    Args: codes - 股票代码列表,如 ['600519', '000858', '300750']
+    Returns: {code: {name, price, pe_ttm, pb, mcap_yi, float_mcap_yi, turnover_pct, ...}}
+    PE/PB 为空时返回 None (非零),避免下游误判低估。"""
+    if not HAS_REQUESTS:
+        return {}
+    q = ','.join(codes)
+    url = f"http://qt.gtimg.cn/q={q}"
+    ua_headers = {"User-Agent": UA}
+    txt = None
+    # Windows 环境金融数据接口常缺根证书，_SSL_CTX 在模块级别初始化
+    for _retry in range(3):
+        try:
+            req = _urllib_req.Request(url, headers=ua_headers)
+            with _urllib_req.urlopen(req, timeout=15, context=_SSL_CTX) as r:
+                txt = r.read().decode('gbk', errors='ignore')
+            break
+        except Exception:
+            time.sleep(0.5)
+    if not txt:
+        return {}
+    out = {}
+    for line in txt.strip().split(';'):
+        line = line.strip()
+        if not line:
+            continue
+        m = line.split('~')
+        if len(m) < 50:
+            continue
+        try:
+            out[m[2]] = {
+                'code': m[2], 'name': m[1],
+                'price': float(m[3]) if m[3] else 0,
+                'prev_close': float(m[4]) if m[4] else 0,
+                'open': float(m[5]) if m[5] else 0,
+                'vol_hand': float(m[6]) if m[6] else 0,
+                'chg': float(m[31]) if m[31] else 0,
+                'pct': float(m[32]) if m[32] else 0,
+                'high': float(m[33]) if m[33] else 0,
+                'low': float(m[34]) if m[34] else 0,
+                'amount_yi': round(float(m[37]) / 1e8, 2) if m[37] else 0,
+                'turnover_pct': float(m[38]) if m[38] else 0,
+                'pe_ttm': float(m[39]) if m[39] else None,
+                'mktcap_yi': round(float(m[45]) / 1e8, 2) if m[45] else None,
+                'float_mcap_yi': round(float(m[44]) / 1e8, 2) if m[44] else None,
+                'time': m[30] if len(m) > 30 else '',
+            }
+        except Exception:
+            continue
+    return out
+
+
+def baidu_kline_with_ma(code, days=120):
+    """百度 K 线 + 内置 MA5/MA10/MA20 (HTTP JSON, 不封IP)。
+    Args: code - 6位股票代码
+    Returns: {'keys': [...], 'rows': [[date, open, close, high, low, vol, amt, ma5, ma10, ma20, ...]]}"""
+    if not HAS_REQUESTS:
+        return {"keys": [], "rows": []}
+    market_code = 1 if code.startswith("6") else 0
+    url = f"https://finance.pae.baidu.com/vapi/v1?kind=7&stock_type=stock_market_type&code={market_code}.{code}&is_489=1&finClType=1&is_html=0"
+    headers = {"User-Agent": UA, "Referer": "https://finance.pae.baidu.com/"}
+    try:
+        r = em_get(url, params=None, headers=headers, timeout=15)
+        if r is None:
+            return {"keys": [], "rows": []}
+        d = r.json()
+        vinfo = (d.get("Result") or {}).get("vinfo") or {}
+        result = (vinfo.get("Result") or {}).get(f"_{code}") or {}
+        keys = result.get("keys", [])
+        rows_raw = result.get("newbars", [])
+        rows = []
+        for row in rows_raw:
+            parsed = []
+            for v in row:
+                try:
+                    parsed.append(float(v))
+                except (ValueError, TypeError):
+                    parsed.append(v)
+            rows.append(parsed)
+        return {"keys": keys, "rows": rows}
+    except Exception as e:
+        sys.stderr.write(f"[astock] 百度K线失败({code}): {e}\n")
+        return {"keys": [], "rows": []}
+
+
+# ---------- Layer 3: 财务三表 ----------
+
+def sina_financial_report(code, report_type="fzb"):
+    """新浪财务三表 (HTTP JSONP, 免密钥)。
+    Args: code - 6位代码, report_type - 'lrb'(利润表)/'fzb'(资产负债表)/'llb'(现金流量表)
+    Returns: [{报告期, <科目>: <值>, <科目>_同比: <同>}, ...] 最近N期"""
+    if not HAS_REQUESTS:
+        return []
+    url = f"https://money.finance.sina.com.cn/corp/go.php/vFD_FinanceStatement/stockid/{code}/ctrl/main/displaytype/4.phtml"
+    headers = {"User-Agent": UA, "Referer": "https://finance.sina.com.cn/"}
+    try:
+        r = _requests.get(url, headers=headers, timeout=15)
+        text = r.text
+        # 去除 HTML 换行和 JSONP 壳
+        text = re.sub(r'\s+', ' ', text).strip()
+        i = text.find('(')
+        j = text.rfind(')')
+        if i >= 0 and j > i:
+            text = text[i+1:j]
+        data = json.loads(text)
+        items = []
+        if isinstance(data, dict):
+            # 尝试多路径取值: mainHZ/data/result/items
+            for key in ('mainHZ', 'data', 'result', 'items'):
+                val = data.get(key)
+                if isinstance(val, list) and val:
+                    data = val
+                    break
+        elif not isinstance(data, list):
+            return []
+        if isinstance(data, list):
+            for item in data[:5]:  # 最新5期
+                clean = {}
+                if isinstance(item, dict):
+                    for k, v in item.items():
+                        clean[k] = str(v).strip()
+                items.append(clean)
+        return items
+    except Exception as e:
+        sys.stderr.write(f"[astock] 新浪财报失败({code},{report_type}): {e}\n")
+        return []
+
+
+# ---------- Layer 4: 行业比较 ----------
+
+def industry_comparison(top_n=100):
+    """东财行业板块排名 (push2 clist, 限流保护)。
+    Returns: {top: [{rank, name, change_pct, up_count, down_count, leader, leader_change}], bottom: [...], total: int}"""
+    if not HAS_REQUESTS:
+        return {"top": [], "bottom": [], "total": 0}
+    params = {
+        "pn": 1, "pz": str(top_n), "ft": "12",
+        "fs": "m:90+t:2+m:90+t:23+m:90+t:80",
+        "fields": "f1,f2,f3,f4,f5,f6,f12,f14,f15,f16,f17,f18,f19,f20,f21,f22",
+        "ut": "fa5fd02be4c5dd5b2a8b91c573f934c7",
+    }
+    headers = {"User-Agent": UA, "Referer": "https://quote.eastmoney.com/"}
+    try:
+        r = em_get("https://push2.eastmoney.com/api/qt/clist/get", params=params, headers=headers, timeout=15)
+        if r is None:
+            return {"top": [], "bottom": [], "total": 0}
+        d = r.json()
+        diff = (d.get("data") or {}).get("diff") or []
+        if isinstance(diff, dict):
+            diff = list(diff.values())
+        items = []
+        for it in diff:
+            pct = it.get("f3", "")
+            try:
+                pct = float(pct) if pct else 0
+            except (ValueError, TypeError):
+                pct = 0
+            items.append({
+                "rank": it.get("f23", ""),
+                "name": it.get("f14", ""),
+                "change_pct": round(pct, 2),
+                "up_count": it.get("f22", 0),
+                "down_count": it.get("f21", 0),
+                "leader": it.get("f12", ""),
+                "leader_change": it.get("f3", 0),
+            })
+        # 按涨跌幅降序排
+        items.sort(key=lambda x: x["change_pct"], reverse=True)
+        n = len(items)
+        top_list = [{"rank": i+1, **it} for i, it in enumerate(items[:max(n//3, 5)])]
+        bottom_list = [{"rank": n-i, **it} for i, it in enumerate(items[-max(n//3, 5):][::-1])]
+        return {"top": top_list, "bottom": bottom_list, "total": n}
+    except Exception as e:
+        sys.stderr.write(f"[astock] 行业比较失败: {e}\n")
+        return {"top": [], "bottom": [], "total": 0}
+
+
+# ---------- Layer 5: 打板情绪 (涨停池) ----------
+
+def em_zt_pool(date=None):
+    """涨停池 (东财 push2ex)。
+    Returns: [{code, name, price, pct, limit_days, seal_fund, break_times, industry}]"""
+    if date is None:
+        date = datetime.now().strftime("%Y%m%d")
+    return _em_zt_api("getTopicZTPool", "fbt:asc", date)
+
+def em_zb_pool(date=None):
+    """跌停池。Returns: [{code, name, price, break_times, industry}]"""
+    if date is None:
+        date = datetime.now().strftime("%Y%m%d")
+    return _em_zt_api("getTopicZBPool", "fbt:asc", date)
+
+def em_dt_pool(date=None):
+    """炸板池 (打开过涨停但收盘未封住)。Returns: [{code, name, price, pct, industry}]"""
+    if date is None:
+        date = datetime.now().strftime("%Y%m%d")
+    return _em_zt_api("getTopicDTPool", "fund:asc", date)
+
+def limit_up_sentiment(date=None):
+    """打板情绪温度计。Returns: {zt_count, zb_count, dt_count, break_rate(%), max_height, ladder:{连板数:家数}}"""
+    if date is None:
+        date = datetime.now().strftime("%Y%m%d")
+    zt, zb, dt = em_zt_pool(date), em_zb_pool(date), em_dt_pool(date)
+    ladder = {}
+    for s in zt:
+        h = s.get("limit_days", 1) or 1
+        ladder[h] = ladder.get(h, 0) + 1
+    zt_n, zb_n = len(zt), len(zb)
+    return {
+        "date": date,
+        "zt_count": zt_n,
+        "zb_count": zb_n,
+        "dt_count": len(dt),
+        "break_rate": round(zb_n / (zt_n + zb_n) * 100, 1) if (zt_n + zb_n) else 0,
+        "max_height": max((s.get("limit_days", 1) or 1 for s in zt), default=0),
+        "ladder": dict(sorted(ladder.items())),
+    }
+
+
+# ---------- Layer 6: 公告与新闻 ----------
+
+def cninfo_announcements(code, page_size=20):
+    """巨潮资讯公告查询。Returns: [{title, type, date, url}]"""
+    if not HAS_REQUESTS:
+        return []
+    # Windows 环境金融数据接口常缺根证书，_SSL_CTX 在模块级别初始化
+    market_code = 1 if code.startswith("6") else 0
+    msg_url = "https://www.cninfo.com.cn/new/hisMsg/query"
+    post_data = json.dumps({"stock": f"{market_code}.{code}", "pageNum": 1, "pageSize": page_size}).encode()
+    req = _urllib_req.Request(msg_url, data=post_data, headers={
+        "User-Agent": UA, "Content-Type": "application/json",
+        "Referer": "http://www.cninfo.com.cn/"
+    })
+    try:
+        with _urllib_req.urlopen(req, timeout=15, context=_SSL_CTX) as r:
+            d = json.loads(r.read().decode('utf-8'))
+        results = (d.get("announcements") or [])
+        return [{
+            "title": a.get("adjTitle", a.get("title", "")),
+            "type": a.get("category", ""),
+            "date": str(a.get("noticeDate", ""))[:10],
+            "url": a.get("shareUrl", ""),
+        } for a in results[:page_size]]
+    except Exception as e:
+        sys.stderr.write(f"[astock] 巨潮公告失败({code}): {e}\n")
+        return []
+
+
+def eastmoney_global_news(page_size=50):
+    """东财7x24全球快讯。Returns: [{title, summary, time}]"""
+    if not HAS_REQUESTS:
+        return []
+    try:
+        url = "https://np-listapi.eastmoney.com/comm/web/getNewsByColumns"
+        params = {
+            "columns": "WTkzMTQ6MTEyODozOTgzOjM5ODo0Mzc=:WTRhMjg0YjowOmRlZmF1bHQ=",
+            "column": "3983", "requireAll": 1, "pageSize": page_size,
+        }
+        headers = {"User-Agent": UA, "Referer": "https://www.eastmoney.com/"}
+        r = em_get(url, params=params, headers=headers, timeout=15)
+        if r is None:
+            return []
+        d = r.json()
+        items = (d.get("data") or {}).get("list") or []
+        return [{
+            "title": it.get("title", ""),
+            "summary": str(it.get("digest", ""))[:200],
+            "time": str(it.get("showTime", "")),
+        } for it in items[:page_size]]
+    except Exception as e:
+        sys.stderr.write(f"[astock] 东财全局新闻失败: {e}\n")
+        return []
+
+
+# ---------- Layer 7: 北向资金 ----------
+
+def hsgt_realtime():
+    """北向资金实时 (同花顺数据接口)。Returns: {time, hgt_yi, sgt_yi, hslt_yi}"""
+    if not HAS_REQUESTS:
+        return {}
+    try:
+        url = "http://data.hexin.cn/marketSzkApi/northFinanceData"
+        r = _requests.get(url, headers={"User-Agent": UA}, timeout=10)
+        d = r.json()
+        data = d.get("data") or {}
+        hgt = data.get("hgt") or {}
+        sgt = data.get("sgt") or {}
+        return {
+            "time": datetime.now().strftime("%H:%M"),
+            "hgt_yi": round(hgt.get("netAmt", 0) / 1e8, 2) if hgt.get("netAmt") else 0,
+            "sgt_yi": round(sgt.get("netAmt", 0) / 1e8, 2) if sgt.get("netAmt") else 0,
+            "hslt_yi": 0,  # 合计
+        }
+    except Exception as e:
+        sys.stderr.write(f"[astock] 北向资金失败: {e}\n")
+        return {}
+
+
+# ---------- Layer 8: 分红历史 ----------
+
+def dividend_history(code, page_size=10):
+    """分红送转记录。Returns: [{date, bonus_rmb, transfer_ratio, bonus_ratio, plan}]"""
+    data = eastmoney_datacenter(
+        "RPT_SHAREBONUS_DET",
+        filter_str=f'(SECURITY_CODE="{code}")',
+        page_size=page_size, sort_columns="END_DATE", sort_types="-1",
+    )
+    return [{
+        "date": str(row.get("END_DATE", ""))[:10],
+        "bonus_rmb": float(row.get("PLAN_BONUS_PERSHARE", 0) or 0),
+        "transfer_ratio": float(row.get("TRANSFER_PER_10", 0) or 0),
+        "bonus_ratio": float(row.get("BONUS_PER_10", 0) or 0),
+        "plan": row.get("BONUS_PLAN_DESC", ""),
+    } for row in data]
+
+
+# ---------- Layer 10: 计算工具 ----------
+
+def forward_pe(price, eps_forecast):
+    """前向PE = 当前价 / 预测每股收益"""
+    if not eps_forecast or eps_forecast == 0:
+        return None
+    return round(price / abs(eps_forecast), 2)
+
+
+def pe_digestion(current_pe, cagr, target_pe=30):
+    """PE消化年数: 假设盈利以CAGR增长,多久后PE降到目标值。"""
+    if not cagr or cagr <= 0 or not current_pe or current_pe <= 0:
+        return None
+    target_eps = current_pe / target_pe  # 目标PE对应的EPS
+    # EPS_current ~ 1 (归一化), future_EPS = (1+cagr)^n
+    # target_pe = price / (EPS_current * (1+cagr)^n) = current_pe / (1+cagr)^n
+    # (1+cagr)^n = current_pe / target_pe
+    # n = log(current_pe/target_pe) / log(1+cagr)
+    try:
+        import math
+        ratio = current_pe / target_pe
+        if ratio <= 1:
+            return 0  # 已在目标以下
+        return round(math.log(ratio) / math.log(1 + cagr / 100), 1)
+    except (ValueError, ZeroDivisionError):
+        return None
+
+
+def calc_peg(pe, cagr):
+    """PEG = PE / 增长率(%)。(<1 低估, 1-1.5 合理, >1.5 贵)"""
+    if not cagr or cagr <= 0 or not pe:
+        return None
+    return round(pe / cagr, 2)

@@ -97,5 +97,44 @@
     "headline": "Shock regime(风格急转退潮期,创业板-4.36%/84.6%下跌)电力红利唯一正收益: Top1国电电力(ROE18.6%+利润+75%+回测cautious WR56.6%/DD-7.66%全池最优,入场优势17/25边界值)4.8%+华电国际9.3%+皖能电力7.7%+陕鼓/赣能0%观察;总仓位20.9%/现金79.1%;赣能涨停日占5日涨幅90%追涨陷阱剔除;腾讯K线抽查4项一致1项追涨确认;置信度中偏低(回测5只仅1只cautious)",
     "confidence": "中偏低",
     "fetchedAt": "20260717"
+  },
+  {
+    "runId": "20260717_short-term-picks",
+    "asOf": "20260717",
+    "goal": "short-term-picks",
+    "path": "data/runs/20260717_short-term-picks/final.json",
+    "headline": "全球AI芯片暴跌传导+美伊冲突升级致A股四指数跌3-7%/90.5%个股下跌,电力板块为唯一结构性防御机会(11只涨停);Top1长江电力(入场优势21/25,回测cautious胜率55.6%/均收+0.35%/回撤-5.96%三项达标)+国电电力(4.8%)+中国核电(8.8%)+广核/陕煤观察0%;总仓位41.6%/现金58.4%;回测10只仅2cautious+1observation;对抗审查10对矛盾(0硬4中3低3数据缺失)全调和;置信度中偏低",
+    "confidence": "中偏低",
+    "fetchedAt": "20260717"
+  },
+  {
+    "runId": "20260720_short-term-picks",
+    "asOf": "20260720",
+    "goal": "short-term-picks",
+    "path": "output/20260720_短周期2周推荐清单.md",
+    "dataPath": "data/runs/20260720_short-term-picks/final.json",
+    "headline": "极端波动日全池涨停零可用流动性:46只候选零过关,回测全部rejected;Top5空仓满现防御观望。Pipeline矛盾:M1/M2实锤(risk-portfolio评分源与候选池不一致)。置信度低。",
+    "confidence": "低",
+    "fetchedAt": "20260720"
+  },
+  {
+    "runId": "20260720_hot-trends",
+    "asOf": "20260720",
+    "goal": "hot-trends",
+    "path": "output/20260720_热门板块潜力股综合推荐.md",
+    "dataPath": "data/runs/20260720_hot-trends/final.json",
+    "headline": "北向370亿驱动央企+煤炭+电力三重共振启动期，市场广度极弱(上涨31.5%)→防御型Top8配置山西焦煤/川投能源各15%底仓，总仓位70%，置信度低(回测全链缺失)",
+    "confidence": "低",
+    "fetchedAt": "20260720"
+  },
+  {
+    "runId": "20260720_hot-trends",
+    "asOf": "20260720",
+    "goal": "hot-trends",
+    "path": "output/20260720_热门板块潜力股综合推荐.md",
+    "dataPath": "data/runs/20260720_hot-trends/final.json",
+    "headline": "北向370亿驱动央企+煤炭+电力三重共振启动期，市场广度极弱(上涨31.5%)→防御型Top8配置山西焦煤/川投能源各15%底仓，总仓位70%，置信度低(回测全链缺失)",
+    "confidence": "低",
+    "fetchedAt": "20260720"
   }
 ]

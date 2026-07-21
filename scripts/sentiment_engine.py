@@ -34,59 +34,20 @@ except Exception:
 
 # ════════════════════════════════════════════
 # 共享模块: 从 astock_data 导入基础工具
+# 注意: EM_SESSION/em_get/em_post/HAS_REQUESTS/UA 等底层 HTTP 设施
+# 已全部迁移到 astock_data.py (V3.5+) 统一维护, 此处不再重复实现。
 # ════════════════════════════════════════════
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 try:
     from astock_data import em_get, em_post, UA, HAS_REQUESTS
-    _requests = None  # 不直接 import requests, 走 astock_data
-    if not HAS_REQUESTS:
-        import requests as _requests
+    # astock_data 可用时直接复用其 EM_SESSION + 限流 + retry, 无需本地副本
 except ImportError:
-    # astock_data 不可用时自行降级
     try:
         import requests as _requests
         HAS_REQUESTS = True
     except ImportError:
         HAS_REQUESTS = False
     UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-
-    EM_MIN_INTERVAL = 1.0
-    _em_last_call = [0.0]
-    import random
-
-    if HAS_REQUESTS:
-        EM_SESSION = _requests.Session()
-        EM_SESSION.headers.update({"User-Agent": UA})
-    else:
-        EM_SESSION = None
-
-    def em_get(url, params=None, headers=None, timeout=15, **kwargs):
-        if not HAS_REQUESTS:
-            return None
-        wait = EM_MIN_INTERVAL - (time.time() - _em_last_call[0])
-        if wait > 0:
-            time.sleep(wait + random.uniform(0.1, 0.5))
-        try:
-            r = EM_SESSION.get(url, params=params, headers=headers, timeout=timeout, **kwargs)
-            return r
-        except Exception:
-            return None
-        finally:
-            _em_last_call[0] = time.time()
-
-    def em_post(url, json_data=None, headers=None, timeout=15):
-        if not HAS_REQUESTS:
-            return None
-        wait = EM_MIN_INTERVAL - (time.time() - _em_last_call[0])
-        if wait > 0:
-            time.sleep(wait + random.uniform(0.1, 0.5))
-        try:
-            r = EM_SESSION.post(url, json=json_data, headers=headers, timeout=timeout)
-            return r
-        except Exception:
-            return None
-        finally:
-            _em_last_call[0] = time.time()
 
 
 # ════════════════════════════════════════════

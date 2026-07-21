@@ -335,10 +335,18 @@ def compute_timing_score(symbol: str, catalyst_info: dict = None) -> dict:
     """综合入场评分: 信号+动量质量+透支概率 → 入场评分(-30到+30)。
     此评分叠加到 Layer 1 综合评分上。
     """
-    code = symbol.replace('sh', '').replace('sz', '')
-    sym = symbol if symbol.startswith(('sh', 'sz')) else (
-        f"sh{code}" if code.startswith(('6', '9')) else f"sz{code}"
-    )
+    # Normalize: strip any sh/sz prefix (case-insensitive), re-add lowercase prefix based on stock code
+    # 股票代码规范化: 从首数字判断交易所(而非取前缀,避免 "603456"→"60"错误)
+    if symbol.lower().startswith(('sh', 'sz')):
+        # 已有sh/sz前缀
+        exchange_prefix = symbol[:2].lower()
+        code_only = symbol[2:]
+    else:
+        # 无sh/sz前缀,从首位数字判断: 6=SH, 0/3=SZ
+        first_digit = symbol[0] if symbol else ''
+        exchange_prefix = 'sh' if first_digit == '6' else 'sz'
+        code_only = symbol
+    sym = f"{exchange_prefix}{code_only}"
 
     rows = get_kline_data(sym)
     if not rows:

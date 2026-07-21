@@ -1,0 +1,118 @@
+{
+  "fetchedAt": "20260720",
+  "asOf": "20260720",
+  "method": "local-http-fallback-tencent-em",
+  "stocks": {
+    "000725": {
+      "tencent_quote": {
+        "name": "��������",
+        "price": 5.81,
+        "change_pct": -4.28,
+        "volume": 13189490.0,
+        "turnover_rate": 794335.0,
+        "pe_ttm": 36.17,
+        "pb_mf": 6.2,
+        "total_mv": 5.8
+      },
+      "fundamental_snapshot": {
+        "raw": ""
+      },
+      "pledge_check": {
+        "raw": "ERROR:HTTP Error 502: Bad Gateway"
+      }
+    },
+    "002891": {
+      "tencent_quote": {
+        "name": "�г�ɷ�",
+        "price": 29.56,
+        "change_pct": 2.35,
+        "volume": 60399.0,
+        "turnover_rate": 17722.0,
+        "pe_ttm": 27.42,
+        "pb_mf": 29.84,
+        "total_mv": 28.61
+      },
+      "fundamental_snapshot": {
+        "raw": ""
+      },
+      "pledge_check": {
+        "raw": "ERROR:HTTP Error 502: Bad Gateway"
+      }
+    },
+    "002294": {
+      "tencent_quote": {
+        "name": "����̩",
+        "price": 37.82,
+        "change_pct": 1.5,
+        "volume": 200305.0,
+        "turnover_rate": 75393.0,
+        "pe_ttm": 62.33,
+        "pb_mf": 38.98,
+        "total_mv": 35.88
+      },
+      "fundamental_snapshot": {
+        "raw": ""
+      },
+      "pledge_check": {
+        "raw": "ERROR:HTTP Error 502: Bad Gateway"
+      }
+    },
+    "000543": {
+      "tencent_quote": {
+        "name": "���ܵ���",
+        "price": 7.96,
+        "change_pct": 3.51,
+        "volume": 326166.0,
+        "turnover_rate": 25491.0,
+        "pe_ttm": 8.39,
+        "pb_mf": 7.99,
+        "total_mv": 7.54
+      },
+      "fundamental_snapshot": {
+        "raw": ""
+      },
+      "pledge_check": {
+        "raw": "ERROR:HTTP Error 502: Bad Gateway"
+      }
+    },
+    "000899": {
+      "tencent_quote": {
+        "name": "���ܹɷ�",
+        "price": 11.53,
+        "change_pct": 7.76,
+        "volume": 420390.0,
+        "turnover_rate": 47027.0,
+        "pe_ttm": 11.08,
+        "pb_mf": 11.6,
+        "total_mv": 10.59
+      },
+      "fundamental_snapshot": {
+        "raw": ""
+      },
+      "pledge_check": {
+        "raw": "ERROR:HTTP Error 502: Bad Gateway"
+      }
+    },
+    "601369": {
+      "tencent_quote": {
+        "name": "�¹Ķ���",
+        "price": 9.75,
+        "change_pct": 2.63,
+        "volume": 266657.0,
+        "turnover_rate": 25750.0,
+        "pe_ttm": 24.28,
+        "pb_mf": 9.86,
+        "total_mv": 9.47
+      },
+      "fundamental_snapshot": {
+        "raw": ""
+      },
+      "pledge_check": {
+        "raw": "ERROR:HTTP Error 502: Bad Gateway"
+      }
+    }
+  },
+  "_meta": {
+    "notes": "All MCPs SSL-down. Using Tencent quotes + EastMoney HTTP APIs."
+  }
+}
