@@ -46,14 +46,14 @@ let ctx = ''
 // ── Phase 1: 热榜挖掘(含 prefetch) ──
 phase('热榜挖掘')
 log('🔄 启动热榜挖掘 — agent: catalyst-scanner')
-const cat = await S('catalyst', () => agent(PREFETCH+P('catalyst-scanner','多源挖掘今日主线:热榜+龙虎榜+涨停池+连板梯队+市场概览。',"用 ifind_search_news(必带time_start/end)+china-news+'PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python scripts/hot_trend_dig.py' (Step4-5涨停池+市场概览可用,Step1-3 SSL挂则curl龙虎榜)+cn_fetch.py rank。非结构化页面用 web-scraping fetch.py 抓取。输出主线主题+情绪(涨停/封板率/炸板率/连板高度)+资金方向。", ctx), {agentType:'catalyst-scanner',schema:RET,label:'catalyst',phase:'热榜挖掘'}))
+const cat = await S('catalyst', () => agent(PREFETCH+P('catalyst-scanner','多源挖掘今日主线:热榜+龙虎榜+涨停池+连板梯队+市场概览。','⚠️ 不要用 MCP(全 SSL 挂)。用 PYTHONIOENCODING=utf-8 python scripts/hot_trend_dig.py + cn_fetch.py rank + astock_data.py tencent_quote 批量取行情。非结构化页面用 web-scraping fetch.py。输出主线主题+情绪(涨停/封板率/连板高度)+资金方向。', ctx), {agentType:'catalyst-scanner',schema:RET,label:'catalyst',phase:'热榜挖掘'}))
 ctx = ap(cat,'主线/情绪')
 log('✅ 热榜挖掘完成 — ' + (cat?.summary || '空'))
 
 // ── Phase 2: 板块成分(承接主线主题) ──
 phase('板块成分')
 log('🔄 启动板块成分 — agent: sector-analyst')
-const sector = await S('sector', () => agent(P('sector-analyst','承接主线,挖板块成分+龙头+候选池。','用 Read 读 '+cat.path+' 的 data.mainThemes 确定主线方向;对主线用 ifind_sector_data(一次一板块)+cn_fetch.py rank 取成分+龙头+5日涨幅排名;候选优先<40元。cn_fetch 不覆盖的页面用 web-scraping fetch.py。', ctx), {agentType:'sector-analyst',schema:RET,label:'sector',phase:'板块成分'}))
+const sector = await S('sector', () => agent(P('sector-analyst','承接主线,挖板块成分+龙头+候选池。','⚠️ 不要用 MCP。用 Read 读 '+cat.path+' 的 data.mainThemes 确定主线方向;对主线用 cn_fetch.py rank + astock_data.py tencent_quote 批量取行情;候选优先<40元。', ctx), {agentType:'sector-analyst',schema:RET,label:'sector',phase:'板块成分'}))
 ctx += ap(sector,'板块/候选')
 log('✅ 板块成分完成 — ' + (sector?.summary || '空'))
 
@@ -61,8 +61,8 @@ log('✅ 板块成分完成 — ' + (sector?.summary || '空'))
 phase('技术∥排雷')
 log('🔄 启动技术∥排雷 — technical-liquidity ∥ fundamentals-analyst')
 const [tech, fund] = await parallel([
-  () => S('tech', () => agent(P('technical-liquidity','对候选批量做流动性过滤+动量。','用 Read 读 '+sector.path+' 的 data.candidates 获取候选清单;用 ifind_get_stock_summary 或 cn_fetch.py factors 批量算动量+流动性;硬门槛过滤(成交额>=1亿/换手1-7%/非ST非次新/近5-20日>30%透支剔除)。返pass/reject/factors。', ctx), {agentType:'technical-liquidity',schema:RET,label:'technical',phase:'技术∥排雷'})),
-  () => S('fund', () => agent(P('fundamentals-analyst','对候选批量排雷(对 sector 全候选做)。','用 Read 读 '+sector.path+' 的 data.candidates 获取候选清单;用 ifind_get_stock_financials+ifind_get_stock_shareholders 批量排雷(商誉/质押/造假),硬雷点剔除。返每只 verdict。', ctx), {agentType:'fundamentals-analyst',schema:RET,label:'fundamentals',phase:'技术∥排雷'})),
+  () => S('tech', () => agent(P('technical-liquidity','对候选批量做流动性过滤+动量。','⚠️ 不要用 MCP。用 Read 读 '+sector.path+' 的 data.candidates 获取候选清单;用 cn_fetch.py factors kline 批量算动量+流动性;硬门槛过滤(成交额>=1亿/换手1-7%/非ST非次新/近5日>30%透支剔除)。返pass/reject/factors。', ctx), {agentType:'technical-liquidity',schema:RET,label:'technical',phase:'技术∥排雷'})),
+  () => S('fund', () => agent(P('fundamentals-analyst','对候选批量排雷。','⚠️ 不要用 MCP。用 Read 读 '+sector.path+' 的 data.candidates 获取候选清单;用 astock_data.py tencent_quote 取PE/PB/市值;硬雷点(PE>200且无增速/亏损/商誉>30%)剔除。返每只 verdict。', ctx), {agentType:'fundamentals-analyst',schema:RET,label:'fundamentals',phase:'技术∥排雷'})),
 ])
 ctx += ap(tech,'技术') + ap(fund,'财务')
 log('✅ 技术∥排雷完成')

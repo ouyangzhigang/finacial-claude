@@ -44,17 +44,17 @@ let ctx = ''
 
 // ── Phase 1: 舆情挖掘(含 prefetch) ──
 phase('舆情挖掘')
-const cat = await S('catalyst', () => agent(PREFETCH+P('catalyst-scanner','舆情挖掘:从新闻语义+热榜+社交情绪识别趋势+候选股。','用 ifind_search_news(必带time_start/end,query含"'+focus+'")+china-news+hot_trend_dig.py 识别2-3个趋势主题,给信号强度+信息源+候选代码。非结构化页面用 web-scraping fetch.py。警惕纯炒作,给情绪温度+市场怀疑度。', ctx), {agentType:'catalyst-scanner',schema:RET,label:'catalyst',phase:'舆情挖掘'}))
+const cat = await S('catalyst', () => agent(PREFETCH+P('catalyst-scanner','舆情挖掘:从新闻语义+热榜+社交情绪识别趋势+候选股。','⚠️ 不要用 MCP(全 SSL 挂)。用 python scripts/hot_trend_dig.py + cn_fetch.py rank + astock_data.py 取新闻/资金流。识别2-3个趋势主题,给信号强度+信息源+候选代码。警惕纯炒作,给情绪温度+市场怀疑度。', ctx), {agentType:'catalyst-scanner',schema:RET,label:'catalyst',phase:'舆情挖掘'}))
 ctx = ap(cat,'舆情趋势')
 
 // ── Phase 2: 趋势验证(读 catalyst 的趋势主题) ──
 phase('趋势验证')
-const macro = await S('macro', () => agent(P('macro-strategist','验证舆情趋势是否与宏观顺风方向一致。','用 Read 读 '+cat.path+' 的 data.trends 获取舆情趋势;用 ifind_index_data+ifind_search_news+ifind_get_edb_data 判断趋势是否落在宏观顺风方向。trendAligned=true 才继续,false 则降权。', ctx), {agentType:'macro-strategist',schema:RET,label:'macro',phase:'趋势验证'}))
+const macro = await S('macro', () => agent(P('macro-strategist','验证舆情趋势是否与宏观顺风方向一致。','⚠️ 不要用 MCP。用 Read 读 '+cat.path+' 的 data.trends 获取舆情趋势;用 cn_fetch.py kline sh000001 30 取上证K线 + astock_data.py tencent_quote 取指数估值。判断趋势是否落在宏观顺风方向。trendAligned=true 才继续,false 则降权。', ctx), {agentType:'macro-strategist',schema:RET,label:'macro',phase:'趋势验证'}))
 ctx += ap(macro,'趋势验证')
 
 // ── Phase 3: 板块候选(读 catalyst + macro) ──
 phase('板块候选')
-const sector = await S('sector', () => agent(P('sector-analyst','承接趋势,挖对应板块+候选池。','用 Read 读 '+cat.path+' 和 '+macro.path+';对验证通过的趋势(trendAligned=true),用 ifind_sector_data+ifind_search_stocks+手动龙头 取板块成分+候选,优先<40元。合并去重。', ctx), {agentType:'sector-analyst',schema:RET,label:'sector',phase:'板块候选'}))
+const sector = await S('sector', () => agent(P('sector-analyst','承接趋势,挖对应板块+候选池。','⚠️ 不要用 MCP。用 Read 读 '+cat.path+' 和 '+macro.path+';对验证通过的趋势(trendAligned=true),用 cn_fetch.py rank + astock_data.py tencent_quote 取板块成分+候选,优先<40元。合并去重。', ctx), {agentType:'sector-analyst',schema:RET,label:'sector',phase:'板块候选'}))
 ctx += ap(sector,'候选')
 
 // ── Phase 4: 技术∥排雷(并行,都读 sector 候选) ──

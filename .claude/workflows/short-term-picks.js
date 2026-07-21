@@ -56,14 +56,14 @@ log('✅ 宏观定调完成 — ' + (macro?.summary || '空'))
 // ── Phase 2: 候选池(承接宏观顺风方向) ──
 phase('候选池')
 log('🔄 启动候选池生成 — agent: sector-analyst')
-const sector = await S('sector', () => agent(P('sector-analyst','在顺风方向内撒网,生成候选池>=30只。','Read '+macro.path+' 的 data.tailwinds 确定顺风行业。用 ifind_search_stocks(NL选股)+ifind_sector_data+cn_fetch.py rank 多源汇总30-50只去重,标注来源。cn_fetch 不覆盖的用 web-scraping fetch.py。1w账户优先<40元。', ctx), {agentType:'sector-analyst',schema:RET,label:'sector',phase:'候选池'}))
+const sector = await S('sector', () => agent(P('sector-analyst','在顺风方向内撒网,生成候选池>=30只。','⚠️ 数据通道: 本机 MCP(iFind/Wind/AkShare) 全 SSL 挂, 不要尝试 MCP 工具。Read '+macro.path+' 的 data.tailwinds 确定顺风行业。用 cn_fetch.py rank changepercent 80 取涨幅榜 + astock_data.py tencent_quote 批量取行情PE/PB/市值 + cn_fetch.py kline 取技术面, 多源汇总30-50只去重。1w账户优先<40元。', ctx), {agentType:'sector-analyst',schema:RET,label:'sector',phase:'候选池'}))
 ctx += ap(sector,'候选池')
 log('✅ 候选池完成 — ' + (sector?.summary || '空'))
 
 // ── Phase 3: 流动性过滤(读候选池) ──
 phase('流动性过滤')
 log('🔄 启动流动性过滤 — agent: technical-liquidity')
-const tech = await S('technical', () => agent(P('technical-liquidity','对全部候选批量做流动性硬门槛过滤+短线因子。','用 Read 读 '+sector.path+' 的 data.candidates 获取候选清单;用 ifind_get_stock_summary 或 cn_fetch.py factors 批量算5/10/20日动量+MA20+量价突破+amt20;硬门槛(成交额>=1亿/换手1-7%/市值>=30亿/非ST/近5-10-20日>30%透支剔除)。返pass/reject/factors。', ctx), {agentType:'technical-liquidity',schema:RET,label:'technical',phase:'流动性过滤'}))
+const tech = await S('technical', () => agent(P('technical-liquidity','对全部候选批量做流动性硬门槛过滤+短线因子。','⚠️ 不要用 MCP 工具(全 SSL 挂)。用 Read 读 '+sector.path+' 的 data.candidates 获取候选清单;用 cn_fetch.py factors 批量算5/10/20日动量+MA20+量价突破;硬门槛(成交额>=1亿/换手1-7%/市值>=30亿/非ST/近5日>30%透支剔除)。返pass/reject/factors。', ctx), {agentType:'technical-liquidity',schema:RET,label:'technical',phase:'流动性过滤'}))
 ctx += ap(tech,'流动性')
 log('✅ 流动性过滤完成 — ' + (tech?.summary || '空'))
 
@@ -71,8 +71,8 @@ log('✅ 流动性过滤完成 — ' + (tech?.summary || '空'))
 phase('并行评分')
 log('🔄 启动并行评分 — catalyst-scanner ∥ fundamentals-analyst')
 const [cat, fund] = await parallel([
-  () => S('catalyst', () => agent(P('catalyst-scanner','对过关票批量做催化兑现度+情绪+资金。','⚠️ 数据通道纪律（严格执行）: 1) 先试 ifind_search_news；如果任何 MCP 工具调用 >60s 无返回，立即放弃该工具改走以下备选；2) 备选 A: python scripts/cn_fetch.py --keyword <词> 取新浪/腾讯资讯；3) 备选 B: python scripts/hot_trend_dig.py 取龙虎榜；4) 备选 C: 基于前序环节已知信息 + LLM 常识推断，明确标注"推断路径替代MCP"。不要在任何单一工具上无限等待。返每只催化+整体情绪。', ctx), {agentType:'catalyst-scanner',schema:RET,label:'catalyst',phase:'并行评分'})),
-  () => S('fundamentals', () => agent(P('fundamentals-analyst','对过关票批量做财务排雷+估值锚。','用 Read 读 '+tech.path+' 的 data.pass 获取过关票清单;用 ifind_get_stock_financials(年报日期优先,max5主体可分批)+ifind_get_stock_shareholders 批量排雷+估值分位。硬雷点一票否决。', ctx), {agentType:'fundamentals-analyst',schema:RET,label:'fundamentals',phase:'并行评分'})),
+  () => S('catalyst', () => agent(P('catalyst-scanner','对过关票批量做催化兑现度+情绪+资金。','⚠️ 数据通道: 本机 MCP 全 SSL 挂, 不要尝试 MCP 工具。1) python scripts/cn_fetch.py --keyword <词> 取新浪/腾讯资讯; 2) python scripts/hot_trend_dig.py 取龙虎榜; 3) astock_data.py 取资金流/新闻。返每只催化+整体情绪。', ctx), {agentType:'catalyst-scanner',schema:RET,label:'catalyst',phase:'并行评分'})),
+  () => S('fundamentals', () => agent(P('fundamentals-analyst','对过关票批量做财务排雷+估值锚。','⚠️ 不要用 MCP 工具(全 SSL 挂)。用 Read 读 '+tech.path+' 的 data.pass 获取过关票清单;用 astock_data.py tencent_quote 取PE/PB/市值 + cn_fetch.py kline 取30日K线算技术位。硬雷点(PE>200且无增速/亏损/商誉>30%)一票否决。', ctx), {agentType:'fundamentals-analyst',schema:RET,label:'fundamentals',phase:'并行评分'})),
 ])
 ctx += ap(cat,'催化') + ap(fund,'财务')
 log('✅ 并行评分完成')

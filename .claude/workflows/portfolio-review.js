@@ -46,7 +46,7 @@ let ctx = ''
 // ── Phase 1: 组合体检(含 prefetch) ──
 phase('组合体检')
 log('🔄 启动组合体检 — agent: risk-portfolio')
-const risk = await S('risk', () => agent(PREFETCH+P('risk-portfolio','对持仓做组合层体检:相关性+集中度+因子暴露+隐性偏移。','持仓清单: '+holdingsStr+'。用 ifind_get_stock_summary日K算持仓间相关性(近20日收益相关)+行业集中度+风格暴露+催化同源。识别"同涨同跌"对与隐性偏移。对每只给初步信号衰减判断。', ctx), {agentType:'risk-portfolio',schema:RET,label:'risk',phase:'组合体检'}))
+const risk = await S('risk', () => agent(PREFETCH+P('risk-portfolio','对持仓做组合层体检:相关性+集中度+因子暴露+隐性偏移。','持仓清单: '+holdingsStr+'。⚠️ 不要用 MCP。用 cn_fetch.py kline 取近20日K线算持仓间相关性+行业集中度+风格暴露。识别"同涨同跌"对与隐性偏移。对每只给初步信号衰减判断。', ctx), {agentType:'risk-portfolio',schema:RET,label:'risk',phase:'组合体检'}))
 ctx = ap(risk,'组合体检')
 log('✅ 组合体检完成 — ' + (risk?.summary || '空'))
 
@@ -56,7 +56,7 @@ log('🔄 启动持仓深评 — fundamentals∥technical∥catalyst')
 const [fund, tech, cat] = await parallel([
   () => S('fund', () => agent(P('fundamentals-analyst','对持仓批量做基本面变化复查。','用 Read 读 '+risk.path+' 的 data.holdingsAssessment 获取持仓清单;检查持仓最新财报 vs 建仓时变化(业绩拐点/新红旗/股东变化)。返每只 verdict+earningsChange。', ctx), {agentType:'fundamentals-analyst',schema:RET,label:'fundamentals',phase:'持仓深评'})),
   () => S('tech', () => agent(P('technical-liquidity','对持仓批量做技术信号衰减检查。','用 Read 读 '+risk.path+' 的 data.holdingsAssessment 获取持仓清单;检查每只:近5日动量转负?跌破MA5/MA20?量能萎缩?返每只 signalDecay+action(持有/减仓/换仓)。', ctx), {agentType:'technical-liquidity',schema:RET,label:'technical',phase:'持仓深评'})),
-  () => S('cat', () => agent(P('catalyst-scanner','对持仓批量做催化兑现/落空检查。','用 Read 读 '+risk.path+' 的 data.holdingsAssessment 获取持仓清单;用 ifind_search_news+china-news get_stock_news+ifind_get_stock_events 检查每只:原催化已兑现/落空?新催化临近?返每只 catalystFulfilled+upcoming+action。非结构化页面用 web-scraping fetch.py。', ctx), {agentType:'catalyst-scanner',schema:RET,label:'catalyst',phase:'持仓深评'})),
+  () => S('cat', () => agent(P('catalyst-scanner','对持仓批量做催化兑现/落空检查。','用 Read 读 '+risk.path+' 的 data.holdingsAssessment 获取持仓清单。⚠️ 不要用 MCP。用 python scripts/cn_fetch.py --keyword <股票名> 取新浪/腾讯资讯 + astock_data.py 取资金流。检查每只:原催化已兑现/落空?新催化临近?返每只 catalystFulfilled+upcoming+action。', ctx), {agentType:'catalyst-scanner',schema:RET,label:'catalyst',phase:'持仓深评'})),
 ])
 ctx += ap(fund,'基本面') + ap(tech,'技术') + ap(cat,'催化')
 log('✅ 持仓深评完成')

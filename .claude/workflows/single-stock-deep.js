@@ -52,9 +52,9 @@ phase('独立分析')
 log('🔄 启动4维并行分析 — macro∥fundamentals∥technical∥catalyst')
 const [macro, fund, tech, cat] = await parallel([
   () => S('macro', () => agent(PREFETCH+P('macro-strategist','对目标标的所属行业做"天时"五维定调。','用工具链取该股所属行业宏观读数+政策节点+情绪,输出顺风方向2-3+占优风格。判断目标标的所属方向是否落在顺风区。', '', TGT), {agentType:'macro-strategist',schema:RET,label:'macro',phase:'独立分析'})),
-  () => S('fund', () => agent(P('fundamentals-analyst','对目标标的做财务画像+估值锚+排雷。','Read '+SHARED+' 获取市场背景。用 ifind_get_stock_financials(年报日期优先)+ifind_get_stock_summary+ifind_get_stock_shareholders 取财务+估值分位+排雷,硬雷点一票否决。', '', TGT), {agentType:'fundamentals-analyst',schema:RET,label:'fundamentals',phase:'独立分析'})),
-  () => S('tech', () => agent(P('technical-liquidity','对目标标的做流动性硬门槛+短线因子+技术位。','Read '+SHARED+' 获取市场背景。用 ifind_get_stock_summary 取近1月日K算5/10/20日动量+MA20+量价突破;流动性硬门槛(成交额>=1亿/换手1-7%/市值>=30亿)不过关直接标注。盘中价须收盘复核。', '', TGT), {agentType:'technical-liquidity',schema:RET,label:'technical',phase:'独立分析'})),
-  () => S('cat', () => agent(P('catalyst-scanner','对目标标的做催化日历+兑现度+情绪+资金分析。','Read '+SHARED+' 获取市场背景。用 ifind_search_news(必带time_start/end)+china-news get_stock_news 取催化+情绪+资金,判断兑现度(近5日涨>15%半兑现/>30%透支)。非结构化新闻/公告页用 web-scraping fetch.py 抓取。', '', TGT), {agentType:'catalyst-scanner',schema:RET,label:'catalyst',phase:'独立分析'})),
+  () => S('fund', () => agent(P('fundamentals-analyst','对目标标的做财务画像+估值锚+排雷。','Read '+SHARED+' 获取市场背景。⚠️ 不要用 MCP(全 SSL 挂)。用 astock_data.py tencent_quote 取PE/PB/市值 + cn_fetch.py kline 取60日K线 + python scripts/astock_cli.py supply_risk 取供给端风险。硬雷点(PE>200且无增速/亏损/商誉>30%)一票否决。', '', TGT), {agentType:'fundamentals-analyst',schema:RET,label:'fundamentals',phase:'独立分析'})),
+  () => S('tech', () => agent(P('technical-liquidity','对目标标的做流动性硬门槛+短线因子+技术位。','Read '+SHARED+' 获取市场背景。⚠️ 不要用 MCP。用 cn_fetch.py factors kline 取5/10/20日动量+MA20+量价突破;流动性硬门槛(成交额>=1亿/换手1-7%/市值>=30亿)不过关直接标注。', '', TGT), {agentType:'technical-liquidity',schema:RET,label:'technical',phase:'独立分析'})),
+  () => S('cat', () => agent(P('catalyst-scanner','对目标标的做催化日历+兑现度+情绪+资金分析。','Read '+SHARED+' 获取市场背景。⚠️ 不要用 MCP。用 python scripts/cn_fetch.py --keyword <股票名> 取新浪/腾讯资讯 + python scripts/hot_trend_dig.py 取龙虎榜 + astock_data.py 取资金流。判断兑现度(近5日涨>15%半兑现/>30%透支)。', '', TGT), {agentType:'catalyst-scanner',schema:RET,label:'catalyst',phase:'独立分析'})),
 ])
 
 let ctx = ap(macro,'宏观') + ap(fund,'财务') + ap(tech,'技术') + ap(cat,'催化')

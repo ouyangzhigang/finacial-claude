@@ -83,9 +83,10 @@
       "role": "弹性进攻(超跌反弹+半导体双确认)",
       "workflow": "short-term-picks",
       "confidence": "低",
-      "currentPrice": null,
+      "currentPrice": "32.87",
       "changePct": null,
-      "status": "active"
+      "status": "active",
+      "currentChangePct": "10.01"
     },
     {
       "code": "000426",
@@ -95,9 +96,10 @@
       "role": "价值底仓(中报预增+财务优质)",
       "workflow": "short-term-picks",
       "confidence": "低",
-      "currentPrice": null,
+      "currentPrice": "29.62",
       "changePct": null,
-      "status": "active"
+      "status": "active",
+      "currentChangePct": "9.99"
     },
     {
       "code": "300450",
@@ -107,10 +109,11 @@
       "role": "观察仓(储能+好入场时机)",
       "workflow": "short-term-picks",
       "confidence": "低",
-      "currentPrice": null,
+      "currentPrice": "32.76",
       "changePct": null,
-      "status": "active"
+      "status": "active",
+      "currentChangePct": "4.76"
     }
   ],
-  "lastUpdated": "2026-07-21 18:07:41"
+  "lastUpdated": "2026-07-21 20:00:02"
 }
