@@ -255,11 +255,28 @@ def compute_composite_factors(kline_factors: dict, llm_factors: dict = None) -> 
         liq_score = min(100, liq_score + 20)  # 量比健康加分
     raw['liquidity'] = liq_score
 
+    # ── 基本面硬扣分(垃圾公司过滤器) ──
+    # ROE<5% 且 PE>50 → 说明盈利能力弱但估值高, 扣30分
+    # 此扣分在 z-score 之前执行, 确保"垃圾公司"在因子层面就被压低
+    roe = lf.get('roe')
+    pe = lf.get('pe')
+    fundamentals_penalty = 0
+    if roe is not None and pe is not None:
+        try:
+            roe_val = float(roe)
+            pe_val = float(pe)
+            if roe_val < 5 and pe_val > 50:
+                fundamentals_penalty = 30
+                raw['fundamentals'] = max(0, raw['fundamentals'] - fundamentals_penalty)
+        except (ValueError, TypeError):
+            pass  # 非数值型 ROE/PE, 跳过扣分
+
     return {
         'symbol': kf['symbol'],
         'raw_factors': {k: round(v, 1) for k, v in raw.items()},
         'kline_data': kf,
         'llm_data': lf,
+        'fundamentals_penalty': fundamentals_penalty,  # 记录扣分, 供调试
     }
 
 
@@ -340,8 +357,9 @@ def correlation_matrix(all_stocks: list) -> dict:
 
     corr = {}
     penalty = {}  # 每维的降权系数
+    for dim in dims:
+        penalty.setdefault(dim, 1.0)
     for i, d1 in enumerate(dims):
-        penalty.setdefault(d1, 1.0)
         for j, d2 in enumerate(dims):
             if j <= i:
                 continue
@@ -492,6 +510,29 @@ def main():
                 llm_factors_map.setdefault(code, {})['capital_score'] = cap_score
         except ImportError:
             pass  # astock_data 不可用时降级为 LLM 评分
+
+        # 2d. 读取基本面 ROE/PE (从 fundamentals-analyst.json 嵌套结构提取)
+        fund_path = os.path.join(args.data_dir, 'fundamentals-analyst.json')
+        if os.path.exists(fund_path):
+            try:
+                with open(fund_path, 'r', encoding='utf-8') as f:
+                    fdata = json.load(f)
+                fd = fdata.get('data', fdata)
+                stocks_dict = fd.get('stocks', {})
+                if isinstance(stocks_dict, dict):
+                    for code, info in stocks_dict.items():
+                        code = str(code)
+                        financials = info.get('financials', {}) if isinstance(info, dict) else {}
+                        valuation = info.get('valuation', {}) if isinstance(info, dict) else {}
+                        roe = financials.get('roe')
+                        pe = valuation.get('peTtm')
+                        if roe is not None or pe is not None:
+                            llm_factors_map.setdefault(code, {}).update({
+                                'roe': roe,
+                                'pe': pe,
+                            })
+            except Exception:
+                pass
 
     # 3. 综合因子计算
     all_stocks = []

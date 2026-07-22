@@ -6,7 +6,7 @@
     {title: '候选池', detail: 'sector 30-50只'},
     {title: '流动性过滤', detail: 'technical 批量硬门槛'},
     {title: '并行评分', detail: 'catalyst∥fundamentals'},
-    {title: '量化引擎', detail: 'factor_engine+timing_engine+sentiment_engine+supply_risk+capital_score'},
+    {title: '量化引擎', detail: 'factor_engine+timing_engine+sentiment_engine+supply_risk+capital_score'},{title: '硬门过滤', detail: '6道硬门,代码执行,governor不可override'},
     {title: '回测组合', detail: 'risk(portfolio_optimizer)+评分+回测'},
     {title: '综合落盘', detail: 'governor 审查+裁决+报告+portfolio+notify'},
   ],
@@ -124,7 +124,18 @@ if (passCodes) {
   ctx += '\n【量化引擎】⚠️ 跳过(无过关票代码)'
 }
 
-// ── Phase 5: 回测组合(综合全链 + portfolio_optimizer) ──
+// ── Phase 4.6: 硬门过滤(代码执行,governor不可override) ──
+	phase('硬门过滤')
+	log('🔄 启动硬门过滤 — 6道硬门,代码执行,governor不可override')
+	await S('hard_gate', async () => {
+	  const cmd = 'PYTHONIOENCODING=utf-8 python scripts/hard_gate.py --run-id '+asOf+'_'+G+' 2>&1'
+	  await agent('⚠️ 只运行命令不调试。\n运行 Bash: '+cmd+'\n然后 Read '+RD+'/gate_report.json。', {label:'hard_gate', phase:'硬门过滤'})
+	  return {path: RD+'/gate_report.json', summary:'硬门过滤完成'}
+	})
+	ctx += '\n【硬门过滤】⚠️ governor不可override → '+RD+'/gate_report.json'
+	log('✅ 硬门过滤完成')
+
+	// ── Phase 5: 回测组合(综合全链 + portfolio_optimizer) ──
 phase('回测组合')
 log('🔄 启动回测组合 — agent: risk-portfolio')
 const risk = await S('risk', () => agent(P('risk-portfolio','综合评分排序+回测(环境分层)+组合配置。\n\n## 量化引擎产出(必读)\n1. Read '+RD+'/factor_scores.json → 八维因子(含social维)z-score+综合评分\n2. Read '+RD+'/timing_scores.json → 入场信号+动量质量+透支概率+timing_score\n3. Read '+RD+'/sentiment_scores.json → 社交热度(social_heat)+炒作风险(hype_risk)+情绪拐点(heat_momentum)\n4. Read '+RD+'/supply_risk.json → 供给端风险(解禁日历+股东户数+大宗交易)\n5. Read '+RD+'/capital_scores.json → 资金流量化评分(120日趋势+融资融券+大宗)\n6. Read '+RD+'/regime.json → 市场环境+权重调整+风险预算\n\n## 你的任务\n1. 融合量化引擎产出 + LLM质化评分(催化/基本面/情绪),做最终排序\n2. 社交排序规则:\n   - social_heat>80 且 hype_risk>70 → 标记"过热预警",降权\n   - heat_momentum正 且 bull_ratio>0.6 → 社交顺风加分\n   - 社交热度与基本面背离(heat高+fundamentals低) → 警惕空气票\n3. 供给端排序规则:\n   - supply_risk.risk_score>50 → 标记"供给端高压",降仓\n   - 未来30天有大额解禁 → 一票否决入TopN\n   - 股东户数连续增加 → 筹码分散降权\n4. 资金流排序规则:\n   - capital_score<30 → 资金持续流出,降权\n   - capital_score>70 → 资金加速流入,加分\n5. 运行 Bash: PYTHONIOENCODING=utf-8 python scripts/portfolio_optimizer.py --codes {Top'+topN+'代码} --account '+acc.replace('w','0000')+' --risk-budget {regime.risk_budget} --output '+RD+'/backtest.json 2>&1\n6. Read '+RD+'/backtest.json 获取回测结果(3月非重叠窗口+环境分层胜率)\n7. timing_score < -10 的票不得排Top1(追涨票); 回测 verdict=rejected 不入TopN\n8. 组合分散(行业<=40%/催化同源<=50%/单票<=25%)', ctx), {agentType:'risk-portfolio',schema:RET,label:'risk',phase:'回测组合'}))
@@ -134,7 +145,21 @@ log('✅ 回测组合完成 — ' + (risk?.summary || '空'))
 // ── Phase 6: 综合落盘(含对抗审查+裁决+portfolio+notify) ──
 phase('综合落盘')
 log('🔄 启动综合落盘 — agent: governor (对抗审查+裁决+报告)')
-const report = await S('governor', () => agent('综合全链产出写短周期选股报告+Top'+topN+'操作卡。\n\n## 投资目标\n'+goal+'\n\n## 全链产出(用 Read 读各 json)\n'+ctx+'\n'+history+'\n\n## ⚠️ 硬约束(违反任何一条视为未完成,不得落盘)\n\n### 回测纪律(驰宏锌锗教训·不可逾越)\n- 回测3项全不达标(胜率<55%+均收<3%+回撤>8%)→ 该标的**剔出TopN**,不得靠\"降仓位+严止损\"硬留\n- 2项不达标→ 仓位砍半+信心列标\"低·回测未背书\"\n- 1项不达标→ 正常保留但标注短板\n- Top1须回测综合胜率(环境加权)排名前列+非高位回调者\n\n### 板块纪律(W1修复·不可丢弃前序产出)\n- 前序环节(catalyst/sector/tech/fundamentals)筛选出的标的**不得因个人偏好丢弃**\n- 若某个板块(如半导体)是前序确认的主线,即便该板块数据有瑕疵,也须保留至少1只入TopN\n- 丢弃前序标的须在报告中说明具体原因\n\n### 数据判断纪律(W3修复·不可误判)\n- Read sentiment_scores.json/capital_scores.json 等文件前先检查文件是否存在\n- 文件存在但数据全中性值(如social_heat全15/risk_score全0/capital_score全50)→ 标注\"数据源降级:全中性值,无区分度\",不标注\"未执行\"\n- supply_risk.json 前228行是SSL warning, 真正的JSON在末尾→ 解析时跳过warning行\n\n## 第一步：对抗审查(4项核心,逐项标注✅/⚠️/❌)\n1. Top1回测综合胜率是否最优? 回测纪律是否执行?\n2. Top1入场优势是否够高?(优势<12/25=追涨票, 理想>=18/25)\n3. 组合催化同源是否超50%? 行业集中度是否合理?\n4. Top1社交热度是否与基本面背离?\n每项标注✅/⚠️/❌, ❌则调整排名或仓位。\n\n## 第二步：写报告\nWRITE output/'+asOf+'_短周期2周推荐清单.md\n结构: 结论先行→总体策略→TopN逐一说明(含回测达标情况)→风险免责\n\n## 第三步：落盘数据\n1. WRITE '+RD+'/final.json(envelope,data含oneLineConclusion/topN/totalPosition/confidence/keyRisks)\n2. WRITE '+RD+'/_rec.json 含 {topN, confidence}\n3. Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1\n\n## 第四步: 返回 schema\nschema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。\n注意: 已移除 StructuredOutput 工具引用(W6修复), 直接按 schema 返回即可。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
+const report = await S('governor', () => agent('综合全链产出写短周期选股报告+Top'+topN+'操作卡。\n\n## 投资目标\n'+goal+'\n\n## 全链产出(用 Read 读各 json)\n'+ctx+'\n'+history+'\n\n## 🚫 硬门约束(代码执行,不可override)
+
+**‼️ 第一步: Read '+RD+'/gate_report.json 获取硬门过滤结果。**
+
+硬门由 `scripts/hard_gate.py` 代码执行, governor **不可推翻**:
+
+1. **status="❌否决"** 的标的 → 不得入TopN, 不得出现在报告中
+2. **status="⚠️降级"** 的标的 → 遵守 max_rank 限制(如 max_rank=2 则不得排Top1)
+3. **system_flags.position_cap** → 总仓位上限, 不可超过(当前 MCP 全挂=40%)
+4. **system_flags.confidence_floor** → 置信度下限, 不可上调
+5. **system_flags.adaptive_mode** → 若为"momentum_priority": fundamentals 权重 20%→5%, 因子排名权重 30%→50%, G1/G2/G3阈值已自动放宽。**因子引擎排名是排序第一依据, 不可用回测推翻。**
+
+**违反以上任何一条 → 报告无效, 退回重写。**
+
+## ⚠️ 硬约束(违反任何一条视为未完成,不得落盘)\n\n### 回测纪律(驰宏锌锗教训·不可逾越)\n- 回测3项全不达标(胜率<55%+均收<3%+回撤>8%)→ 该标的**剔出TopN**,不得靠\"降仓位+严止损\"硬留\n- 2项不达标→ 仓位砍半+信心列标\"低·回测未背书\"\n- 1项不达标→ 正常保留但标注短板\n- Top1须回测综合胜率(环境加权)排名前列+非高位回调者\n\n### 板块纪律(W1修复·不可丢弃前序产出)\n- 前序环节(catalyst/sector/tech/fundamentals)筛选出的标的**不得因个人偏好丢弃**\n- 若某个板块(如半导体)是前序确认的主线,即便该板块数据有瑕疵,也须保留至少1只入TopN\n- 丢弃前序标的须在报告中说明具体原因\n\n### 数据判断纪律(W3修复·不可误判)\n- Read sentiment_scores.json/capital_scores.json 等文件前先检查文件是否存在\n- 文件存在但数据全中性值(如social_heat全15/risk_score全0/capital_score全50)→ 标注\"数据源降级:全中性值,无区分度\",不标注\"未执行\"\n- supply_risk.json 前228行是SSL warning, 真正的JSON在末尾→ 解析时跳过warning行\n\n## 第一步：对抗审查(4项核心,逐项标注✅/⚠️/❌)\n1. Top1回测综合胜率是否最优? 回测纪律是否执行?\n2. Top1入场优势是否够高?(优势<12/25=追涨票, 理想>=18/25)\n3. 组合催化同源是否超50%? 行业集中度是否合理?\n4. Top1社交热度是否与基本面背离?\n每项标注✅/⚠️/❌, ❌则调整排名或仓位。\n\n## 第二步：写报告\nWRITE output/'+asOf+'_短周期2周推荐清单.md\n结构: 结论先行→总体策略→TopN逐一说明(含回测达标情况)→风险免责\n\n## 第三步：落盘数据\n1. WRITE '+RD+'/final.json(envelope,data含oneLineConclusion/topN/totalPosition/confidence/keyRisks)\n2. WRITE '+RD+'/_rec.json 含 {topN, confidence}\n3. Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1\n\n## 第四步: 返回 schema\nschema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。\n注意: 已移除 StructuredOutput 工具引用(W6修复), 直接按 schema 返回即可。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
 log('✅ 综合落盘完成')
 log('🎉 Workflow 全部完成!')
 if (report?.path) {
