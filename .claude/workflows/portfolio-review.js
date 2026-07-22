@@ -74,7 +74,51 @@ log('✅ 顺风逆风完成 — ' + (macro?.summary || '空'))
 // ── Phase 4: 综合落盘 ──
 phase('综合落盘')
 log('🔄 启动综合落盘 — agent: governor (对抗审查+裁决+体检报告)')
-const report = await S('governor', () => agent('综合全链写组合体检报告+换仓建议。\n\n## 投资目标\n'+goal+'\n\n## 全链产出(用 Read 读各 json)\n'+ctx+'\n'+history+'\n\n## 你的任务\n### 0. 收尾脚本(先跑)\nBash: python scripts/portfolio_tracker.py update 2>&1\n\n### 1. 对抗审查\n检测矛盾并用 MCP 只读工具抽查验证:\n- 技术信号衰减(减仓)但催化即将兑现(加仓)?\n- 基本面改善但组合相关性过高(同涨同跌)?\n- 宏观从顺风转逆风但持仓未调整?\n- 某只持仓基本面+技术+催化三方矛盾?\n对关键矛盾用 ifind 抽查持仓数据,标注 ✅核实/⚠️偏差/❌矛盾。\n\n### 2. 报告输出\n换仓建议具体到哪只减/换/加(引用各agent的action)。\n1. WRITE output/'+asOf+'_组合体检报告.md(结论先行→总体策略→各专项+逻辑关系→对抗审查结论+总督验证→换仓操作→风险→免责),头一句话附组合健康度+置信度。\n2. WRITE '+RD+'/final.json(envelope,data 含 oneLineConclusion/rebalanceActions/topN/totalPosition/confidence/keyRisks/contradictions/modules)。\n3. 更新 data/index.json(Read→push→Write)。\n\n### 3. 邮件通知\nBash: python scripts/notify_email.py --run-id '+asOf+'_'+G+' 2>&1\n(失败不影响返回)\n\nschema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
+const report = await S('governor', () => agent('综合全链写组合体检报告+换仓建议。
+
+## 投资目标
+'+goal+'
+
+## 全链产出(用 Read 读各 json)
+'+ctx+'
+'+history+'
+
+## ⚠️ 硬约束(违反任何一条视为未完成)
+
+### 数据判断纪律
+- Read 前序 json 文件前先检查文件是否存在
+- 文件存在但数据不可靠→ 标注"数据源降级",不标注"未执行"
+- 多路 MCP 全挂时, 换仓建议须基于 cn_fetch.py 腾讯 HTTP 报价, 不可凭 LLM 记忆虚构
+
+### 换仓纪律
+- 前序环节(risk/fundamentals/technical/catalyst/macro)的 action 建议**不得因个人偏好丢弃**
+- 减仓/换仓/加仓须引用具体 agent 的 action 字段, 不可凭空建议
+- 若有持仓的多方信号矛盾(技术看空+催化看多), 须诚实标注矛盾, 给出保守建议
+
+## 你的任务
+### 0. 收尾脚本(先跑)
+Bash: python scripts/portfolio_tracker.py update 2>&1
+
+### 1. 对抗审查
+检测矛盾:
+- 技术信号衰减(减仓)但催化即将兑现(加仓)?
+- 基本面改善但组合相关性过高(同涨同跌)?
+- 宏观从顺风转逆风但持仓未调整?
+- 某只持仓基本面+技术+催化三方矛盾?
+标注 ✅核实/⚠️偏差/❌矛盾。
+
+### 2. 报告输出
+换仓建议具体到哪只减/换/加(引用各agent的action)。
+1. WRITE output/'+asOf+'_组合体检报告.md(结论先行→总体策略→各专项+逻辑关系→对抗审查结论+总督验证→换仓操作→风险→免责),头一句话附组合健康度+置信度。
+2. WRITE '+RD+'/final.json(envelope,data 含 oneLineConclusion/rebalanceActions/topN/totalPosition/confidence/keyRisks/contradictions/modules)。
+3. 更新 data/index.json(Read→push→Write)。
+
+### 3. 邮件通知
+Bash: python scripts/notify_email.py --run-id '+asOf+'_'+G+' 2>&1
+(失败不影响返回)
+
+schema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。
+注意: 已移除 StructuredOutput 工具引用(W6修复), 直接按 schema 返回即可。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
 log('✅ 综合落盘完成')
 log('🎉 Workflow 全部完成!')
 if (report?.path) {

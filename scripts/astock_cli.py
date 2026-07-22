@@ -21,6 +21,11 @@ astock_cli.py — a-stock-data CLI 包装器
 import json
 import sys
 import argparse
+import warnings
+
+# S8修复: 抑制东财 HTTPS 未验证证书的 InsecureRequestWarning 洪流
+# 这些 warning 来自 urllib3, 每条请求都触发, 淹没 stdout 导致 JSON 被污染
+warnings.filterwarnings("ignore", message="Unverified HTTPS request")
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")

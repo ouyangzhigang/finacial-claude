@@ -1,5 +1,14 @@
 [
   {
+    "runId": "20260722_hot-trends",
+    "asOf": "20260722",
+    "goal": "hot-trends",
+    "path": "data/runs/20260722_hot-trends/final.json",
+    "headline": "市场深度下跌趋势(创业板m20=-16.1%),11只候选仅粤电力A(000539)回测均收达标(2.52%),但胜率(44.4%)和回撤(29.19%)未达标,仓位砍半至38.8%。其余4只一票否决列观察仓。置信度:低。61.2%现金等待市场企稳。",
+    "confidence": "低",
+    "fetchedAt": "20260722"
+  },
+  {
     "runId": "20260722_short-term-picks",
     "asOf": "20260722",
     "goal": "short-term-picks",

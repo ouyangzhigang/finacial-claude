@@ -72,6 +72,77 @@ ctx += ap(risk,'组合')
 
 // ── Phase 6: 综合落盘 ──
 phase('综合落盘')
-const report = await S('governor', () => agent('综合全链写舆情趋势预判选股报告。\n\n## 投资目标\n'+goal+'\n\n## 全链产出(用 Read 读各 json)\n'+ctx+'\n'+history+'\n\n## 第一步：对抗审查(精简为3项核心矛盾)\n1. Top1舆情热度高但回测全面跑输?\n2. 趋势信号强但催化已price-in?(查近5日涨幅)\n3. 宏观逆风但标的仍在TopN?\n每项标注 ✅/⚠️/❌, ❌则剔除或降权。\n\n## 第二步：写报告文件\nWRITE output/'+asOf+'_舆情趋势预判选股.md, 结构: 结论先行→总体策略→TopN逐一说明→风险免责\n头一句话: 趋势强度 + 置信度 + 回测达标情况。\n\n## 第三步：落盘数据文件\n1. WRITE '+RD+'/final.json(envelope,data含oneLineConclusion/topN/totalPosition/confidence/keyRisks/contradictions/trends/modules)\n2. WRITE '+RD+'/_rec.json 含 {topN, confidence}\n3. Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1 (失败不影响)\n4. Bash: python scripts/notify_email.py --run-id '+asOf+'_'+G+' 2>&1\n\nschema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。\n注意: 已移除 StructuredOutput 工具引用(W6修复), 直接按 schema 返回即可。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
+// ── Phase 5.5: 硬门过滤(代码执行,governor不可override) ──
+	phase('硬门过滤')
+	log('🔄 启动硬门过滤 — 6道硬门,代码执行,governor不可override')
+	await S('hard_gate', async () => {
+	  const cmd = 'PYTHONIOENCODING=utf-8 python scripts/hard_gate.py --run-id '+asOf+'_'+G+' 2>&1'
+	  await agent('⚠️ 只运行命令不调试。
+运行 Bash: '+cmd+'
+然后 Read '+RD+'/gate_report.json。', {label:'hard_gate', phase:'硬门过滤'})
+	  return {path: RD+'/gate_report.json', summary:'硬门过滤完成'}
+	})
+	ctx += '
+【硬门过滤】⚠️ governor不可override → '+RD+'/gate_report.json'
+	log('✅ 硬门过滤完成')
+
+	// ── Phase 6: 综合落盘 ──
+	phase('综合落盘')
+	const report = await S('governor', () => agent('综合全链写舆情趋势预判选股报告。
+
+## 投资目标
+'+goal+'
+
+## 全链产出(用 Read 读各 json)
+'+ctx+'
+'+history+'
+
+## 🚫 硬门约束(代码执行,不可override)
+
+**‼️ 第一步: Read '+RD+'/gate_report.json 获取硬门过滤结果。**
+
+硬门由 scripts/hard_gate.py 代码执行, governor **不可推翻**:
+
+1. **status="❌否决"** 的标的 → 不得入TopN, 不得出现在报告中
+2. **status="⚠️降级"** 的标的 → 遵守 max_rank 限制
+3. **system_flags.position_cap** → 总仓位上限, 不可超过
+4. **system_flags.confidence_floor** → 置信度下限, 不可上调
+
+**违反以上任何一条 → 报告无效, 退回重写。**
+
+## ⚠️ 硬约束(违反任何一条视为未完成)
+
+### 回测纪律
+- 回测3项全不达标(胜率<55%+均收<3%+回撤>8%)→ 该标的**剔出TopN**,不得靠"降仓位+严止损"硬留
+- 2项不达标→ 仓位砍半+信心列标"低·回测未背书"
+- 1项不达标→ 正常保留但标注短板
+
+### 板块纪律
+- 前序环节(catalyst/macro/sector/tech/fundamentals)筛选出的标的**不得因个人偏好丢弃**
+- 若某个趋势是前序确认的主线,即便该趋势数据有瑕疵,也须保留至少1只入TopN
+- 丢弃前序标的须在报告中说明具体原因
+
+### 数据判断纪律
+- Read 前序 json 文件前先检查文件是否存在
+- 文件存在但数据全中性值→ 标注"数据源降级:全中性值,无区分度",不标注"未执行"
+
+## 第一步：对抗审查(3项核心矛盾)
+1. Top1舆情热度高但回测全面跑输?
+2. 趋势信号强但催化已price-in?(查近5日涨幅)
+3. 宏观逆风但标的仍在TopN?
+每项标注 ✅/⚠️/❌, ❌则剔除或降权。
+
+## 第二步：写报告文件
+WRITE output/'+asOf+'_舆情趋势预判选股.md, 结构: 结论先行→总体策略→TopN逐一说明→风险免责
+头一句话: 趋势强度 + 置信度 + 回测达标情况。
+
+## 第三步：落盘数据文件
+1. WRITE '+RD+'/final.json(envelope,data含oneLineConclusion/topN/totalPosition/confidence/keyRisks/contradictions/trends/modules)
+2. WRITE '+RD+'/_rec.json 含 {topN, confidence}
+3. Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1 (失败不影响)
+4. Bash: python scripts/notify_email.py --run-id '+asOf+'_'+G+' 2>&1
+
+schema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。
+注意: 已移除 StructuredOutput 工具引用(W6修复), 直接按 schema 返回即可。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
 
 return report

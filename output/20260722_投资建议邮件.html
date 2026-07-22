@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: #f5f5f5; padding: 20px; color: #333; }
+.card { max-width: 700px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+h1 { font-size: 20px; color: #cc3333; margin: 0 0 4px; }
+.sub { color: #888; font-size: 13px; margin-bottom: 24px; }
+.alert { background: #fff3cd; border-left: 4px solid #ffc107; padding: 14px 18px; border-radius: 6px; margin: 20px 0; font-size: 14px; line-height: 1.7; }
+.alert-red { background: #ffeaea; border-left-color: #e74c3c; }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+th { background: #f0f0f0; text-align: left; padding: 10px 12px; font-weight: 600; }
+td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.tag-red { background: #fde2e2; color: #c0392b; }
+.tag-yellow { background: #fef3cd; color: #b8860b; }
+.tag-green { background: #d4edda; color: #155724; }
+h2 { font-size: 16px; margin: 28px 0 12px; padding-bottom: 8px; border-bottom: 2px solid #eee; }
+.verdict { background: #e8f4fd; border-radius: 8px; padding: 16px 20px; margin: 20px 0; line-height: 1.8; font-size: 14px; }
+.footer { color: #999; font-size: 12px; margin-top: 28px; padding-top: 16px; border-top: 1px solid #eee; line-height: 1.8; }
+.num { font-family: "SF Mono", "Consolas", monospace; }
+.highlight { background: linear-gradient(180deg, transparent 60%, #ffeaa7 60%); }
+</style>
+</head>
+<body>
+<div class="card">
+
+<h1>⚠️ 短周期选股周报 — 市场逆风，仅 1 只勉强达标</h1>
+<div class="sub">2026-07-22 收盘 | 账户 1w | 持有期 1 周（至 07-29）| 策略：短线爆发力优先</div>
+
+<div class="verdict">
+<strong>📌 一句话结论</strong><br>
+市场处于深度下跌趋势（创业板 m20 = <span style="color:#e74c3c">-16.1%</span>），11 只候选仅 <strong>粤电力 A（000539）</strong> 回测均收达标（2.52%），但胜率 44.4% 和回撤 29.19% 均未达理想标准，仓位砍半至 <strong>38.8%</strong>。其余 4 只高评分标的回测三项全不达标 → 一票否决列观察仓。<span class="highlight"><strong>置信度：低</strong></span>。61.2% 现金等待市场企稳，当前非理想短线窗口。
+</div>
+
+<h2>📊 TopN 实盘配置</h2>
+<table>
+<tr><th>排名</th><th>代码</th><th>名称</th><th>方向</th><th>仓位</th><th>金额</th><th>角色</th></tr>
+<tr>
+  <td><span class="tag tag-yellow">Top1</span></td>
+  <td><strong>000539</strong></td>
+  <td><strong>粤电力 A</strong></td>
+  <td>央企改革</td>
+  <td>38.8%</td>
+  <td class="num">3,876 元（600 股）</td>
+  <td>唯一回测部分达标·方向性试探</td>
+</tr>
+<tr>
+  <td>—</td><td>—</td><td>💵 现金</td><td>—</td><td>61.2%</td><td class="num">6,124 元</td><td>等待市场企稳</td>
+</tr>
+</table>
+
+<h2>🔍 观察仓（零仓位，不入实盘）</h2>
+<table>
+<tr><th>代码</th><th>名称</th><th>方向</th><th>LLM 评分</th><th>否决原因</th></tr>
+<tr><td>000506</td><td>招金黄金</td><td>黄金避险</td><td class="num">21.25（最高）</td><td>胜率 38.9% + 均收 -1.88% + 回撤 20.27%</td></tr>
+<tr><td>603993</td><td>洛阳钼业</td><td>黄金+钼铜</td><td class="num">18.70</td><td>胜率 44.4% + 均收 -0.07% + 回撤 19.01%</td></tr>
+<tr><td>603162</td><td>海通发展</td><td>中报预增</td><td class="num">17.30</td><td>胜率 44.4% + 均收 1.55% + 回撤 18.79%</td></tr>
+<tr><td>002545</td><td>东方铁塔</td><td>中报预增</td><td class="num">17.25</td><td>胜率 33.3% + 均收 -1.79% + 回撤 18.98%</td></tr>
+</table>
+
+<h2>🎯 粤电力 A（000539）操作计划</h2>
+<table>
+<tr><th>维度</th><th>内容</th></tr>
+<tr><td>买入参考区间</td><td><strong>6.20–6.50 元</strong>（当前 6.46 元，处于区间上沿）</td></tr>
+<tr><td>⚠️ 盘中提示</td><td>6.46 元为 7/22 收盘价。若次日<span style="color:#e74c3c">高开 &gt;3% → 暂缓</span>，等回调至 6.30 以下</td></tr>
+<tr><td>止损</td><td><strong>6.14 元</strong>（MA20，连续 2 日收于下方即止损）</td></tr>
+<tr><td>目标</td><td><strong>7.00–7.36 元</strong>（前期高点，约 +11–14%）</td></tr>
+<tr><td>仓位</td><td><strong>600 股（3,876 元，38.8%）</strong></td></tr>
+<tr><td>分批建仓</td><td>首批 300 股 @6.46（1,938 元），观察 2 日后若未破 MA20 加仓 300 股</td></tr>
+</table>
+
+<h2>📈 三情景应对</h2>
+<table>
+<tr><th>情景</th><th>触发条件</th><th>应对</th></tr>
+<tr>
+  <td><span class="tag tag-green">🟢 突破</span></td>
+  <td>上证 5 日涨 &gt;1%</td>
+  <td>粤电力 A 持有不动；重新评估观察仓调入（优先洛阳钼业）；总仓位可提至 50–60%</td>
+</tr>
+<tr>
+  <td><span class="tag tag-yellow">🟡 震荡</span></td>
+  <td>上证 5 日涨跌 &lt;1%</td>
+  <td>粤电力 A 按计划分批建仓；观察仓零仓位；现金为王（61.2%）</td>
+</tr>
+<tr>
+  <td><span class="tag tag-red">🔴 破位</span></td>
+  <td>上证跌破 3800</td>
+  <td>粤电力 A 若连续 2 日收于 MA20 下方 → 立即止损；全部现金，不操作</td>
+</tr>
+</table>
+
+<h2>🔴 关键风险</h2>
+<ol>
+<li><strong>市场系统性下跌</strong> — 上证 m20 = -5.93%，创业板 m20 = -16.1%，短线策略胜率普遍 &lt;55%</li>
+<li><strong>粤电力 A 回撤极大（29.19%）</strong> — 央企电力板块波动剧烈，止损纪律必须严格执行</li>
+<li><strong>粤电力 A 近 5 日已涨 18.32%</strong> — 已部分 price-in，若后续 1–2 日继续大涨应止盈而非加仓</li>
+<li><strong>样本量不足（N=18）</strong> — 95% 置信区间宽（21.5%–67.4%），统计可靠性低</li>
+</ol>
+
+<div class="alert alert-red">
+<strong>⚠️ 诚实结论：当前不是理想的短线窗口。</strong><br>
+回测纪律（驰宏锌锗教训）要求：三项全不达标不得入 TopN。宁可错过，不可做错。建议等待市场企稳信号出现后再加大仓位。
+</div>
+
+<div class="footer">
+<strong>免责声明：</strong>本邮件由 AI 投资总监（Governor Agent）综合多 agent 产出自动生成，不构成任何投资建议。所有代码/价位/仓位/止损/目标均为基于历史数据的概率分析，不保证未来收益。据此操作，风险自负。<br><br>
+数据来源：腾讯 qt.gtimg.cn（HTTP 绕代理）+ 通达信 mootdx（TCP 7709）+ 东财（龙虎榜/情绪）| 回测样本 N=18（3 个月）<br>
+完整报告：output/20260722_热门板块潜力股综合推荐.md<br>
+报告生成：2026-07-22 | Governor Agent v2.0
+</div>
+
+</div>
+</body>
+</html>

@@ -36,11 +36,12 @@ const O = (ag) => `\nWRITE ${RD}/${ag}.json; envelope:{"agent":"${ag}","asOf":"$
 const P = (ag, task, extra, ctx) => `${task}\n# 目标\n${goal}\n# 前序\n${ctx||'(起点)'}\n# 任务\n${extra}${O(ag)}`
 const ap = (r, l) => r ? '\n【'+l+'】'+r.summary+(r.path?' → '+r.path:'') : '\n【'+l+'】⚠️ 数据缺失'
 
-// ── 周期下限硬约束 ──
-if (/^([23]日|隔日)/.test(String(period))) {
-  log('周期<5日,拒绝选股,降级日内跟踪简报')
+// ── 周期下限硬约束(Q4修复:覆盖所有<5日变体) ──
+if (/^([1234]日|隔日|当日|次日)/.test(String(period))) {
+  const dayCount = String(period).match(/(\d+)日/)?.[1] || '?'
+  log('周期<5日('+dayCount+'日),拒绝选股,降级日内跟踪简报')
   phase('综合落盘')
-  const report = await S('governor', () => agent('周期<5日窗口无统计优势,拒绝输出TopN买入清单,只输出"事件驱动日内跟踪简报"。\n## 投资目标\n'+goal+'\n## 你的任务\n1. WRITE output/'+asOf+'_日内跟踪简报.md,提示用户"2日窗口无统计优势,建议改>=5日或用单股深评"。\n2. WRITE '+RD+'/final.json(envelope,data含verdict:"拒绝选股",reason)。\n3. 更新 data/index.json(Read→push→Write)。\nschema 返回 {path,dataPath,oneLineConclusion:"拒绝选股·降级日内跟踪",confidence:"低",keyRisks:["2日窗口高噪音"]}。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
+  const report = await S('governor', () => agent('周期<5日窗口('+dayCount+'日)无统计优势,拒绝输出TopN买入清单,只输出"事件驱动日内跟踪简报"。\n## 投资目标\n'+goal+'\n## 你的任务\n1. WRITE output/'+asOf+'_日内跟踪简报.md,提示用户"'+dayCount+'日窗口无统计优势,建议改>=5日(1周)或用单股深评"。\n2. WRITE '+RD+'/final.json(envelope,data含verdict:"拒绝选股",reason)。\n3. 更新 data/index.json(Read→push→Write)。\nschema 返回 {path,dataPath,oneLineConclusion:"拒绝选股·降级日内跟踪",confidence:"低",keyRisks:["'+dayCount+'日窗口高噪音,建议>=5日"]}。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
   return report
 }
 
@@ -120,9 +121,29 @@ if (passCodes) {
   log('✅ 量化引擎完成 — factor('+(fe?'✓':'✗')+') + timing('+(te?'✓':'✗')+') + sentiment('+(se?'✓':'✗')+') + supply_risk('+(sr?'✓':'✗')+') + capital_score('+(cs?'✓':'✗')+')')
   ctx += '\n【量化引擎】5引擎并行 → '+RD+'/'
 } else {
-  log('⚠️ 量化引擎跳过 — 无过关票代码,降级到LLM评分')
-  ctx += '\n【量化引擎】⚠️ 跳过(无过关票代码)'
-}
+  } else {
+    // Q2修复: passCodes为空时从sector候选池降级取代码, 避免量化引擎完全跳过
+    const fallbackCodes = sector?.keyFields?.candidateCodes || ''
+    if (fallbackCodes) {
+      log('⚠️ passCodes为空, 从sector候选池降级取 '+fallbackCodes.split(',').length+' 只代码')
+      const RUN = '⚠️ 只运行以下命令, 然后 Read 输出文件确认写入成功, 直接返回。不要调试, 不要分析为什么结果为空, 0结果也直接返回。'
+      await parallel([
+        () => S('factor_engine', async () => {
+          const cmd = 'PYTHONIOENCODING=utf-8 python scripts/factor_engine.py --codes '+fallbackCodes+' --data-dir '+RD+' --json \'{\"regime\":\"'+regime+'\"}\' --output '+RD+'/factor_scores.json 2>&1'
+          await agent(RUN+'\n运行 Bash: '+cmd+'\n然后 Read '+RD+'/factor_scores.json 确认写入成功。', {label:'factor_engine', phase:'量化引擎'})
+          return {path: RD+'/factor_scores.json', summary:'因子评分完成(降级代码)'}
+        }),
+        () => S('timing_engine', async () => {
+          const cmd = 'PYTHONIOENCODING=utf-8 python scripts/timing_engine.py --codes '+fallbackCodes+' --output '+RD+'/timing_scores.json 2>&1'
+          await agent(RUN+'\n运行 Bash: '+cmd+'\n然后 Read '+RD+'/timing_scores.json 确认写入成功。', {label:'timing_engine', phase:'量化引擎'})
+          return {path: RD+'/timing_scores.json', summary:'入场评估完成(降级代码)'}
+        }),
+      ])
+      ctx += '\n【量化引擎】⚠️ 降级代码(sector候选池) → '+RD+'/'
+    } else {
+      log('⚠️ 量化引擎跳过 — 无过关票代码且无sector候选,降级到LLM评分')
+      ctx += '\n【量化引擎】⚠️ 跳过(无代码可用)'
+    }}
 
 // ── Phase 4.6: 硬门过滤(代码执行,governor不可override) ──
 	phase('硬门过滤')
@@ -138,7 +159,7 @@ if (passCodes) {
 	// ── Phase 5: 回测组合(综合全链 + portfolio_optimizer) ──
 phase('回测组合')
 log('🔄 启动回测组合 — agent: risk-portfolio')
-const risk = await S('risk', () => agent(P('risk-portfolio','综合评分排序+回测(环境分层)+组合配置。\n\n## 量化引擎产出(必读)\n1. Read '+RD+'/factor_scores.json → 八维因子(含social维)z-score+综合评分\n2. Read '+RD+'/timing_scores.json → 入场信号+动量质量+透支概率+timing_score\n3. Read '+RD+'/sentiment_scores.json → 社交热度(social_heat)+炒作风险(hype_risk)+情绪拐点(heat_momentum)\n4. Read '+RD+'/supply_risk.json → 供给端风险(解禁日历+股东户数+大宗交易)\n5. Read '+RD+'/capital_scores.json → 资金流量化评分(120日趋势+融资融券+大宗)\n6. Read '+RD+'/regime.json → 市场环境+权重调整+风险预算\n\n## 你的任务\n1. 融合量化引擎产出 + LLM质化评分(催化/基本面/情绪),做最终排序\n2. 社交排序规则:\n   - social_heat>80 且 hype_risk>70 → 标记"过热预警",降权\n   - heat_momentum正 且 bull_ratio>0.6 → 社交顺风加分\n   - 社交热度与基本面背离(heat高+fundamentals低) → 警惕空气票\n3. 供给端排序规则:\n   - supply_risk.risk_score>50 → 标记"供给端高压",降仓\n   - 未来30天有大额解禁 → 一票否决入TopN\n   - 股东户数连续增加 → 筹码分散降权\n4. 资金流排序规则:\n   - capital_score<30 → 资金持续流出,降权\n   - capital_score>70 → 资金加速流入,加分\n5. 运行 Bash: PYTHONIOENCODING=utf-8 python scripts/portfolio_optimizer.py --codes {Top'+topN+'代码} --account '+acc.replace('w','0000')+' --risk-budget {regime.risk_budget} --output '+RD+'/backtest.json 2>&1\n6. Read '+RD+'/backtest.json 获取回测结果(3月非重叠窗口+环境分层胜率)\n7. timing_score < -10 的票不得排Top1(追涨票); 回测 verdict=rejected 不入TopN\n8. 组合分散(行业<=40%/催化同源<=50%/单票<=25%)', ctx), {agentType:'risk-portfolio',schema:RET,label:'risk',phase:'回测组合'}))
+const risk = await S('risk', () => agent(P('risk-portfolio','综合评分排序+回测(环境分层)+组合配置。\n\n## 量化引擎产出(必读)\n1. Read '+RD+'/factor_scores.json → 八维因子(含social维)z-score+综合评分\n2. Read '+RD+'/timing_scores.json → 入场信号+动量质量+透支概率+timing_score\n3. Read '+RD+'/sentiment_scores.json → 社交热度(social_heat)+炒作风险(hype_risk)+情绪拐点(heat_momentum)\n4. Read '+RD+'/supply_risk.json → 供给端风险(解禁日历+股东户数+大宗交易)\n5. Read '+RD+'/capital_scores.json → 资金流量化评分(120日趋势+融资融券+大宗)\n6. Read '+RD+'/regime.json → 市场环境+权重调整+风险预算\n\n## 你的任务\n1. 融合量化引擎产出 + LLM质化评分(催化/基本面/情绪),做最终排序\n2. 社交排序规则:\n   - social_heat>80 且 hype_risk>70 → 标记"过热预警",降权\n   - heat_momentum正 且 bull_ratio>0.6 → 社交顺风加分\n   - 社交热度与基本面背离(heat高+fundamentals低) → 警惕空气票\n3. 供给端排序规则:\n   - supply_risk.risk_score>50 → 标记"供给端高压",降仓\n   - 未来30天有大额解禁 → 一票否决入TopN\n   - 股东户数连续增加 → 筹码分散降权\n4. 资金流排序规则:\n   - capital_score<30 → 资金持续流出,降权\n   - capital_score>70 → 资金加速流入,加分\n5. 运行 Bash: PYTHONIOENCODING=utf-8 python scripts/portfolio_optimizer.py --codes {Top'+topN+'代码} --account '+acc.replace('w','0000')+' --risk-budget "+(regime==='trending'?'0.8':regime==='ranging'?'0.6':regime==='high_volatility'?'0.4':regime==='style_rotation'?'0.5':'0.3')+" --output '+RD+'/backtest.json 2>&1\n6. Read '+RD+'/backtest.json 获取回测结果(3月非重叠窗口+环境分层胜率)\n7. timing_score < -10 的票不得排Top1(追涨票); 回测 verdict=rejected 不入TopN\n8. 组合分散(行业<=40%/催化同源<=50%/单票<=25%)', ctx), {agentType:'risk-portfolio',schema:RET,label:'risk',phase:'回测组合'}))
 ctx += ap(risk,'组合')
 log('✅ 回测组合完成 — ' + (risk?.summary || '空'))
 

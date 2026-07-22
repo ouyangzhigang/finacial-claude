@@ -44,10 +44,10 @@
       "role": "弹性进攻",
       "workflow": "hot-trends",
       "confidence": "中",
-      "currentPrice": "17.70",
+      "currentPrice": "16.90",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "2.73"
+      "currentChangePct": "-1.92"
     },
     {
       "code": "301282",
@@ -57,10 +57,10 @@
       "role": "弹性进攻",
       "workflow": "hot-trends",
       "confidence": "中",
-      "currentPrice": "21.55",
+      "currentPrice": "21.67",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "3.46"
+      "currentChangePct": "4.03"
     },
     {
       "code": "002185",
@@ -70,10 +70,10 @@
       "role": "价值底仓",
       "workflow": "hot-trends",
       "confidence": "中",
-      "currentPrice": "18.60",
+      "currentPrice": "18.42",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "1.36"
+      "currentChangePct": "0.38"
     },
     {
       "code": "600460",
@@ -83,10 +83,10 @@
       "role": "弹性进攻(超跌反弹+半导体双确认)",
       "workflow": "short-term-picks",
       "confidence": "低",
-      "currentPrice": "34.24",
+      "currentPrice": "33.19",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "4.17"
+      "currentChangePct": "0.97"
     },
     {
       "code": "000426",
@@ -96,10 +96,10 @@
       "role": "价值底仓(中报预增+财务优质)",
       "workflow": "short-term-picks",
       "confidence": "低",
-      "currentPrice": "32.34",
+      "currentPrice": "31.73",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "9.18"
+      "currentChangePct": "7.12"
     },
     {
       "code": "300450",
@@ -109,10 +109,10 @@
       "role": "观察仓(储能+好入场时机)",
       "workflow": "short-term-picks",
       "confidence": "低",
-      "currentPrice": "32.79",
+      "currentPrice": "31.89",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "0.09"
+      "currentChangePct": "-2.66"
     },
     {
       "code": "600667",
@@ -122,10 +122,10 @@
       "role": "存储芯片+先进封装",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "17.45",
+      "currentPrice": "16.69",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "4.55"
+      "currentChangePct": "0.00"
     },
     {
       "code": "600522",
@@ -135,10 +135,10 @@
       "role": "观察仓-光纤光缆/AI算力",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "34.50",
+      "currentPrice": "32.50",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-0.38"
+      "currentChangePct": "-6.15"
     },
     {
       "code": "sz002185",
@@ -199,7 +199,19 @@
       "currentPrice": null,
       "changePct": null,
       "status": "active"
+    },
+    {
+      "code": "000539",
+      "name": "粤电力A",
+      "recommendedAt": "20260722",
+      "recommendedPrice": null,
+      "role": "",
+      "workflow": "hot-trends",
+      "confidence": "低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
     }
   ],
-  "lastUpdated": "2026-07-22 10:30:45"
+  "lastUpdated": "2026-07-22 20:42:12"
 }
