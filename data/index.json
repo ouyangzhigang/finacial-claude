@@ -1,11 +1,20 @@
 [
   {
+    "runId": "20260722_short-term-picks",
+    "asOf": "20260722",
+    "goal": "short-term-picks",
+    "path": "data/runs/20260722_short-term-picks/final.json",
+    "headline": "downtrend repair window (northbound 37B), backtest 4/5 rejected only huatian cautious, severe data degradation (MCP all down), 2 positions (55.4%) + 3 watch, confidence low",
+    "confidence": "low",
+    "fetchedAt": "20260722"
+  },
+  {
     "runId": "20260721_short-term-picks",
     "asOf": "20260721",
     "goal": "short-term-picks",
     "path": "data/runs/20260721_short-term-picks/final.json",
-    "headline": "半导体/中报预增双确认顺风+全市场逆风,Top1士兰微(超跌反弹+回测observation)仓位32.9%,Top2兴业银锡(财务优质+中报预增)29.6%,Top3先导智能观察仓;总仓位62.5%+现金37.5%留足FOMC/政治局会议安全垫;置信度低(回测N=18/市场逆风/事件密集)",
-    "confidence": "低",
+    "headline": "科创50+10.73%奇迹日反弹后半导体超跌修复窗口,全市场回测maxDD全面超标无一approved;Top1蔚蓝锂芯(002245,回测66.7%/2.46%/-29.0%,2/3达标),Top2太极实业(600667,回测66.7%/3.65%/-42.84%),Top3华天科技(002185,回测55.6%/2.11%/-42.54%);3下单52.3%+2观察(士兰微/中天科技),留47.7%现金应对FOMC+政治局会议;置信度:中;Governor否决risk-portfolio原始TopN(金禄电子硬剔除+海康威视不在流水线)",
+    "confidence": "中",
     "fetchedAt": "20260721"
   },
   {

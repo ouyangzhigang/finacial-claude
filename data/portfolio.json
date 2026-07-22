@@ -44,10 +44,10 @@
       "role": "弹性进攻",
       "workflow": "hot-trends",
       "confidence": "中",
-      "currentPrice": "17.23",
+      "currentPrice": "17.70",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "10.03"
+      "currentChangePct": "2.73"
     },
     {
       "code": "301282",
@@ -57,10 +57,10 @@
       "role": "弹性进攻",
       "workflow": "hot-trends",
       "confidence": "中",
-      "currentPrice": "20.83",
+      "currentPrice": "21.55",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "19.99"
+      "currentChangePct": "3.46"
     },
     {
       "code": "002185",
@@ -70,10 +70,10 @@
       "role": "价值底仓",
       "workflow": "hot-trends",
       "confidence": "中",
-      "currentPrice": "18.35",
+      "currentPrice": "18.60",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "8.90"
+      "currentChangePct": "1.36"
     },
     {
       "code": "600460",
@@ -83,10 +83,10 @@
       "role": "弹性进攻(超跌反弹+半导体双确认)",
       "workflow": "short-term-picks",
       "confidence": "低",
-      "currentPrice": "32.87",
+      "currentPrice": "34.24",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "10.01"
+      "currentChangePct": "4.17"
     },
     {
       "code": "000426",
@@ -96,10 +96,10 @@
       "role": "价值底仓(中报预增+财务优质)",
       "workflow": "short-term-picks",
       "confidence": "低",
-      "currentPrice": "29.62",
+      "currentPrice": "32.34",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "9.99"
+      "currentChangePct": "9.18"
     },
     {
       "code": "300450",
@@ -109,11 +109,97 @@
       "role": "观察仓(储能+好入场时机)",
       "workflow": "short-term-picks",
       "confidence": "低",
-      "currentPrice": "32.76",
+      "currentPrice": "32.79",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "4.76"
+      "currentChangePct": "0.09"
+    },
+    {
+      "code": "600667",
+      "name": "太极实业",
+      "recommendedAt": "20260721",
+      "recommendedPrice": null,
+      "role": "存储芯片+先进封装",
+      "workflow": "short-term-picks",
+      "confidence": "中",
+      "currentPrice": "17.45",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "4.55"
+    },
+    {
+      "code": "600522",
+      "name": "中天科技",
+      "recommendedAt": "20260721",
+      "recommendedPrice": null,
+      "role": "观察仓-光纤光缆/AI算力",
+      "workflow": "short-term-picks",
+      "confidence": "中",
+      "currentPrice": "34.50",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "-0.38"
+    },
+    {
+      "code": "sz002185",
+      "name": "华天科技",
+      "recommendedAt": "20260722",
+      "recommendedPrice": 18.74,
+      "role": "建仓底仓",
+      "workflow": "short-term-picks",
+      "confidence": "低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "sh601168",
+      "name": "西部矿业",
+      "recommendedAt": "20260722",
+      "recommendedPrice": 36.66,
+      "role": "建仓辅助",
+      "workflow": "short-term-picks",
+      "confidence": "低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "sz300759",
+      "name": "康龙化成",
+      "recommendedAt": "20260722",
+      "recommendedPrice": null,
+      "role": "观察",
+      "workflow": "short-term-picks",
+      "confidence": "低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "sh688046",
+      "name": "药康生物",
+      "recommendedAt": "20260722",
+      "recommendedPrice": null,
+      "role": "观察",
+      "workflow": "short-term-picks",
+      "confidence": "低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "sz300139",
+      "name": "晓程科技",
+      "recommendedAt": "20260722",
+      "recommendedPrice": null,
+      "role": "观察",
+      "workflow": "short-term-picks",
+      "confidence": "低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
     }
   ],
-  "lastUpdated": "2026-07-21 20:00:02"
+  "lastUpdated": "2026-07-22 10:30:45"
 }
