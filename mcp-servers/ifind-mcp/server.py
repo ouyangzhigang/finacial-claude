@@ -77,6 +77,7 @@ class CompatibleSSLAdapter(HTTPAdapter):
         return super().init_poolmanager(*args, **kwargs)
 
 _session = requests.Session()
+_session.trust_env = False  # 绕过系统代理(Whistle), 直连 iFind API
 _session.mount("https://", CompatibleSSLAdapter())
 
 SERVER_URLS = {

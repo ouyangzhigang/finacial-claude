@@ -225,10 +225,27 @@ def optimize_portfolio(stocks: list, account: int = 10000,
     total_budget = account * risk_budget
     cash_reserve = account * cash_min
 
-    # 过滤: timing_score < -10 的票不入组合
+    # 过滤1: timing_score < -10 的票不入组合
     eligible = [s for s in stocks if s.get('timing_score', 0) > -10]
+    # 过滤2: backtest verdict=rejected 不入组合(驰宏锌锗纪律)
+    eligible = [s for s in eligible if s.get('backtest_verdict', '') != 'rejected']
     if not eligible:
-        return {'positions': [], 'cash': account, 'cash_pct': 100, 'reason': '无合格标的'}
+        rejected_count = sum(1 for s in stocks if s.get('backtest_verdict', '') == 'rejected')
+        timing_fail = sum(1 for s in stocks if s.get('timing_score', 0) <= -10)
+        if rejected_count == len(stocks) and rejected_count > 0:
+            reason = 'ALL_REJECTED: 全部标的回测否决(胜率/均收/回撤不达标), 建议空仓等待'
+        elif timing_fail == len(stocks) and timing_fail > 0:
+            reason = 'ALL_TIMING_FAIL: 全部标的入场时机不佳'
+        else:
+            reason = '无合格标的(回测不达标或入场时机差)'
+        return {
+            'positions': [], 'cash': account, 'cash_pct': 100,
+            'verdict': 'ALL_REJECTED',
+            'reason': reason,
+            'recommendation': '空仓等待',
+            'invested': 0, 'invested_pct': 0,
+            'risk_budget': risk_budget, 'stock_count': 0,
+        }
 
     # 按综合评分+入场评分排序
     eligible.sort(key=lambda x: x.get('composite_score', 0) + x.get('timing_score', 0), reverse=True)

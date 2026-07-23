@@ -91,6 +91,7 @@ class CompatibleSSLAdapter(HTTPAdapter):
 
 
 _session = requests.Session()
+_session.trust_env = False  # 绕过系统代理(Whistle), 直连 Wind API
 _session.mount("https://", CompatibleSSLAdapter())
 
 # ---- Service domain URL mapping (matches Wind official cli.mjs SERVERS) ----

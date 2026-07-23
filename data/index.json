@@ -1,5 +1,14 @@
 [
   {
+    "runId": "20260723_short-term-picks",
+    "asOf": "20260723",
+    "goal": "short-term-picks",
+    "path": "data/runs/20260723_short-term-picks/final.json",
+    "headline": "动量优先模式:熊市反弹第4天(上证m20=-5.93%), Top3潜能恒信(300191)31%+宏桥控股(002379)21%+中国西电(601179)27%,总仓位79%,置信度中。回测全否决(0/24 approved),动量优先模式因子排名覆盖回测,所有仓位标注投机性质。核心风险:反弹缩量/政策窗口/技术透支。",
+    "confidence": "中",
+    "fetchedAt": "20260723"
+  },
+  {
     "runId": "20260722_hot-trends",
     "asOf": "20260722",
     "goal": "hot-trends",
@@ -13,8 +22,8 @@
     "asOf": "20260722",
     "goal": "short-term-picks",
     "path": "data/runs/20260722_short-term-picks/final.json",
-    "headline": "downtrend repair window (northbound 37B), backtest 4/5 rejected only huatian cautious, severe data degradation (MCP all down), 2 positions (55.4%) + 3 watch, confidence low",
-    "confidence": "low",
+    "headline": "极端困难市场:26只候选仅002606大连电瓷通过回测(observation级,胜率55.6%/均收0.36%/回撤-20.69%),2项不达标→仓位砍半至13.6%,86.4%现金等科创50企稳。电网设备板块顺风+基本面最优质(PE25.1/营收+88%/净利+194%)提供底线保护。置信度:中低。",
+    "confidence": "中低",
     "fetchedAt": "20260722"
   },
   {

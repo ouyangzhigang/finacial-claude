@@ -17,6 +17,7 @@ argument-hint: "[目标关键词+参数,如:短周期 2周 账户1w | 600519 深
 |---|---|---|---|
 | 深评/深度/单股/<6位代码> | `single-stock-deep` | ticker(6位代码), name | account, horizon, riskPref, position |
 | 短周期/选股/2周/推荐 | `short-term-picks` | — | topN, period, account, riskPref, position |
+| 超短/1日/隔日/次日/打板/涨停/尾盘 | `ultra-short-picks` | — | topN, account, riskPref |
 | 热门/板块/热点/潜力 | `hot-trends` | — | constraint, topN, account |
 | 体检/复盘/持仓 | `portfolio-review` | holdings:[{code,shares,cost}] | account |
 | 舆情/趋势/预判 | `sentiment-trend-picks` | keyword 或 trend | topN, account |
@@ -36,6 +37,9 @@ argument-hint: "[目标关键词+参数,如:短周期 2周 账户1w | 600519 深
 - `体检 600519 100股@1700 000858 200股@145` → `{asOf:"<今天>", holdings:[{code:"600519",shares:100,cost:1700},{code:"000858",shares:200,cost:145}], account:"1w"}`
 - `舆情 AI算力` → `{asOf:"<今天>", keyword:"AI算力", topN:5, account:"1w"}`
 - `热门板块 Top8` → `{asOf:"<今天>", constraint:"热门板块潜力股综合推荐", topN:8, account:"1w"}`
+- `超短 1日 打板 账户1w` → `{asOf:"<今天>", topN:3, account:"1w", riskPref:"积极"}`
+
+> ⚠️ **超短周期特殊约束**: 超短选股仅适用于交易时段(09:30-15:00)。尾盘(14:30-15:00)买入封板票, 次日开盘冲高出。市场温度<30°时拒绝选股。不看基本面, 核心看封板质量+资金流+舆情+龙虎榜。
 
 ## 第三步:调用 Workflow 执行
 

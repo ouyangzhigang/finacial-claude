@@ -71,6 +71,11 @@ GATES = {
         "action": "system_wide",
         "check_system": True,
     },
+    "G8_回测": {
+        "desc": "backtest_verdict=rejected → 一票否决入TopN(驰宏锌锗纪律: 回测证伪不得强推)",
+        "action": "reject",
+        "check": lambda st: st.get("backtest_verdict", "") == "rejected",
+    },
 }
 
 
@@ -216,6 +221,30 @@ def load_capital_scores(data_dir):
     return result
 
 
+def load_backtest_results(data_dir):
+    """加载回测结果 → {code: {backtest_verdict, win_rate, avg_return, max_drawdown}}"""
+    path = os.path.join(data_dir, "backtest.json")
+    data = load_json(path)
+    if not data:
+        return {}
+    result = {}
+    backtest_list = data.get("backtest", [])
+    if isinstance(backtest_list, list):
+        for bt in backtest_list:
+            code = bt.get("code", "")
+            # Normalize: strip exchange prefix (sz000975 → 000975)
+            code = code.replace("sh", "").replace("sz", "").replace("SH", "").replace("SZ", "")
+            if code:
+                result[code] = {
+                    "backtest_verdict": bt.get("verdict", "unknown"),
+                    "win_rate": bt.get("win_rate", 0),
+                    "avg_return": bt.get("avg_return", 0),
+                    "max_drawdown": bt.get("max_drawdown", 0),
+                    "pass_count": bt.get("pass_count", 0),
+                }
+    return result
+
+
 def check_mcp_status(data_dir):
     """检测 MCP 状态 → 是否全挂(递归搜索 agent JSON)"""
     # 先检查 _shared.json
@@ -271,7 +300,7 @@ def check_mcp_status(data_dir):
         agent_path = os.path.join(data_dir, fname)
         agent_data = load_json(agent_path)
         if agent_data:
-            r = search_mcp(agent_data)
+            r = search_mcp_all(agent_data)
             if r:
                 return r
 
@@ -286,6 +315,7 @@ def merge_stock_data(data_dir):
     supply = load_supply_risk(data_dir)
     fundamentals = load_fundamentals(data_dir)
     capital = load_capital_scores(data_dir)
+    backtest = load_backtest_results(data_dir)
 
     # 收集所有代码
     all_codes = set()
@@ -295,6 +325,7 @@ def merge_stock_data(data_dir):
     all_codes.update(supply.keys())
     all_codes.update(fundamentals.keys())
     all_codes.update(capital.keys())
+    all_codes.update(backtest.keys())
 
     stocks = {}
     for code in all_codes:
@@ -305,6 +336,7 @@ def merge_stock_data(data_dir):
         st.update(supply.get(code, {}))
         st.update(fundamentals.get(code, {}))
         st.update(capital.get(code, {}))
+        st.update(backtest.get(code, {}))
         stocks[code] = st
 
     return stocks
@@ -525,6 +557,7 @@ def main():
             "G5_因子排名": GATES["G5_因子排名"]["desc"],
             "G6_数据降级": GATES["G6_数据降级"]["desc"],
             "G7_自适应动量": GATES["G7_自适应动量"]["desc"],
+            "G8_回测": GATES["G8_回测"]["desc"],
         },
         "system_flags": system_flags,
         "summary": {

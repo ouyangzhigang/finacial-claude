@@ -8,7 +8,8 @@
       "Bash(scrapling *)",
       "Bash",
       "Read",
-      "Write"
+      "Write",
+      "Workflow"
     ]
   },
   "enabledMcpjsonServers": [
