@@ -359,7 +359,7 @@ def fetch_market_data(date_str):
     try:
         result = subprocess.run(
             ['python', 'scripts/market_radar.py', '--section', 'zt,longhu,capital,news,sector'],
-            capture_output=True, text=True, timeout=60,
+            capture_output=True, text=True, encoding='utf-8', timeout=60,
             env={**os.environ, 'PYTHONIOENCODING': 'utf-8'}
         )
         return result.stdout
@@ -373,7 +373,7 @@ def fetch_lhb_deep(date_str):
     try:
         result = subprocess.run(
             ['python', 'scripts/hot_trend_dig.py', '--date', date_str],
-            capture_output=True, text=True, timeout=60,
+            capture_output=True, text=True, encoding='utf-8', timeout=60,
             env={**os.environ, 'PYTHONIOENCODING': 'utf-8'}
         )
         return result.stdout
@@ -389,7 +389,7 @@ def fetch_sentiment(codes, data_dir):
         result = subprocess.run(
             ['python', 'scripts/sentiment_engine.py', '--codes', codes_str,
              '--data-dir', data_dir, '--output', f'{data_dir}/sentiment_scores.json'],
-            capture_output=True, text=True, timeout=120,
+            capture_output=True, text=True, encoding='utf-8', timeout=120,
             env={**os.environ, 'PYTHONIOENCODING': 'utf-8'}
         )
         return result.stdout
@@ -480,7 +480,7 @@ def build_candidates(date_str, data_dir):
     # 构建候选
     for code in codes_for_quote:
         sym = f"sh{code}" if code.startswith(('6', '9')) else f"sz{code}"
-        q = quotes.get(sym, {})
+        q = quotes.get(code, {})
         kf = kline_factors.get(code, {})
 
         if not q or not isinstance(q, dict):
@@ -657,7 +657,9 @@ def main():
         json.dump(output, f, ensure_ascii=False, indent=2)
 
     print(f"✅ 输出到 {output_path}", file=sys.stderr)
-    print(f"   Top{args.top_n}: {[s['code'] for s in top_n]}", file=sys.stderr)
+    top_n = output.get('stocks', [])
+    if top_n:
+        print(f"   Top{args.top_n}: {[s['code'] for s in top_n]}", file=sys.stderr)
 
     # 打印到 stdout 供 agent 读取
     print(json.dumps(output, ensure_ascii=False, indent=2))

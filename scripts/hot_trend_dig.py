@@ -3,13 +3,18 @@
 🔥 A股热点趋势挖掘脚本 — 龙虎榜 + 热门个股 + 板块资金流 + 涨跌停池 + 连板梯队
 
 数据源: akshare(经新浪源) + findata-toolkit sector_data.py(自动降级)
-网络: 经代理/Whistle, 东方财富 push2 直连不通, 用新浪源兜底
+网络: 绕过 Whistle 代理, 直连东财 HTTP
 
 用法:
     python hot_trend_dig.py              # 默认今天/最近交易日
     python hot_trend_dig.py --date 20260630  # 指定日期
     python hot_trend_dig.py --top 20       # 展示Top N(默认15)
 """
+import os
+# 绕过系统代理(Whistle), 直连东财/新浪 API
+os.environ["NO_PROXY"] = "*"
+os.environ["no_proxy"] = "*"
+
 import akshare as ak
 import pandas as pd
 import re

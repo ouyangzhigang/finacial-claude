@@ -1,0 +1,4178 @@
+[
+  {
+    "code": "603619",
+    "name": "中曼石油",
+    "fbt": "09:31",
+    "fbt_raw": 93111,
+    "lbc": 2,
+    "days": 8,
+    "hybk": "油服工程",
+    "sector_zt_count": 2,
+    "fund_yi": 0.79,
+    "amount_yi": 3.76,
+    "zbc": 0,
+    "zdp": 9.98,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 88,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "2连板",
+        "good"
+      ],
+      [
+        "封单0.8亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "603988",
+    "name": "中电电机",
+    "fbt": "09:31",
+    "fbt_raw": 93112,
+    "lbc": 2,
+    "days": 2,
+    "hybk": "电机Ⅱ",
+    "sector_zt_count": 1,
+    "fund_yi": 0.64,
+    "amount_yi": 0.82,
+    "zbc": 0,
+    "zdp": 9.99,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 88,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "2连板",
+        "good"
+      ],
+      [
+        "封单0.6亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "605162",
+    "name": "新中港",
+    "fbt": "09:31",
+    "fbt_raw": 93135,
+    "lbc": 2,
+    "days": 2,
+    "hybk": "电力",
+    "sector_zt_count": 8,
+    "fund_yi": 0.76,
+    "amount_yi": 1.14,
+    "zbc": 0,
+    "zdp": 10.03,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 88,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "2连板",
+        "good"
+      ],
+      [
+        "封单0.8亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "002412",
+    "name": "汉森制药",
+    "fbt": "09:38",
+    "fbt_raw": 93848,
+    "lbc": 2,
+    "days": 2,
+    "hybk": "中药Ⅱ",
+    "sector_zt_count": 3,
+    "fund_yi": 0.96,
+    "amount_yi": 2.36,
+    "zbc": 0,
+    "zdp": 9.99,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 88,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "2连板",
+        "good"
+      ],
+      [
+        "封单1.0亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "002229",
+    "name": "鸿博股份",
+    "fbt": "09:36",
+    "fbt_raw": 93612,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "IT服务Ⅱ",
+    "sector_zt_count": 2,
+    "fund_yi": 1.07,
+    "amount_yi": 2.4,
+    "zbc": 0,
+    "zdp": 10.01,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 83,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.1亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "002298",
+    "name": "中电鑫龙",
+    "fbt": "09:43",
+    "fbt_raw": 94339,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 1.05,
+    "amount_yi": 2.14,
+    "zbc": 0,
+    "zdp": 10.01,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 83,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.1亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "002774",
+    "name": "快意电梯",
+    "fbt": "09:45",
+    "fbt_raw": 94509,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "专用设备",
+    "sector_zt_count": 6,
+    "fund_yi": 0.75,
+    "amount_yi": 1.48,
+    "zbc": 0,
+    "zdp": 10.03,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 83,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.7亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "600379",
+    "name": "宝光股份",
+    "fbt": "09:49",
+    "fbt_raw": 94955,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.67,
+    "amount_yi": 1.42,
+    "zbc": 0,
+    "zdp": 10.03,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 83,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.7亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "300062",
+    "name": "中能电气",
+    "fbt": "09:53",
+    "fbt_raw": 95336,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.85,
+    "amount_yi": 3.19,
+    "zbc": 0,
+    "zdp": 20.04,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 83,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.8亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "000608",
+    "name": "阳光股份",
+    "fbt": "09:54",
+    "fbt_raw": 95412,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "房地产开",
+    "sector_zt_count": 4,
+    "fund_yi": 0.8,
+    "amount_yi": 2.47,
+    "zbc": 0,
+    "zdp": 9.93,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 83,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.8亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "601179",
+    "name": "中国西电",
+    "fbt": "10:07",
+    "fbt_raw": 100738,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 4.28,
+    "amount_yi": 24.12,
+    "zbc": 0,
+    "zdp": 9.99,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 80,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单4.3亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "605299",
+    "name": "舒华体育",
+    "fbt": "09:30",
+    "fbt_raw": 93000,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "文娱用品",
+    "sector_zt_count": 1,
+    "fund_yi": 0.45,
+    "amount_yi": 1.18,
+    "zbc": 0,
+    "zdp": 9.98,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 78,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.45亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "600980",
+    "name": "北矿科技",
+    "fbt": "09:30",
+    "fbt_raw": 93004,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "专用设备",
+    "sector_zt_count": 6,
+    "fund_yi": 0.28,
+    "amount_yi": 0.34,
+    "zbc": 0,
+    "zdp": 10.02,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 78,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.28亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002762",
+    "name": "金发拉比",
+    "fbt": "09:47",
+    "fbt_raw": 94742,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "服装家纺",
+    "sector_zt_count": 1,
+    "fund_yi": 0.26,
+    "amount_yi": 0.29,
+    "zbc": 0,
+    "zdp": 10.04,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 78,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.26亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "605100",
+    "name": "华丰股份",
+    "fbt": "09:48",
+    "fbt_raw": 94825,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "通用设备",
+    "sector_zt_count": 4,
+    "fund_yi": 0.35,
+    "amount_yi": 1.45,
+    "zbc": 0,
+    "zdp": 10.01,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 78,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.35亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "000017",
+    "name": "深中华A",
+    "fbt": "09:50",
+    "fbt_raw": 95015,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "饰品",
+    "sector_zt_count": 1,
+    "fund_yi": 0.27,
+    "amount_yi": 0.57,
+    "zbc": 0,
+    "zdp": 10.08,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 78,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.27亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002713",
+    "name": "东易日盛",
+    "fbt": "09:53",
+    "fbt_raw": 95306,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "装修装饰",
+    "sector_zt_count": 1,
+    "fund_yi": 0.43,
+    "amount_yi": 1.52,
+    "zbc": 0,
+    "zdp": 10.02,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 78,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.43亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002900",
+    "name": "哈三联",
+    "fbt": "10:05",
+    "fbt_raw": 100548,
+    "lbc": 2,
+    "days": 2,
+    "hybk": "化学制药",
+    "sector_zt_count": 2,
+    "fund_yi": 0.47,
+    "amount_yi": 2.89,
+    "zbc": 0,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 75,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "2连板",
+        "good"
+      ],
+      [
+        "封单0.47亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "000603",
+    "name": "盛达资源",
+    "fbt": "10:07",
+    "fbt_raw": 100733,
+    "lbc": 3,
+    "days": 3,
+    "hybk": "贵金属",
+    "sector_zt_count": 2,
+    "fund_yi": 2.4,
+    "amount_yi": 16.56,
+    "zbc": 1,
+    "zdp": 10.01,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 75,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "3连板",
+        "good"
+      ],
+      [
+        "封单2.4亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "002112",
+    "name": "三变科技",
+    "fbt": "10:16",
+    "fbt_raw": 101606,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.61,
+    "amount_yi": 2.44,
+    "zbc": 0,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 75,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.6亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "600550",
+    "name": "保变电气",
+    "fbt": "10:19",
+    "fbt_raw": 101951,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.93,
+    "amount_yi": 7.04,
+    "zbc": 0,
+    "zdp": 10.01,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 75,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.9亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "600219",
+    "name": "南山铝业",
+    "fbt": "10:42",
+    "fbt_raw": 104255,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "工业金属",
+    "sector_zt_count": 3,
+    "fund_yi": 1.43,
+    "amount_yi": 18.75,
+    "zbc": 0,
+    "zdp": 10.11,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 75,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.4亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "002240",
+    "name": "盛新锂能",
+    "fbt": "10:46",
+    "fbt_raw": 104648,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "能源金属",
+    "sector_zt_count": 2,
+    "fund_yi": 1.47,
+    "amount_yi": 17.41,
+    "zbc": 0,
+    "zdp": 10.02,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 75,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.5亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "601061",
+    "name": "中信金属",
+    "fbt": "10:56",
+    "fbt_raw": 105601,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "贸易Ⅱ",
+    "sector_zt_count": 1,
+    "fund_yi": 0.99,
+    "amount_yi": 2.75,
+    "zbc": 0,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 75,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.0亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "002218",
+    "name": "拓日新能",
+    "fbt": "09:32",
+    "fbt_raw": 93230,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电力",
+    "sector_zt_count": 8,
+    "fund_yi": 0.89,
+    "amount_yi": 1.99,
+    "zbc": 1,
+    "zdp": 10.09,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 73,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.9亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "000815",
+    "name": "美利云",
+    "fbt": "09:37",
+    "fbt_raw": 93703,
+    "lbc": 4,
+    "days": 4,
+    "hybk": "IT服务Ⅱ",
+    "sector_zt_count": 2,
+    "fund_yi": 2.22,
+    "amount_yi": 21.02,
+    "zbc": 3,
+    "zdp": 9.98,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 73,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "3次开板",
+        "weak"
+      ],
+      [
+        "4连板",
+        "good"
+      ],
+      [
+        "封单2.2亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "601678",
+    "name": "滨化股份",
+    "fbt": "09:37",
+    "fbt_raw": 93730,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "化学原料",
+    "sector_zt_count": 4,
+    "fund_yi": 1.29,
+    "amount_yi": 8.14,
+    "zbc": 1,
+    "zdp": 10.09,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 73,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.3亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "000533",
+    "name": "顺钠股份",
+    "fbt": "09:39",
+    "fbt_raw": 93927,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 1.22,
+    "amount_yi": 2.44,
+    "zbc": 1,
+    "zdp": 10.01,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 73,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.2亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "603318",
+    "name": "水发燃气",
+    "fbt": "09:40",
+    "fbt_raw": 94009,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "燃气Ⅱ",
+    "sector_zt_count": 1,
+    "fund_yi": 0.73,
+    "amount_yi": 4.23,
+    "zbc": 1,
+    "zdp": 9.99,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 73,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.7亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "603399",
+    "name": "永杉锂业",
+    "fbt": "09:49",
+    "fbt_raw": 94907,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "能源金属",
+    "sector_zt_count": 2,
+    "fund_yi": 1.07,
+    "amount_yi": 6.67,
+    "zbc": 1,
+    "zdp": 10.02,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 73,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.1亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "603956",
+    "name": "威派格",
+    "fbt": "09:49",
+    "fbt_raw": 94917,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "专用设备",
+    "sector_zt_count": 6,
+    "fund_yi": 0.53,
+    "amount_yi": 0.9,
+    "zbc": 1,
+    "zdp": 9.96,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 73,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.5亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "002498",
+    "name": "汉缆股份",
+    "fbt": "09:49",
+    "fbt_raw": 94918,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 1.63,
+    "amount_yi": 4.4,
+    "zbc": 1,
+    "zdp": 10.06,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 73,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.6亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "002083",
+    "name": "孚日股份",
+    "fbt": "09:59",
+    "fbt_raw": 95939,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "纺织制造",
+    "sector_zt_count": 3,
+    "fund_yi": 1.1,
+    "amount_yi": 5.47,
+    "zbc": 1,
+    "zdp": 9.98,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 73,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.1亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "600396",
+    "name": "华电辽能",
+    "fbt": "13:53",
+    "fbt_raw": 135334,
+    "lbc": 2,
+    "days": 4,
+    "hybk": "电力",
+    "sector_zt_count": 8,
+    "fund_yi": 1.05,
+    "amount_yi": 53.52,
+    "zbc": 0,
+    "zdp": 9.99,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 72,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "2连板",
+        "good"
+      ],
+      [
+        "封单1.1亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "002300",
+    "name": "太阳电缆",
+    "fbt": "10:19",
+    "fbt_raw": 101900,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.27,
+    "amount_yi": 1.94,
+    "zbc": 0,
+    "zdp": 10.07,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 70,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.27亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "001208",
+    "name": "华菱线缆",
+    "fbt": "10:19",
+    "fbt_raw": 101909,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.38,
+    "amount_yi": 2.93,
+    "zbc": 0,
+    "zdp": 10.02,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 70,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.38亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "001337",
+    "name": "四川黄金",
+    "fbt": "10:46",
+    "fbt_raw": 104615,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "贵金属",
+    "sector_zt_count": 2,
+    "fund_yi": 0.42,
+    "amount_yi": 7.73,
+    "zbc": 0,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 70,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.42亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002088",
+    "name": "鲁阳节能",
+    "fbt": "09:30",
+    "fbt_raw": 93024,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "装修建材",
+    "sector_zt_count": 1,
+    "fund_yi": 0.1,
+    "amount_yi": 0.48,
+    "zbc": 1,
+    "zdp": 10.03,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 68,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.10亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "600962",
+    "name": "国投中鲁",
+    "fbt": "09:31",
+    "fbt_raw": 93139,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "农产品加",
+    "sector_zt_count": 1,
+    "fund_yi": 0.39,
+    "amount_yi": 0.62,
+    "zbc": 1,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 68,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.39亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002339",
+    "name": "积成电子",
+    "fbt": "09:33",
+    "fbt_raw": 93324,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.32,
+    "amount_yi": 3.04,
+    "zbc": 1,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 68,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.32亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002879",
+    "name": "长缆科技",
+    "fbt": "09:34",
+    "fbt_raw": 93445,
+    "lbc": 3,
+    "days": 3,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 1.43,
+    "amount_yi": 4.21,
+    "zbc": 2,
+    "zdp": 9.99,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 68,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "2次开板",
+        "weak"
+      ],
+      [
+        "3连板",
+        "good"
+      ],
+      [
+        "封单1.4亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "688618",
+    "name": "三旺通信",
+    "fbt": "09:48",
+    "fbt_raw": 94831,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "通信设备",
+    "sector_zt_count": 1,
+    "fund_yi": 0.12,
+    "amount_yi": 1.14,
+    "zbc": 1,
+    "zdp": 19.99,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 68,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.12亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "003001",
+    "name": "中岩大地",
+    "fbt": "09:52",
+    "fbt_raw": 95218,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "专业工程",
+    "sector_zt_count": 1,
+    "fund_yi": 0.36,
+    "amount_yi": 5.02,
+    "zbc": 1,
+    "zdp": 10.03,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 68,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.36亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "001382",
+    "name": "新亚电缆",
+    "fbt": "09:54",
+    "fbt_raw": 95409,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.36,
+    "amount_yi": 1.07,
+    "zbc": 1,
+    "zdp": 10.03,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 68,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.36亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002165",
+    "name": "红 宝 丽",
+    "fbt": "11:01",
+    "fbt_raw": 110115,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "化学制品",
+    "sector_zt_count": 3,
+    "fund_yi": 1.03,
+    "amount_yi": 5.12,
+    "zbc": 0,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 67,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.0亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "300444",
+    "name": "双杰电气",
+    "fbt": "13:03",
+    "fbt_raw": 130306,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 1.18,
+    "amount_yi": 9.44,
+    "zbc": 0,
+    "zdp": 20.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 67,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.2亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "002451",
+    "name": "摩恩电气",
+    "fbt": "13:03",
+    "fbt_raw": 130324,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.93,
+    "amount_yi": 1.22,
+    "zbc": 0,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 67,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.9亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "600409",
+    "name": "三友化工",
+    "fbt": "13:04",
+    "fbt_raw": 130402,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "化学原料",
+    "sector_zt_count": 4,
+    "fund_yi": 0.53,
+    "amount_yi": 3.41,
+    "zbc": 0,
+    "zdp": 10.03,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 67,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.5亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "002560",
+    "name": "通达股份",
+    "fbt": "13:07",
+    "fbt_raw": 130721,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.65,
+    "amount_yi": 3.24,
+    "zbc": 0,
+    "zdp": 9.96,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 67,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.6亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "301587",
+    "name": "中瑞股份",
+    "fbt": "13:08",
+    "fbt_raw": 130839,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电池",
+    "sector_zt_count": 3,
+    "fund_yi": 0.51,
+    "amount_yi": 2.1,
+    "zbc": 0,
+    "zdp": 20.02,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 67,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.5亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "002546",
+    "name": "新联电子",
+    "fbt": "13:09",
+    "fbt_raw": 130915,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.62,
+    "amount_yi": 3.69,
+    "zbc": 0,
+    "zdp": 10.04,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 67,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.6亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "601606",
+    "name": "长城军工",
+    "fbt": "13:14",
+    "fbt_raw": 131415,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "地面兵装",
+    "sector_zt_count": 2,
+    "fund_yi": 1.34,
+    "amount_yi": 8.5,
+    "zbc": 0,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 67,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.3亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "002173",
+    "name": "创新医疗",
+    "fbt": "13:31",
+    "fbt_raw": 133124,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "医疗服务",
+    "sector_zt_count": 1,
+    "fund_yi": 1.25,
+    "amount_yi": 11.03,
+    "zbc": 0,
+    "zdp": 10.03,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 67,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.3亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "002606",
+    "name": "大连电瓷",
+    "fbt": "13:35",
+    "fbt_raw": 133554,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.5,
+    "amount_yi": 5.07,
+    "zbc": 0,
+    "zdp": 10.02,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 67,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.5亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "002353",
+    "name": "杰瑞股份",
+    "fbt": "09:25",
+    "fbt_raw": 92500,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "专用设备",
+    "sector_zt_count": 6,
+    "fund_yi": 11.37,
+    "amount_yi": 3.93,
+    "zbc": 0,
+    "zdp": 10.0,
+    "is_yizi": true,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 65,
+    "details": [
+      [
+        "一字板",
+        "warning"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单11.4亿",
+        "good"
+      ]
+    ]
+  },
+  {
+    "code": "301234",
+    "name": "五洲医疗",
+    "fbt": "09:25",
+    "fbt_raw": 92500,
+    "lbc": 2,
+    "days": 2,
+    "hybk": "医疗器械",
+    "sector_zt_count": 1,
+    "fund_yi": 4.7,
+    "amount_yi": 0.21,
+    "zbc": 0,
+    "zdp": 20.0,
+    "is_yizi": true,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 65,
+    "details": [
+      [
+        "一字板",
+        "warning"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "2连板",
+        "good"
+      ],
+      [
+        "封单4.7亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "603221",
+    "name": "爱丽家居",
+    "fbt": "09:25",
+    "fbt_raw": 92500,
+    "lbc": 3,
+    "days": 3,
+    "hybk": "家居用品",
+    "sector_zt_count": 1,
+    "fund_yi": 2.2,
+    "amount_yi": 0.02,
+    "zbc": 0,
+    "zdp": 10.03,
+    "is_yizi": true,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 65,
+    "details": [
+      [
+        "一字板",
+        "warning"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "3连板",
+        "good"
+      ],
+      [
+        "封单2.2亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "301158",
+    "name": "德石股份",
+    "fbt": "10:01",
+    "fbt_raw": 100115,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "专用设备",
+    "sector_zt_count": 6,
+    "fund_yi": 0.5,
+    "amount_yi": 2.76,
+    "zbc": 1,
+    "zdp": 19.98,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 65,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.5亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "603567",
+    "name": "珍宝岛",
+    "fbt": "10:05",
+    "fbt_raw": 100510,
+    "lbc": 1,
+    "days": 6,
+    "hybk": "中药Ⅱ",
+    "sector_zt_count": 3,
+    "fund_yi": 0.84,
+    "amount_yi": 6.67,
+    "zbc": 1,
+    "zdp": 9.98,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 65,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.8亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "603191",
+    "name": "望变电气",
+    "fbt": "10:20",
+    "fbt_raw": 102036,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.54,
+    "amount_yi": 2.29,
+    "zbc": 1,
+    "zdp": 10.02,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 65,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.5亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "603876",
+    "name": "鼎胜新材",
+    "fbt": "14:16",
+    "fbt_raw": 141613,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "工业金属",
+    "sector_zt_count": 3,
+    "fund_yi": 0.48,
+    "amount_yi": 7.43,
+    "zbc": 0,
+    "zdp": 10.01,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 65,
+    "details": [
+      [
+        "盘中封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.48亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002566",
+    "name": "益盛药业",
+    "fbt": "14:25",
+    "fbt_raw": 142536,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "中药Ⅱ",
+    "sector_zt_count": 3,
+    "fund_yi": 0.29,
+    "amount_yi": 1.04,
+    "zbc": 0,
+    "zdp": 9.97,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 65,
+    "details": [
+      [
+        "盘中封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.29亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "603050",
+    "name": "科林电气",
+    "fbt": "14:27",
+    "fbt_raw": 142701,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.27,
+    "amount_yi": 1.62,
+    "zbc": 0,
+    "zdp": 10.02,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 65,
+    "details": [
+      [
+        "盘中封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.27亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002197",
+    "name": "证通电子",
+    "fbt": "09:31",
+    "fbt_raw": 93127,
+    "lbc": 3,
+    "days": 3,
+    "hybk": "计算机设",
+    "sector_zt_count": 1,
+    "fund_yi": 0.34,
+    "amount_yi": 8.17,
+    "zbc": 6,
+    "zdp": 10.04,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 63,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "6次开板",
+        "weak"
+      ],
+      [
+        "3连板",
+        "good"
+      ],
+      [
+        "封单0.34亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002775",
+    "name": "文科股份",
+    "fbt": "11:14",
+    "fbt_raw": 111400,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "基础建设",
+    "sector_zt_count": 1,
+    "fund_yi": 0.11,
+    "amount_yi": 0.86,
+    "zbc": 0,
+    "zdp": 9.97,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 62,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.11亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002539",
+    "name": "云图控股",
+    "fbt": "11:25",
+    "fbt_raw": 112539,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "农化制品",
+    "sector_zt_count": 2,
+    "fund_yi": 0.12,
+    "amount_yi": 4.55,
+    "zbc": 0,
+    "zdp": 10.04,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 62,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.12亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "603212",
+    "name": "赛伍技术",
+    "fbt": "13:07",
+    "fbt_raw": 130736,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "光伏设备",
+    "sector_zt_count": 2,
+    "fund_yi": 0.41,
+    "amount_yi": 1.68,
+    "zbc": 0,
+    "zdp": 9.99,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 62,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.41亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "603727",
+    "name": "博迈科",
+    "fbt": "13:17",
+    "fbt_raw": 131712,
+    "lbc": 1,
+    "days": 4,
+    "hybk": "油服工程",
+    "sector_zt_count": 2,
+    "fund_yi": 0.39,
+    "amount_yi": 1.53,
+    "zbc": 0,
+    "zdp": 10.03,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 62,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.39亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002725",
+    "name": "跃岭股份",
+    "fbt": "13:34",
+    "fbt_raw": 133403,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "汽车零部",
+    "sector_zt_count": 2,
+    "fund_yi": 0.29,
+    "amount_yi": 1.19,
+    "zbc": 0,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 62,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.29亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "300141",
+    "name": "和顺电气",
+    "fbt": "13:37",
+    "fbt_raw": 133715,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.23,
+    "amount_yi": 1.81,
+    "zbc": 0,
+    "zdp": 20.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 62,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.23亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002358",
+    "name": "森源电气",
+    "fbt": "13:37",
+    "fbt_raw": 133736,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.21,
+    "amount_yi": 2.56,
+    "zbc": 0,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 62,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.21亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "600343",
+    "name": "航天动力",
+    "fbt": "13:42",
+    "fbt_raw": 134210,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "通用设备",
+    "sector_zt_count": 4,
+    "fund_yi": 0.41,
+    "amount_yi": 9.5,
+    "zbc": 0,
+    "zdp": 10.01,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 62,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.41亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "600698",
+    "name": "湖南天雁",
+    "fbt": "13:46",
+    "fbt_raw": 134602,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "汽车零部",
+    "sector_zt_count": 2,
+    "fund_yi": 0.38,
+    "amount_yi": 2.36,
+    "zbc": 0,
+    "zdp": 10.09,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 62,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.38亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "603680",
+    "name": "今创集团",
+    "fbt": "13:46",
+    "fbt_raw": 134606,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "轨交设备",
+    "sector_zt_count": 1,
+    "fund_yi": 0.29,
+    "amount_yi": 0.82,
+    "zbc": 0,
+    "zdp": 9.98,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 62,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.29亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "000595",
+    "name": "新能股份",
+    "fbt": "09:25",
+    "fbt_raw": 92500,
+    "lbc": 2,
+    "days": 2,
+    "hybk": "电力",
+    "sector_zt_count": 8,
+    "fund_yi": 0.81,
+    "amount_yi": 0.27,
+    "zbc": 0,
+    "zdp": 9.96,
+    "is_yizi": true,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 60,
+    "details": [
+      [
+        "一字板",
+        "warning"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "2连板",
+        "good"
+      ],
+      [
+        "封单0.8亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "603400",
+    "name": "华之杰",
+    "fbt": "10:07",
+    "fbt_raw": 100746,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "通用设备",
+    "sector_zt_count": 4,
+    "fund_yi": 0.21,
+    "amount_yi": 1.68,
+    "zbc": 1,
+    "zdp": 10.01,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 60,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.21亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "920222",
+    "name": "益坤电气",
+    "fbt": "10:11",
+    "fbt_raw": 101102,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.19,
+    "amount_yi": 1.51,
+    "zbc": 1,
+    "zdp": 30.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 60,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.19亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "600468",
+    "name": "百利电气",
+    "fbt": "10:31",
+    "fbt_raw": 103103,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.35,
+    "amount_yi": 2.36,
+    "zbc": 1,
+    "zdp": 9.92,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 60,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.35亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "600173",
+    "name": "卧龙新能",
+    "fbt": "10:48",
+    "fbt_raw": 104854,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "房地产开",
+    "sector_zt_count": 4,
+    "fund_yi": 0.21,
+    "amount_yi": 1.28,
+    "zbc": 1,
+    "zdp": 10.04,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 60,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.21亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "605117",
+    "name": "德业股份",
+    "fbt": "14:38",
+    "fbt_raw": 143823,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "光伏设备",
+    "sector_zt_count": 2,
+    "fund_yi": 1.49,
+    "amount_yi": 21.03,
+    "zbc": 0,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": true,
+    "is_early": false,
+    "total_score": 60,
+    "details": [
+      [
+        "尾盘封板",
+        "weak"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.5亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "600230",
+    "name": "沧州大化",
+    "fbt": "14:43",
+    "fbt_raw": 144301,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "化学制品",
+    "sector_zt_count": 3,
+    "fund_yi": 0.51,
+    "amount_yi": 2.63,
+    "zbc": 0,
+    "zdp": 10.03,
+    "is_yizi": false,
+    "is_tail": true,
+    "is_early": false,
+    "total_score": 60,
+    "details": [
+      [
+        "尾盘封板",
+        "weak"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.5亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "600268",
+    "name": "国电南自",
+    "fbt": "14:43",
+    "fbt_raw": 144339,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.55,
+    "amount_yi": 5.39,
+    "zbc": 0,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": true,
+    "is_early": false,
+    "total_score": 60,
+    "details": [
+      [
+        "尾盘封板",
+        "weak"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.6亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "301292",
+    "name": "海科新源",
+    "fbt": "14:48",
+    "fbt_raw": 144827,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电池",
+    "sector_zt_count": 3,
+    "fund_yi": 0.98,
+    "amount_yi": 11.52,
+    "zbc": 0,
+    "zdp": 20.0,
+    "is_yizi": false,
+    "is_tail": true,
+    "is_early": false,
+    "total_score": 60,
+    "details": [
+      [
+        "尾盘封板",
+        "weak"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.0亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "603026",
+    "name": "石大胜华",
+    "fbt": "14:50",
+    "fbt_raw": 145059,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电池",
+    "sector_zt_count": 3,
+    "fund_yi": 0.95,
+    "amount_yi": 9.18,
+    "zbc": 0,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": true,
+    "is_early": false,
+    "total_score": 60,
+    "details": [
+      [
+        "尾盘封板",
+        "weak"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.9亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "000011",
+    "name": "深物业A",
+    "fbt": "09:33",
+    "fbt_raw": 93342,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "房地产开",
+    "sector_zt_count": 4,
+    "fund_yi": 0.11,
+    "amount_yi": 0.95,
+    "zbc": 2,
+    "zdp": 9.96,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 58,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "2次开板",
+        "weak"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.11亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "600984",
+    "name": "建设机械",
+    "fbt": "09:51",
+    "fbt_raw": 95117,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "工程机械",
+    "sector_zt_count": 1,
+    "fund_yi": 0.4,
+    "amount_yi": 1.73,
+    "zbc": 2,
+    "zdp": 9.97,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 58,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "2次开板",
+        "weak"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.40亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "605189",
+    "name": "富春染织",
+    "fbt": "09:53",
+    "fbt_raw": 95327,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "纺织制造",
+    "sector_zt_count": 3,
+    "fund_yi": 0.49,
+    "amount_yi": 2.66,
+    "zbc": 3,
+    "zdp": 10.04,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 58,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "3次开板",
+        "weak"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.49亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "000155",
+    "name": "川能动力",
+    "fbt": "11:29",
+    "fbt_raw": 112948,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电力",
+    "sector_zt_count": 8,
+    "fund_yi": 0.57,
+    "amount_yi": 9.73,
+    "zbc": 1,
+    "zdp": 10.03,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 57,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.6亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "600611",
+    "name": "大众交通",
+    "fbt": "13:10",
+    "fbt_raw": 131027,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "铁路公路",
+    "sector_zt_count": 1,
+    "fund_yi": 0.61,
+    "amount_yi": 3.72,
+    "zbc": 1,
+    "zdp": 9.95,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 57,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.6亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "000862",
+    "name": "银星能源",
+    "fbt": "13:34",
+    "fbt_raw": 133403,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电力",
+    "sector_zt_count": 8,
+    "fund_yi": 0.62,
+    "amount_yi": 4.61,
+    "zbc": 1,
+    "zdp": 10.04,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 57,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.6亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "000688",
+    "name": "国城矿业",
+    "fbt": "10:14",
+    "fbt_raw": 101427,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "小金属",
+    "sector_zt_count": 1,
+    "fund_yi": 0.98,
+    "amount_yi": 8.08,
+    "zbc": 2,
+    "zdp": 10.01,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 55,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "2次开板",
+        "weak"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单1.0亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "600354",
+    "name": "敦煌种业",
+    "fbt": "14:05",
+    "fbt_raw": 140509,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "种植业",
+    "sector_zt_count": 1,
+    "fund_yi": 0.32,
+    "amount_yi": 3.57,
+    "zbc": 1,
+    "zdp": 10.02,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 55,
+    "details": [
+      [
+        "盘中封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.32亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "601700",
+    "name": "风范股份",
+    "fbt": "14:34",
+    "fbt_raw": 143454,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.14,
+    "amount_yi": 2.37,
+    "zbc": 0,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": true,
+    "is_early": false,
+    "total_score": 55,
+    "details": [
+      [
+        "尾盘封板",
+        "weak"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.14亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "603861",
+    "name": "白云电器",
+    "fbt": "14:40",
+    "fbt_raw": 144025,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.44,
+    "amount_yi": 2.42,
+    "zbc": 0,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": true,
+    "is_early": false,
+    "total_score": 55,
+    "details": [
+      [
+        "尾盘封板",
+        "weak"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.44亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "605288",
+    "name": "凯迪股份",
+    "fbt": "14:41",
+    "fbt_raw": 144136,
+    "lbc": 1,
+    "days": 3,
+    "hybk": "自动化设",
+    "sector_zt_count": 2,
+    "fund_yi": 0.16,
+    "amount_yi": 1.15,
+    "zbc": 0,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": true,
+    "is_early": false,
+    "total_score": 55,
+    "details": [
+      [
+        "尾盘封板",
+        "weak"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.16亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "001388",
+    "name": "信通电子",
+    "fbt": "14:42",
+    "fbt_raw": 144236,
+    "lbc": 1,
+    "days": 9,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.16,
+    "amount_yi": 4.08,
+    "zbc": 0,
+    "zdp": 10.02,
+    "is_yizi": false,
+    "is_tail": true,
+    "is_early": false,
+    "total_score": 55,
+    "details": [
+      [
+        "尾盘封板",
+        "weak"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.16亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "000803",
+    "name": "山高环能",
+    "fbt": "14:44",
+    "fbt_raw": 144406,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电力",
+    "sector_zt_count": 8,
+    "fund_yi": 0.13,
+    "amount_yi": 2.0,
+    "zbc": 0,
+    "zdp": 10.03,
+    "is_yizi": false,
+    "is_tail": true,
+    "is_early": false,
+    "total_score": 55,
+    "details": [
+      [
+        "尾盘封板",
+        "weak"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.13亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "300510",
+    "name": "金冠股份",
+    "fbt": "14:52",
+    "fbt_raw": 145203,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "电网设备",
+    "sector_zt_count": 29,
+    "fund_yi": 0.33,
+    "amount_yi": 3.44,
+    "zbc": 0,
+    "zdp": 20.0,
+    "is_yizi": false,
+    "is_tail": true,
+    "is_early": false,
+    "total_score": 55,
+    "details": [
+      [
+        "尾盘封板",
+        "weak"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.33亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002674",
+    "name": "兴业科技",
+    "fbt": "14:54",
+    "fbt_raw": 145409,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "纺织制造",
+    "sector_zt_count": 3,
+    "fund_yi": 0.44,
+    "amount_yi": 5.32,
+    "zbc": 0,
+    "zdp": 10.01,
+    "is_yizi": false,
+    "is_tail": true,
+    "is_early": false,
+    "total_score": 55,
+    "details": [
+      [
+        "尾盘封板",
+        "weak"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.44亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "603331",
+    "name": "百达精工",
+    "fbt": "14:54",
+    "fbt_raw": 145433,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "通用设备",
+    "sector_zt_count": 4,
+    "fund_yi": 0.24,
+    "amount_yi": 0.9,
+    "zbc": 0,
+    "zdp": 9.98,
+    "is_yizi": false,
+    "is_tail": true,
+    "is_early": false,
+    "total_score": 55,
+    "details": [
+      [
+        "尾盘封板",
+        "weak"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.24亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "001258",
+    "name": "立新能源",
+    "fbt": "09:31",
+    "fbt_raw": 93145,
+    "lbc": 6,
+    "days": 6,
+    "hybk": "电力",
+    "sector_zt_count": 8,
+    "fund_yi": 1.95,
+    "amount_yi": 12.71,
+    "zbc": 7,
+    "zdp": 9.99,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 53,
+    "details": [
+      [
+        "早盘封板",
+        "good"
+      ],
+      [
+        "7次开板",
+        "weak"
+      ],
+      [
+        "6连板(高位)",
+        "warning"
+      ],
+      [
+        "封单2.0亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "600722",
+    "name": "金牛化工",
+    "fbt": "11:01",
+    "fbt_raw": 110157,
+    "lbc": 2,
+    "days": 5,
+    "hybk": "化学原料",
+    "sector_zt_count": 4,
+    "fund_yi": 0.64,
+    "amount_yi": 13.65,
+    "zbc": 2,
+    "zdp": 9.99,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 52,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "2次开板",
+        "weak"
+      ],
+      [
+        "2连板",
+        "good"
+      ],
+      [
+        "封单0.6亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "000035",
+    "name": "中国天楹",
+    "fbt": "11:10",
+    "fbt_raw": 111015,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "环境治理",
+    "sector_zt_count": 1,
+    "fund_yi": 0.25,
+    "amount_yi": 3.82,
+    "zbc": 1,
+    "zdp": 10.02,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 52,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.25亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "600844",
+    "name": "金煤科技",
+    "fbt": "11:18",
+    "fbt_raw": 111815,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "化学原料",
+    "sector_zt_count": 4,
+    "fund_yi": 0.38,
+    "amount_yi": 3.01,
+    "zbc": 1,
+    "zdp": 10.04,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 52,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.38亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "300214",
+    "name": "日科化学",
+    "fbt": "11:23",
+    "fbt_raw": 112339,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "化学制品",
+    "sector_zt_count": 3,
+    "fund_yi": 0.45,
+    "amount_yi": 4.82,
+    "zbc": 1,
+    "zdp": 20.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 52,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.45亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "000668",
+    "name": "荣丰控股",
+    "fbt": "13:07",
+    "fbt_raw": 130733,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "房地产开",
+    "sector_zt_count": 4,
+    "fund_yi": 0.19,
+    "amount_yi": 0.63,
+    "zbc": 1,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 52,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.19亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "603488",
+    "name": "展鹏科技",
+    "fbt": "13:33",
+    "fbt_raw": 133357,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "专用设备",
+    "sector_zt_count": 6,
+    "fund_yi": 0.2,
+    "amount_yi": 0.99,
+    "zbc": 1,
+    "zdp": 9.99,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 52,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.20亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "600990",
+    "name": "四创电子",
+    "fbt": "13:37",
+    "fbt_raw": 133747,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "军工电子",
+    "sector_zt_count": 1,
+    "fund_yi": 0.27,
+    "amount_yi": 1.04,
+    "zbc": 1,
+    "zdp": 10.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 52,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.27亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "301357",
+    "name": "北方长龙",
+    "fbt": "13:49",
+    "fbt_raw": 134948,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "地面兵装",
+    "sector_zt_count": 2,
+    "fund_yi": 0.38,
+    "amount_yi": 5.65,
+    "zbc": 1,
+    "zdp": 20.0,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 52,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.38亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "600449",
+    "name": "宁夏建材",
+    "fbt": "13:55",
+    "fbt_raw": 135546,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "水泥",
+    "sector_zt_count": 2,
+    "fund_yi": 0.27,
+    "amount_yi": 1.21,
+    "zbc": 1,
+    "zdp": 10.03,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 52,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.27亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002199",
+    "name": "东晶电子",
+    "fbt": "09:25",
+    "fbt_raw": 92500,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "元件",
+    "sector_zt_count": 1,
+    "fund_yi": 0.38,
+    "amount_yi": 0.61,
+    "zbc": 0,
+    "zdp": 10.05,
+    "is_yizi": true,
+    "is_tail": false,
+    "is_early": true,
+    "total_score": 50,
+    "details": [
+      [
+        "一字板",
+        "warning"
+      ],
+      [
+        "0次开板",
+        "good"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.38亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002379",
+    "name": "宏桥控股",
+    "fbt": "10:06",
+    "fbt_raw": 100639,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "工业金属",
+    "sector_zt_count": 3,
+    "fund_yi": 0.43,
+    "amount_yi": 14.72,
+    "zbc": 2,
+    "zdp": 10.01,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 50,
+    "details": [
+      [
+        "上午封板",
+        "ok"
+      ],
+      [
+        "2次开板",
+        "weak"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.43亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "600513",
+    "name": "联环药业",
+    "fbt": "13:04",
+    "fbt_raw": 130410,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "化学制药",
+    "sector_zt_count": 2,
+    "fund_yi": 0.76,
+    "amount_yi": 4.34,
+    "zbc": 2,
+    "zdp": 10.03,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 47,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "2次开板",
+        "weak"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.8亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "600389",
+    "name": "江山股份",
+    "fbt": "13:22",
+    "fbt_raw": 132219,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "农化制品",
+    "sector_zt_count": 2,
+    "fund_yi": 0.63,
+    "amount_yi": 3.29,
+    "zbc": 2,
+    "zdp": 10.01,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 47,
+    "details": [
+      [
+        "午后封板",
+        "ok"
+      ],
+      [
+        "2次开板",
+        "weak"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.6亿",
+        "ok"
+      ]
+    ]
+  },
+  {
+    "code": "603082",
+    "name": "北自科技",
+    "fbt": "14:18",
+    "fbt_raw": 141812,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "自动化设",
+    "sector_zt_count": 2,
+    "fund_yi": 0.3,
+    "amount_yi": 1.5,
+    "zbc": 2,
+    "zdp": 9.99,
+    "is_yizi": false,
+    "is_tail": false,
+    "is_early": false,
+    "total_score": 45,
+    "details": [
+      [
+        "盘中封板",
+        "ok"
+      ],
+      [
+        "2次开板",
+        "weak"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.30亿",
+        "weak"
+      ]
+    ]
+  },
+  {
+    "code": "002596",
+    "name": "海南瑞泽",
+    "fbt": "14:41",
+    "fbt_raw": 144121,
+    "lbc": 1,
+    "days": 1,
+    "hybk": "水泥",
+    "sector_zt_count": 2,
+    "fund_yi": 0.21,
+    "amount_yi": 1.65,
+    "zbc": 1,
+    "zdp": 9.93,
+    "is_yizi": false,
+    "is_tail": true,
+    "is_early": false,
+    "total_score": 45,
+    "details": [
+      [
+        "尾盘封板",
+        "weak"
+      ],
+      [
+        "1次开板",
+        "ok"
+      ],
+      [
+        "首板",
+        "ok"
+      ],
+      [
+        "封单0.21亿",
+        "weak"
+      ]
+    ]
+  }
+]

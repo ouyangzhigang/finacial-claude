@@ -1,5 +1,14 @@
 [
   {
+    "runId": "20260723_ultra-short-picks",
+    "asOf": "20260723",
+    "goal": "ultra-short-picks",
+    "path": "data/runs/20260723_ultra-short-picks/final.json",
+    "headline": "超短1日选股: 0标的入选, 79只涨停股全部成交额<1亿触发流动性硬门, 强制空仓。市场温度69°正常但无合格猎物, 置信度中。",
+    "confidence": "中",
+    "fetchedAt": "20260723"
+  },
+  {
     "runId": "20260723_short-term-picks",
     "asOf": "20260723",
     "goal": "short-term-picks",

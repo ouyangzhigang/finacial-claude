@@ -31,6 +31,10 @@ import time
 import urllib.request
 import ssl
 
+# 绕过系统代理(Whistle), 直连东财/新浪/腾讯 API
+os.environ["NO_PROXY"] = "*"
+os.environ["no_proxy"] = "*"
+
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
