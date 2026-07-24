@@ -217,6 +217,9 @@ def fetch_zt_pool():
             "lianban": item.get("lbc"),  # 连板次数
             "circMktCap": item.get("ltsz"),  # 流通市值
             "firstSealTime": item.get("fbt"),  # 首次封板时间
+            "fund": item.get("fund"),  # 封单额(万)
+            "zbc": item.get("zbc"),  # 开板次数
+            "hybk": item.get("hybk"),  # 所属板块
         })
     return result
 

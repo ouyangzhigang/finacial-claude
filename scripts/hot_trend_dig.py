@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-🔥 A股热点趋势挖掘脚本 — 龙虎榜 + 热门个股 + 板块资金流 + 涨跌停池 + 连板梯队
+[hot] A股热点趋势挖掘脚本 — 龙虎榜 + 热门个股 + 板块资金流 + 涨跌停池 + 连板梯队
 
-数据源: akshare(经新浪源) + findata-toolkit sector_data.py(自动降级)
+数据源: 东财数据中心(直连,绕过akshare) + findata-toolkit sector_data.py(自动降级)
 网络: 绕过 Whistle 代理, 直连东财 HTTP
 
 用法:
@@ -15,13 +15,52 @@ import os
 os.environ["NO_PROXY"] = "*"
 os.environ["no_proxy"] = "*"
 
-import akshare as ak
 import pandas as pd
 import re
 import json
 import subprocess
 import sys
+import time
+import urllib.request
+import ssl
 from datetime import datetime, timedelta
+
+# akshare 仅用于热榜/飙升榜(这两个函数暂时没有更好的替代源)
+import akshare as ak
+
+# ── 东财防封 Session (复用 astock_data.py 的成熟模式) ──
+_EM_SESSION = None
+_HAS_REQUESTS = False
+try:
+    import requests as _requests
+    from requests.adapters import HTTPAdapter
+    from urllib3.util.retry import Retry
+    _HAS_REQUESTS = True
+except ImportError:
+    pass
+
+if _HAS_REQUESTS:
+    _EM_SESSION = _requests.Session()
+    _EM_SESSION.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    })
+    _EM_SESSION.verify = False
+    _EM_SESSION.trust_env = False
+    _EM_SESSION.proxies.update({'http': None, 'https': None})
+    try:
+        _adapter = HTTPAdapter(max_retries=Retry(
+            total=3, connect=3, backoff_factor=0.6,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET"]))
+        _EM_SESSION.mount("https://", _adapter)
+        _EM_SESSION.mount("http://", _adapter)
+    except Exception:
+        pass
+
+_SSL_CTX = ssl._create_unverified_context()
+_EM_MIN_INTERVAL = 1.0
+_em_last_call = [0.0]
+_DATACENTER_URL = "https://datacenter-web.eastmoney.com/api/data/v1/get"
 
 
 # ──────────────────────────────── 数据获取 ────────────────────────────────
@@ -38,17 +77,151 @@ def get_target_date(date_str=None):
     return today.strftime('%Y%m%d')
 
 
-def fetch_lhb_data(date_str):
-    """获取龙虎榜数据(akshare)"""
+def _em_api_get(params, timeout=15):
+    """东财数据中心统一请求(requests优先→urllib兜底)"""
+    # 方式1: requests session (已配置 trust_env=False + 禁用代理)
+    if _HAS_REQUESTS and _EM_SESSION is not None:
+        wait = _EM_MIN_INTERVAL - (time.time() - _em_last_call[0])
+        if wait > 0:
+            time.sleep(wait)
+        try:
+            r = _EM_SESSION.get(_DATACENTER_URL, params=params, timeout=timeout)
+            _em_last_call[0] = time.time()
+            if r.status_code == 200:
+                return r.json()
+        except Exception:
+            _em_last_call[0] = time.time()
+
+    # 方式2: urllib 兜底 (同样绕过代理)
     try:
-        df = ak.stock_lhb_detail_em(start_date=date_str, end_date=date_str)
-        if df.empty:
-            print(f"[{date_str}] 龙虎榜无数据。")
-            return None
-        return df
-    except Exception as e:
-        print(f"龙虎榜获取失败: {e}")
+        qs = '&'.join(f'{k}={urllib.request.quote(str(v))}' for k, v in params.items())
+        url = f'{_DATACENTER_URL}?{qs}'
+        req = urllib.request.Request(url, headers={
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        })
+        r = urllib.request.urlopen(req, timeout=timeout, context=_SSL_CTX)
+        raw = r.read().decode('utf-8', errors='replace')
+        return json.loads(raw)
+    except Exception:
         return None
+
+
+def _date_to_dash(date_str):
+    """20260724 → 2026-07-24"""
+    if len(date_str) == 8:
+        return f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]}"
+    return date_str
+
+
+def _parse_lhb_rows(rows):
+    """将 EM API 返回的行转为 akshare 兼容的 DataFrame 列名"""
+    if not rows:
+        return None
+    df_rows = []
+    for row in rows:
+        # 净买额转万元(API返回元)
+        net_amt = row.get('BILLBOARD_NET_AMT') or 0
+        buy_amt = row.get('BILLBOARD_BUY_AMT') or 0
+        sell_amt = row.get('BILLBOARD_SELL_AMT') or 0
+        try:
+            net_amt_wan = round(float(net_amt) / 10000, 1)
+        except (ValueError, TypeError):
+            net_amt_wan = 0
+
+        df_rows.append({
+            '代码': row.get('SECURITY_CODE', ''),
+            '名称': row.get('SECURITY_NAME_ABBR', ''),
+            '收盘价': row.get('CLOSE_PRICE', ''),
+            '涨跌幅': row.get('CHANGE_RATE', ''),
+            '龙虎榜净买额': net_amt,  # 保持原始单位(元), 下游 score_lhb_row 会 /10000
+            '龙虎榜买入额': buy_amt,
+            '龙虎榜卖出额': sell_amt,
+            '龙虎榜成交额': row.get('BILLBOARD_DEAL_AMT', 0),
+            '上榜原因': row.get('EXPLANATION', ''),
+            '解读': row.get('EXPLAIN', ''),  # EM API 的 EXPLAIN 对应 akshare 的'解读'
+            '流通市值': row.get('FREE_MARKET_CAP', ''),
+            '换手率': row.get('TURNOVERRATE', ''),
+        })
+    return pd.DataFrame(df_rows)
+
+
+def _fetch_lhb_date(date_str):
+    """查询指定日期的龙虎榜数据(东财数据中心直连, 绕过akshare)。
+
+    三层降级: requests session → urllib → curl -k
+    列名保持与 akshare stock_lhb_detail_em 兼容。
+    """
+    trade_date = _date_to_dash(date_str)
+    params = {
+        "reportName": "RPT_DAILYBILLBOARD_DETAILSNEW",
+        "columns": "ALL",
+        "filter": f"(TRADE_DATE>='{trade_date}')(TRADE_DATE<='{trade_date}')",
+        "pageNumber": "1",
+        "pageSize": "200",
+        "sortColumns": "SECURITY_CODE",
+        "sortTypes": "1",
+        "source": "WEB",
+        "client": "WEB",
+    }
+
+    # ── 方式1+2: requests / urllib ──
+    data = _em_api_get(params)
+    if data is not None:
+        rows = (data.get("result") or {}).get("data") or []
+        if rows:
+            print(f"[{date_str}] 龙虎榜 {len(rows)} 条 (东财直连)", file=sys.stderr)
+            return _parse_lhb_rows(rows)
+
+    # ── 方式3: curl -k 兜底 ──
+    try:
+        qs = '&'.join(
+            f'{k}={v}' for k, v in params.items()
+        )
+        url = f'{_DATACENTER_URL}?{qs}'
+        result = subprocess.run(
+            ['curl', '-k', '-s', '--connect-timeout', '10', '--max-time', '20', url],
+            capture_output=True, text=True, encoding='utf-8', timeout=30
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            data = json.loads(result.stdout)
+            rows = (data.get("result") or {}).get("data") or []
+            if rows:
+                print(f"[{date_str}] 龙虎榜 {len(rows)} 条 (curl兜底)", file=sys.stderr)
+                return _parse_lhb_rows(rows)
+    except Exception as e:
+        print(f"  curl 兜底失败: {e}", file=sys.stderr)
+
+    # ── 所有方式都失败 ──
+    print(f"[{date_str}] 龙虎榜无数据(所有通道均失败或当日无上榜)。", file=sys.stderr)
+    return None
+
+
+def fetch_lhb_data(date_str):
+    """获取龙虎榜数据, 当日无数据时自动回退到最近交易日。
+
+    龙虎榜盘后(~16:30)才发布, 盘中查询当天必然无数据。
+    此函数尝试: 当日 → 前1个交易日 → 前2个交易日 → 前3个交易日
+    """
+    # 先尝试目标日期
+    df = _fetch_lhb_date(date_str)
+    if df is not None and not df.empty:
+        return df
+
+    # 回退到最近交易日(最多回退3天, 跳过周末)
+    dt = datetime.strptime(date_str, '%Y%m%d')
+    for _ in range(3):
+        dt = dt - timedelta(days=1)
+        if dt.weekday() >= 5:  # 跳过周末
+            continue
+        prev_date = dt.strftime('%Y%m%d')
+        print(f"  当日无龙虎榜数据, 回退到 {prev_date}...", file=sys.stderr)
+        df = _fetch_lhb_date(prev_date)
+        if df is not None and not df.empty:
+            print(f"  [fallback] 使用 {prev_date} 龙虎榜数据 ({len(df)} 条)", file=sys.stderr)
+            return df
+
+    print(f"  龙虎榜数据全部不可用(已回退3个交易日)", file=sys.stderr)
+    return None
 
 
 def fetch_hot_rank():
@@ -96,7 +269,8 @@ sys.path.insert(0, ".claude/skills/findata-toolkit-cn")
 from scripts.sector_data import fetch_zt_pool
 print(json.dumps(fetch_zt_pool(), ensure_ascii=False, default=str))
              '''],
-            capture_output=True, text=True, timeout=120
+            capture_output=True, text=True, encoding='utf-8', timeout=120,
+            env={**os.environ, 'PYTHONIOENCODING': 'utf-8', 'PYTHONUTF8': '1'}
         )
         if result.returncode == 0:
             data = json.loads(result.stdout)
@@ -120,7 +294,8 @@ sys.path.insert(0, ".claude/skills/findata-toolkit-cn")
 from scripts.sector_data import fetch_market_overview
 print(json.dumps(fetch_market_overview(), ensure_ascii=False, default=str))
              '''],
-            capture_output=True, text=True, timeout=120
+            capture_output=True, text=True, encoding='utf-8', timeout=120,
+            env={**os.environ, 'PYTHONIOENCODING': 'utf-8', 'PYTHONUTF8': '1'}
         )
         if result.returncode == 0:
             return json.loads(result.stdout)
@@ -142,7 +317,8 @@ sys.path.insert(0, ".claude/skills/findata-toolkit-cn")
 from scripts.sector_data import fetch_connected_stocks
 print(json.dumps(fetch_connected_stocks(), ensure_ascii=False, default=str))
              '''],
-            capture_output=True, text=True, timeout=120
+            capture_output=True, text=True, encoding='utf-8', timeout=120,
+            env={**os.environ, 'PYTHONIOENCODING': 'utf-8', 'PYTHONUTF8': '1'}
         )
         if result.returncode == 0:
             return json.loads(result.stdout)
@@ -409,7 +585,7 @@ def cross_reference(lhb_df, hot_df, up_df, zt_data, sector_data):
 def print_report(df, market_overview, hot_df, up_df, zt_data, connected_data):
     """打印完整报告"""
     print("\n" + "=" * 70)
-    print("  📈 A股热点趋势综合挖掘报告")
+    print("  [report] A股热点趋势综合挖掘报告")
     print("=" * 70)
 
     # ── 市场概览 ──
@@ -481,7 +657,7 @@ def print_report(df, market_overview, hot_df, up_df, zt_data, connected_data):
         print("\n>>> 无符合条件的龙虎榜数据。")
 
     print(f"\n{'=' * 70}")
-    print("  ⚠️ 风险提示: 龙虎榜数据为盘后统计,不构成投资建议")
+    print("  [!] 风险提示: 龙虎榜数据为盘后统计,不构成投资建议")
     print("  机构买入不代表次日必涨,拉萨席位不代表必跌,请结合大盘环境综合判断")
     print(f"{'=' * 70}")
 
@@ -496,31 +672,31 @@ def main():
     args = parser.parse_args()
 
     date_str = get_target_date(args.date)
-    print(f"📅 目标日期: {date_str}\n")
+    print(f"[date] 目标日期: {date_str}\n")
 
     # ── Step 1: 龙虎榜 ──
-    print("🔍 Step 1/5: 获取龙虎榜数据...")
+    print("[fetch] Step 1/5: 获取龙虎榜数据...")
     lhb_df = fetch_lhb_data(date_str)
 
     # ── Step 2: 今日热榜 ──
-    print("🔍 Step 2/5: 获取热门个股榜...")
+    print("[fetch] Step 2/5: 获取热门个股榜...")
     hot_df = fetch_hot_rank()
 
     # ── Step 3: 飙升榜 ──
-    print("🔍 Step 3/5: 获取飙升榜...")
+    print("[fetch] Step 3/5: 获取飙升榜...")
     up_df = fetch_hot_up()
 
     # ── Step 4: 涨停池+连板梯队 ──
-    print("🔍 Step 4/5: 获取涨停池/连板梯队...")
+    print("[fetch] Step 4/5: 获取涨停池/连板梯队...")
     zt_data = fetch_zt_pool(date_str)
     connected_data = fetch_connected_stocks(date_str)
 
     # ── Step 5: 市场概览 ──
-    print("🔍 Step 5/5: 获取市场概览...")
+    print("[fetch] Step 5/5: 获取市场概览...")
     market_overview = fetch_market_overview(date_str)
 
     # ── 交叉分析 ──
-    print("\n🔗 多源交叉分析中...")
+    print("\n[cross] 多源交叉分析中...")
     result_df = cross_reference(lhb_df, hot_df, up_df, zt_data, connected_data)
 
     # ── 输出报告 ──

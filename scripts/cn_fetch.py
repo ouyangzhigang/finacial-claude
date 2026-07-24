@@ -108,12 +108,12 @@ def quote(symbols):
                 'pct': float(m[32]) if m[32] else 0,          # 涨跌幅%
                 'high': float(m[33]) if m[33] else 0,
                 'low': float(m[34]) if m[34] else 0,
-                'amount_yi': round(float(m[37]) / 1e8, 2) if m[37] else 0,  # 成交额(元->亿)
+                'amount_yi': round(float(m[37]) / 1e4, 2) if m[37] else 0,  # 成交额(万元→亿)
                 'turnover': float(m[38]) if m[38] else 0,     # 换手率%
                 # 估值/市值字段空时填 None 而非 0 —— PE=0 会被选股误判为"无估值压力/低估"
                 'pe_ttm': float(m[39]) if m[39] else None,
-                'mktcap_yi': round(float(m[45]) / 1e8, 2) if m[45] else None,  # 总市值(元->亿)? 待核
-                'float_mktcap_yi': round(float(m[44]) / 1e8, 2) if m[44] else None,  # 流通市值
+                'mktcap_yi': round(float(m[45]), 2) if m[45] else None,  # 总市值(亿,API直接返回亿)
+                'float_mktcap_yi': round(float(m[44]), 2) if m[44] else None,  # 流通市值(亿,API直接返回亿)
                 'time': m[30],
             }
         except Exception as e:
