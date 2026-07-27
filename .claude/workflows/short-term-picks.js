@@ -76,41 +76,40 @@ phase('量化引擎')
 const passCodes = tech?.keyFields?.passCodes || ''
 const regime = macro?.keyFields?.regime || 'trending'
 if (passCodes) {
-  log('🔄 量化引擎 — 对 '+passCodes.split(',').length+' 只过关票并行运行5引擎')
-  const RUN = '⚠️ 只运行命令+读结果+直接返回。不要调试。'
-  const [fe, te, se, sr, cs] = await parallel([
-    () => S('factor_engine', async () => {
-      const cmd = 'PYTHONIOENCODING=utf-8 python scripts/factor_engine.py --codes '+passCodes+' --data-dir '+RD+' --json '+"'"+'{"regime":"'+regime+'"}'+"'"+' --output '+RD+'/factor_scores.json 2>&1'
-      await agent(RUN+'\nBash: '+cmd+'\nRead '+RD+'/factor_scores.json', {label:'factor_engine', phase:'量化引擎'})
-      return {path: RD+'/factor_scores.json', summary:'因子评分完成'}
-    }),
-    () => S('timing_engine', async () => {
-      const cmd = 'PYTHONIOENCODING=utf-8 python scripts/timing_engine.py --codes '+passCodes+' --output '+RD+'/timing_scores.json 2>&1'
-      await agent(RUN+'\nBash: '+cmd+'\nRead '+RD+'/timing_scores.json', {label:'timing_engine', phase:'量化引擎'})
-      return {path: RD+'/timing_scores.json', summary:'入场评估完成'}
-    }),
-    () => S('sentiment_engine', async () => {
-      const cmd = 'PYTHONIOENCODING=utf-8 python scripts/sentiment_engine.py --codes '+passCodes+' --data-dir '+RD+' --output '+RD+'/sentiment_scores.json 2>&1'
-      await agent(RUN+'\nBash: '+cmd+'\nRead '+RD+'/sentiment_scores.json', {label:'sentiment_engine', phase:'量化引擎'})
-      return {path: RD+'/sentiment_scores.json', summary:'舆情评分完成'}
-    }),
-    () => S('supply_risk', async () => {
-      const cmd = 'PYTHONIOENCODING=utf-8 python scripts/astock_cli.py supply_risk --codes '+passCodes+' > '+RD+'/supply_risk.json 2>&1'
-      await agent(RUN+'\nBash: '+cmd+'\nRead '+RD+'/supply_risk.json', {label:'supply_risk', phase:'量化引擎'})
-      return {path: RD+'/supply_risk.json', summary:'供给端风险评分完成'}
-    }),
-    () => S('capital_score', async () => {
-      const cmd = 'PYTHONIOENCODING=utf-8 python scripts/astock_cli.py capital_score --codes '+passCodes+' > '+RD+'/capital_scores.json 2>&1'
-      await agent(RUN+'\nBash: '+cmd+'\nRead '+RD+'/capital_scores.json', {label:'capital_score', phase:'量化引擎'})
-      return {path: RD+'/capital_scores.json', summary:'资金流评分完成'}
-    }),
-  ])
-  log('✅ 量化引擎完成')
-  ctx += '\n【量化引擎】5引擎并行 → '+RD+'/'
-} else {
-  log('⚠️ 量化引擎跳过 — 无过关票代码')
-  ctx += '\n【量化引擎】⚠️ 跳过'
-}
+      log('🔄 量化引擎 — 对 '+passCodes.split(',').length+' 只过关票运行5引擎 (分批: 4并行→1汇总)')
+      const RUN = '⚠️ 只运行命令+读结果+直接返回。不要调试。'
+      // Phase 1: 4个独立引擎并行 (timing/sentiment/supply/capital — 互不依赖)
+      const [te, se, sr, cs] = await parallel([
+        () => S('timing_engine', async () => {
+          const cmd = 'PYTHONIOENCODING=utf-8 python scripts/timing_engine.py --codes '+passCodes+' --output '+RD+'/timing_scores.json 2>&1'
+          await agent(RUN+'\nBash: '+cmd+'\nRead '+RD+'/timing_scores.json', {label:'timing_engine', phase:'量化引擎'})
+          return {path: RD+'/timing_scores.json', summary:'入场评估完成'}
+        }),
+        () => S('sentiment_engine', async () => {
+          const cmd = 'PYTHONIOENCODING=utf-8 python scripts/sentiment_engine.py --codes '+passCodes+' --data-dir '+RD+' --output '+RD+'/sentiment_scores.json 2>&1'
+          await agent(RUN+'\nBash: '+cmd+'\nRead '+RD+'/sentiment_scores.json', {label:'sentiment_engine', phase:'量化引擎'})
+          return {path: RD+'/sentiment_scores.json', summary:'舆情评分完成'}
+        }),
+        () => S('supply_risk', async () => {
+          const cmd = 'PYTHONIOENCODING=utf-8 python scripts/astock_cli.py supply_risk --codes '+passCodes+' > '+RD+'/supply_risk.json 2>&1'
+          await agent(RUN+'\nBash: '+cmd+'\nRead '+RD+'/supply_risk.json', {label:'supply_risk', phase:'量化引擎'})
+          return {path: RD+'/supply_risk.json', summary:'供给端风险评分完成'}
+        }),
+        () => S('capital_score', async () => {
+          const cmd = 'PYTHONIOENCODING=utf-8 python scripts/astock_cli.py capital_score --codes '+passCodes+' > '+RD+'/capital_scores.json 2>&1'
+          await agent(RUN+'\nBash: '+cmd+'\nRead '+RD+'/capital_scores.json', {label:'capital_score', phase:'量化引擎'})
+          return {path: RD+'/capital_scores.json', summary:'资金流评分完成'}
+        }),
+      ])
+      // Phase 2: factor_engine 汇总 (依赖 Phase 1 的 sentiment/capital/supply JSON + 前序 fundamentals-analyst JSON)
+      const fe = await S('factor_engine', async () => {
+        const cmd = 'PYTHONIOENCODING=utf-8 python scripts/factor_engine.py --codes '+passCodes+' --data-dir '+RD+' --json '+"'"+'{"regime":"'+regime+'"}'+"'"+' --output '+RD+'/factor_scores.json 2>&1'
+        await agent(RUN+'\nBash: '+cmd+'\nRead '+RD+'/factor_scores.json', {label:'factor_engine', phase:'量化引擎'})
+        return {path: RD+'/factor_scores.json', summary:'因子评分完成(汇总6维数据)'}
+      })
+      log('✅ 量化引擎完成')
+      ctx += '\n【量化引擎】4引擎并行(timing/sentiment/supply/capital) → factor_engine汇总 → '+RD+'/'
+  } else {
 
 phase('硬门过滤')
 log('🔄 硬门过滤 — 6道硬门,代码执行,governor不可override')
