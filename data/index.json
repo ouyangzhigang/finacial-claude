@@ -1,5 +1,32 @@
 [
   {
+    "runId": "20260727_short-term-picks",
+    "asOf": "20260727",
+    "goal": "short-term-picks",
+    "path": "data/runs/20260727_short-term-picks/final.json",
+    "headline": "MCP全挂置信度低:36只候选经硬门+回测+基本面三重过滤,精选海康威视(002415)为唯一建仓标的(37.2%/100股),其余4只列入观察池(国际复材/中天科技/吉鑫科技/格林达);回测0只approved(2只cautious/observation,2只rejected一票否决);总仓位37.2%≤40%硬上限;政治局会议(7/28-31)为本周最大催化剂,2周末强制复盘。",
+    "confidence": "低",
+    "fetchedAt": "20260727"
+  },
+  {
+    "runId": "20260727_ultra-short-picks",
+    "asOf": "20260727",
+    "goal": "ultra-short-picks",
+    "path": "data/runs/20260727_ultra-short-picks/final.json",
+    "headline": "超短1日选股:温度53.0谨慎,52/74通过硬门,22只否决(一字板1/尾盘炸板4/流动性不足15/烂板1)。对抗审查:立新能源(001258)因子Top1但social_heat=98/m5=57.47%/RSI=95三重红旗被降权。Top2:600667太极实业(18%/100股/封单14.18亿全池最优/RSI仅43.9不超买)+300534陇神戎发(13%/100股/20cm弹性),总仓位31%。置信度:中(偏冷市场次日溢价率承压,无历史胜率校准)。",
+    "confidence": "中",
+    "fetchedAt": "20260727"
+  },
+  {
+    "runId": "20260726_short-term-picks",
+    "asOf": "20260726",
+    "goal": "short-term-picks",
+    "path": "data/runs/20260726_short-term-picks/final.json",
+    "headline": "极端保守:16只候选→8只基本面硬过滤→5只回测(0 approved/2 observation/3 rejected)→Top1空缺。Governor裁定300480/002208基本面硬雷点覆盖gate数据缺口,最终仅603726朗迪集团(25%/2500元)+000417合百集团(6.4%/636元),现金68.6%。置信度:中。趋势下行+回测无一通过,仅投研性质轻仓。",
+    "confidence": "中",
+    "fetchedAt": "20260726"
+  },
+  {
     "runId": "20260724_ultra-short-picks",
     "asOf": "20260724",
     "goal": "ultra-short-picks",

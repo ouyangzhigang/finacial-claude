@@ -185,27 +185,61 @@ def score_seal_quality(st):
 
 
 def score_capital_flow(st):
-    """资金强度评分 (0-100)"""
-    score = 50
+    """资金活跃度评分 (0-100) — 基于实际可获取的指标。
 
-    # 主力净流入/成交额
+    主力资金流数据(push2.eastmoney.com)在部分网络环境下被代理拦截，
+    此处使用成交额/换手率/量比/涨跌幅作为资金活跃度的代理指标。
+    若实际主力资金数据可用，则优先使用。
+    """
+    score = 40  # 基础分
+
     main_net = st.get('main_net_yi', 0)  # 亿
-    amount = st.get('amount_yi', 1)
-    if amount > 0:
-        ratio = main_net / amount * 100
-        if ratio > 10: score += 25
-        elif ratio > 5: score += 15
-        elif ratio > 0: score += 5
-        elif ratio > -5: score -= 10
-        else: score -= 25
-
-    # 大单买入占比
     big_order = st.get('big_order_ratio', 0)
-    if big_order > 50: score += 15
-    elif big_order > 30: score += 8
-    elif big_order < 10: score -= 10
+    has_real_flow = (main_net != 0 or big_order != 0)
 
-    # 北向资金
+    if has_real_flow:
+        # 有真实资金流数据 → 优先使用
+        amount = st.get('amount_yi', 1)
+        if amount > 0:
+            ratio = main_net / amount * 100
+            if ratio > 10: score += 25
+            elif ratio > 5: score += 15
+            elif ratio > 0: score += 5
+            elif ratio > -5: score -= 10
+            else: score -= 25
+
+        if big_order > 50: score += 15
+        elif big_order > 30: score += 8
+        elif big_order < 10: score -= 10
+    else:
+        # 无真实资金流 → 使用代理指标
+        # 成交额(亿) — 流动性好=资金关注度高
+        amt = st.get('amount_yi', 0)
+        if amt > 20: score += 20
+        elif amt > 10: score += 15
+        elif amt > 5: score += 10
+        elif amt > 2: score += 5
+        elif amt < 1: score -= 10
+
+        # 换手率 — 活跃但不极端
+        turnover = st.get('turnover', 0)
+        if 5 <= turnover <= 15: score += 15
+        elif 15 < turnover <= 25: score += 10
+        elif turnover > 25: score += 5
+        elif turnover < 2: score -= 10
+
+        # 量比 — 放量涨停
+        vol_ratio = st.get('volume_ratio', 1)
+        if vol_ratio > 2.5: score += 15
+        elif vol_ratio > 1.5: score += 10
+        elif vol_ratio > 1.0: score += 5
+
+        # 涨跌幅 — 涨停板确定性
+        pct = st.get('pct', 0)
+        if pct >= 20: score += 5  # 20cm
+        elif pct >= 10: score += 3
+
+    # 北向资金 (日度已停止实时披露, 保留字段)
     north_flow = st.get('north_flow_yi', 0)
     if north_flow > 5: score += 10
     elif north_flow > 0: score += 3
@@ -415,16 +449,20 @@ def fetch_lhb_deep(date_str):
 def fetch_sentiment_scores(codes, data_dir):
     """采集舆情热度 -> 返回 {code: {social_heat, heat_momentum, bull_ratio}}。
 
-    直接 import sentiment_engine 的函数, 避免 subprocess。
-    em_hot_rank 和 ths_hot_list 返回 list[dict], 需转为 {code: item}。
+    三层降级:
+    1. sentiment_engine.em_hot_rank (emappdata API, 已验证可用)
+    2. 腾讯行情换手率作为热度代理
+    3. 默认值
     """
+    result = {}
+    codes_set = set(str(c).strip() for c in codes)
+
+    # ── 方式1: emappdata 人气榜 (已验证可绕过代理) ──
     try:
         from sentiment_engine import em_hot_rank, ths_hot_list, compute_social_scores
-        # 获取热榜数据 (返回 list[dict])
         em_list = em_hot_rank(top=200) or []
         ths_list = ths_hot_list(period="day") or []
 
-        # 转为 {code: item} 查找表
         em_map = {}
         for item in (em_list if isinstance(em_list, list) else []):
             if isinstance(item, dict):
@@ -439,24 +477,85 @@ def fetch_sentiment_scores(codes, data_dir):
                 if c:
                     ths_map[c] = item
 
-        if not em_map and not ths_map:
-            return {}
-
-        # 为每个候选代码计算社交评分
-        result = {}
-        for code in codes:
-            scores = compute_social_scores(code, ths_map, em_map, [], None)
-            if scores:
-                result[code] = {
-                    'social_heat': scores.get('heat_score', 50),
-                    'heat_momentum': scores.get('heat_momentum', 0),
-                    'bull_ratio': scores.get('bull_ratio', 0.5),
-                    'hype_risk': scores.get('hype_risk', 0),
-                }
-        return result
+        if em_map or ths_map:
+            for code in codes:
+                scores = compute_social_scores(code, ths_map, em_map, [], None)
+                if scores and (scores.get('social_heat', 50) != 50 or em_map.get(code) or ths_map.get(code)):
+                    result[code] = {
+                        'social_heat': scores.get('social_heat', 50),
+                        'heat_momentum': scores.get('heat_momentum', 0),
+                        'bull_ratio': scores.get('bull_ratio', 0.5),
+                        'hype_risk': scores.get('hype_risk', 0),
+                    }
+            if result:
+                print(f"  [sentiment] emappdata 匹配 {len(result)} 只", file=sys.stderr)
+                return result
     except Exception as e:
-        print(f"sentiment_engine import 失败: {e}", file=sys.stderr)
-    return {}
+        print(f"  [sentiment] sentiment_engine 失败: {e}", file=sys.stderr)
+
+    # ── 方式2: 直接调用 emappdata API (兜底) ──
+    try:
+        from astock_data import em_post
+        r = em_post(
+            'https://emappdata.eastmoney.com/stockrank/getAllCurrentList',
+            json_data={'appId': 'appId01', 'globalId': '786e4c21-70dc-435a-93bb-a'},
+            headers={'Referer': 'https://quote.eastmoney.com/'},
+            timeout=10
+        )
+        if r and r.status_code == 200:
+            data = r.json()
+            hot_list = data.get('data', [])
+            if hot_list:
+                # 构建排名映射: code -> rank (1=最热)
+                rank_map = {}
+                for item in hot_list:
+                    sc = str(item.get('sc', '')).replace('SH', '').replace('SZ', '').strip()
+                    rk = item.get('rk', 999)
+                    if sc and rk:
+                        rank_map[sc] = int(rk)
+
+                for code in codes:
+                    code_str = str(code).strip()
+                    rank = rank_map.get(code_str, 999)
+                    if rank <= 10:
+                        result[code_str] = {'social_heat': 90, 'heat_momentum': 0.5, 'bull_ratio': 0.75, 'hype_risk': 30}
+                    elif rank <= 30:
+                        result[code_str] = {'social_heat': 75, 'heat_momentum': 0.3, 'bull_ratio': 0.65, 'hype_risk': 15}
+                    elif rank <= 100:
+                        result[code_str] = {'social_heat': 60, 'heat_momentum': 0.1, 'bull_ratio': 0.55, 'hype_risk': 0}
+
+                if result:
+                    print(f"  [sentiment] emappdata 直接匹配 {len(result)} 只", file=sys.stderr)
+                    return result
+    except Exception as e:
+        print(f"  [sentiment] emappdata 直接调用失败: {e}", file=sys.stderr)
+
+    # ── 方式3: 腾讯换手率作为热度代理 ──
+    if not result:
+        try:
+            from cn_fetch import quote as cn_quote
+            syms = [f"sh{c}" if c.startswith(('6','9')) else f"sz{c}" for c in codes]
+            quotes = cn_quote(syms) or {}
+            for code in codes:
+                code_str = str(code).strip()
+                q = quotes.get(code_str, {})
+                if q and isinstance(q, dict):
+                    turnover = q.get('turnover', 0)
+                    pct = q.get('pct', 0)
+                    # 换手率越高 + 涨幅越大 → 热度越高
+                    heat = min(100, 50 + turnover * 1.5 + abs(pct) * 0.5)
+                    result[code_str] = {
+                        'social_heat': round(heat, 1),
+                        'heat_momentum': 0.1 if pct > 5 else 0,
+                        'bull_ratio': 0.6 if pct > 0 else 0.4,
+                        'hype_risk': min(80, turnover * 2) if turnover > 25 else 0,
+                    }
+            if result:
+                print(f"  [sentiment] 腾讯换手率代理 {len(result)} 只", file=sys.stderr)
+        except Exception as e:
+            print(f"  [sentiment] 腾讯代理失败: {e}", file=sys.stderr)
+
+    return result
 
 
 def _parse_seal_time(fbt):
@@ -584,7 +683,7 @@ def _match_news_to_codes(core_signals, candidates, zt_industries, concept_top=No
 
 
 def fetch_kline_factors(codes):
-    """采集K线因子"""
+    """采集K线因子 (含RSI计算)"""
     from cn_fetch import factors as cn_factors
     result = {}
     for code in codes:
@@ -592,10 +691,21 @@ def fetch_kline_factors(codes):
         try:
             fc = cn_factors(sym)
             if fc and isinstance(fc, dict):
+                # RSI 计算: 从近14日涨跌幅估算
+                # m5/m10/m20 是5/10/20日动量, 用加权平均近似RSI
+                m5 = fc.get('m5', 0)
+                m10 = fc.get('m10', 0)
+                m20 = fc.get('m20', 0)
+                # 简化RSI: 近期涨幅越大, RSI越高
+                # RSI = 50 + (短期动量加权 - 长期动量) * 系数
+                short_momentum = m5 * 0.5 + m10 * 0.35 + m20 * 0.15
+                rsi_raw = 50 + short_momentum * 1.5
+                rsi = max(5, min(95, rsi_raw))
+
                 result[code] = {
-                    'm5': fc.get('m5', 0),
-                    'm10': fc.get('m10', 0),
-                    'm20': fc.get('m20', 0),
+                    'm5': m5,
+                    'm10': m10,
+                    'm20': m20,
                     'ma5': fc.get('ma5', 0),
                     'ma20': fc.get('ma20', 0),
                     'above_ma5': fc.get('above_ma5', False),
@@ -604,6 +714,7 @@ def fetch_kline_factors(codes):
                     'amt20_yi': fc.get('amt20_yi', 0),
                     'last': fc.get('last', 0),
                     'date': fc.get('date', ''),
+                    'rsi': round(rsi, 1),
                 }
         except Exception:
             pass
@@ -747,8 +858,8 @@ def build_candidates(date_str, data_dir):
     except Exception as e:
         print(f"  lhb_deep 匹配失败: {e}", file=sys.stderr)
 
-    # ── 4. 新闻催化匹配 ──
-    catalyst_map = _match_news_to_codes(core_signals, [], zt_industries, concept_top)
+    # ── 4. 新闻催化匹配 (传入 zt_pool 以启用个股名匹配) ──
+    catalyst_map = _match_news_to_codes(core_signals, zt_pool, zt_industries, concept_top)
 
     # ── 5. 获取股票代码列表 + 腾讯行情 ──
     codes_for_quote = list(zt_map.keys())[:80]
@@ -870,7 +981,7 @@ def build_candidates(date_str, data_dir):
             'm5': kf.get('m5', 0),
             'm10': kf.get('m10', 0),
             'volume_ratio': kf.get('volume_ratio', 1),
-            'rsi': 50,
+            'rsi': kf.get('rsi', 50),
             'above_ma5': kf.get('above_ma5', True),
         }
         candidates.append(st)

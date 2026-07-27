@@ -81,36 +81,51 @@ log('✅ 风险估值完成 — ' + (risk?.summary || '空'))
 // ── Phase 4: 综合落盘(含对抗审查+裁决+portfolio+notify) ──
 phase('综合落盘')
 log('🔄 启动综合落盘 — agent: governor (对抗审查+裁决+报告)')
-const report = await S('governor', () => agent('综合全链产出写单股深评报告。\n\n' +
-'## 投资目标\n' + goal + '\n\n' +
-'## 目标标的\n' + TGT + '\n\n' +
-'## 全链产出(用 Read 读各 json 的 data 取细节)\n' + ctx + '\n' + history + '\n\n' +
-'## ⚠️ 硬约束(违反任何一条视为未完成)\n\n' +
-'### 回测纪律\n' +
-'- 回测3项全不达标(胜率<55%+均收<3%+回撤>8%)→ 该标的**不推荐买入**, 输出"暂无符合回测纪律的买入区间"\n' +
-'- 2项不达标→ 仓位建议砍半+信心列标"低·回测未背书"\n' +
-'- 1项不达标→ 正常保留但标注短板\n\n' +
-'### 板块纪律\n' +
-'- 前序环节(macro/fundamentals/technical/catalyst/sector)的分析结论**不得因个人偏好丢弃**\n' +
-'- 若前序环节有红旗(财务/流动性/催化透支), 须在报告中诚实标注, 不得弱化\n\n' +
-'### 数据判断纪律\n' +
-'- Read 前序 json 文件前先检查文件是否存在\n' +
-'- 文件存在但数据不可靠→ 标注"数据源降级",不标注"未执行"\n\n' +
-'## 第一步：对抗审查(3项核心矛盾)\n' +
-'1. 技术看多 vs 基本面看空?(动量强劲但财务红旗+高PB)\n' +
-'2. 估值 vs 动量?(追高风险)——查近5日涨幅>15%则降权\n' +
-'3. 任一环节标记了 ⚠️/❌ 时交叉验证其他环节是否一致\n' +
-'每项标注 ✅/⚠️/❌, ❌则调整建议。\n\n' +
-'## 第二步：写报告文件\n' +
-'WRITE 报告到 output/' + tk + '_' + asOf + '_深度分析报告.md, 结构: 结论先行→总体策略→各专项+逻辑关系→对抗审查结论→操作建议→风险免责\n' +
-'头一句话: 核心假设 + 置信度。\n\n' +
-'## 第三步：落盘数据文件\n' +
-'1. WRITE ' + RD + '/final.json(envelope,data含oneLineConclusion/topN/totalPosition/confidence/keyRisks/contradictions/modules)\n' +
-'2. 更新 data/index.json(Read→push→Write)\n' +
-'3. Bash: python scripts/portfolio_tracker.py record --run-id ' + asOf + '_' + G + ' --json-file ' + RD + '/_rec.json 2>&1 (失败不影响)\n' +
-'4. Bash: python scripts/notify_email.py --run-id ' + asOf + '_' + G + ' 2>&1\n\n' +
-'schema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。\n' +
-'注意: 已移除 StructuredOutput 工具引用(W6修复), 直接按 schema 返回即可。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
+const report = await S('governor', () => agent(`综合全链产出写单股深评报告。
+
+## 投资目标
+${goal}
+
+## 目标标的
+${TGT}
+
+## 全链产出(用 Read 读各 json 的 data 取细节)
+${ctx}
+${history}
+
+## ⚠️ 硬约束(违反任何一条视为未完成)
+
+### 回测纪律
+- 回测3项全不达标(胜率<55%+均收<3%+回撤>8%)→ 该标的**不推荐买入**, 输出"暂无符合回测纪律的买入区间"
+- 2项不达标→ 仓位建议砍半+信心列标"低·回测未背书"
+- 1项不达标→ 正常保留但标注短板
+
+### 板块纪律
+- 前序环节(macro/fundamentals/technical/catalyst/sector)的分析结论**不得因个人偏好丢弃**
+- 若前序环节有红旗(财务/流动性/催化透支), 须在报告中诚实标注, 不得弱化
+
+### 数据判断纪律
+- Read 前序 json 文件前先检查文件是否存在
+- 文件存在但数据不可靠→ 标注"数据源降级",不标注"未执行"
+
+## 第一步：对抗审查(3项核心矛盾)
+1. 技术看多 vs 基本面看空?(动量强劲但财务红旗+高PB)
+2. 估值 vs 动量?(追高风险)——查近5日涨幅>15%则降权
+3. 任一环节标记了 ⚠️/❌ 时交叉验证其他环节是否一致
+每项标注 ✅/⚠️/❌, ❌则调整建议。
+
+## 第二步：写报告文件
+WRITE 报告到 output/${tk}_${asOf}_深度分析报告.md, 结构: 结论先行→总体策略→各专项+逻辑关系→对抗审查结论→操作建议→风险免责
+头一句话: 核心假设 + 置信度。
+
+## 第三步：落盘数据文件
+1. WRITE ${RD}/final.json(envelope,data含oneLineConclusion/topN/totalPosition/confidence/keyRisks/contradictions/modules)
+2. 更新 data/index.json(Read→push→Write)
+3. Bash: python scripts/portfolio_tracker.py record --run-id ${asOf}_${G} --json-file ${RD}/_rec.json 2>&1 (失败不影响)
+4. Bash: python scripts/notify_email.py --run-id ${asOf}_${G} 2>&1
+
+schema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。
+注意: 已移除 StructuredOutput 工具引用(W6修复), 直接按 schema 返回即可。`, {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
 log('✅ 综合落盘完成')
 log('🎉 Workflow 全部完成!')
 if (report?.path) {
