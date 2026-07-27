@@ -31,35 +31,52 @@ from pathlib import Path
 # 6 道硬门定义
 # ════════════════════════════════════════════
 
+def _safe(st, key, default):
+    """dict.get 安全版: 处理 None / 非数值字符串"""
+    v = st.get(key)
+    if v is None:
+        return default
+    try:
+        return float(v)
+    except (ValueError, TypeError):
+        return default
+
+
 GATES = {
     "G1_基本面": {
-        "desc": "ROE<5% AND PE>50 → 一票否决入TopN",
+        "desc": "ROE<5% AND (PE>50 OR PE<0亏损) → 一票否决入TopN",
         "action": "reject",
         "check": lambda st: (
-            st.get("roe", 999) < 5 and st.get("pe", 0) > 50
+            _safe(st, "roe", 999) < 5 and (_safe(st, "pe", 0) > 50 or _safe(st, "pe", 0) < 0)
         ),
     },
     "G2_社交过热": {
-        "desc": "social_heat>90 AND hype_risk>40 → 一票否决入TopN",
+        "desc": "social_heat>95 AND hype_risk>60 → 一票否决入TopN (heat>90 & hype>40 → 降级)",
         "action": "reject",
         "check": lambda st: (
-            st.get("social_heat", 0) > 90 and st.get("hype_risk", 0) > 40
+            _safe(st, "social_heat", 0) > 95 and _safe(st, "hype_risk", 0) > 60
+        ),
+        # 二级检查: 热度较高但未达否决线 → 降级而非否决
+        "check_downgrade": lambda st: (
+            _safe(st, "social_heat", 0) > 90 and _safe(st, "hype_risk", 0) > 40
         ),
     },
     "G3_入场时机": {
-        "desc": "timing_score<10 → 强制降级观察仓",
+        "desc": "timing_score<0 → 强制降级观察仓 (timing_score<10 → 仅警告标记)",
         "action": "downgrade_observe",
-        "check": lambda st: st.get("timing_score", 99) < 10,
+        "check": lambda st: _safe(st, "timing_score", 99) < 0,
+        # 二级检查: timing_score 偏低但不极端 → 仅警告, 不降级
+        "check_warn": lambda st: _safe(st, "timing_score", 99) < 10,
     },
     "G4_供给风险": {
         "desc": "supply_risk>=30(大额解禁30日内) → 一票否决",
         "action": "reject",
-        "check": lambda st: st.get("supply_risk", 0) >= 30,
+        "check": lambda st: _safe(st, "supply_risk", 0) >= 30,
     },
     "G5_因子排名": {
         "desc": "composite_score<0(后50%) → 不得排Top1, max_rank=2",
         "action": "downgrade_not_top1",
-        "check": lambda st: st.get("composite_score", 999) < 0,
+        "check": lambda st: _safe(st, "composite_score", 999) < 0,
     },
     "G6_数据降级": {
         "desc": "MCP全挂 → 置信度强制'低', 总仓位≤40%",
@@ -74,7 +91,7 @@ GATES = {
     "G8_回测": {
         "desc": "backtest_verdict=rejected → 一票否决入TopN(驰宏锌锗纪律: 回测证伪不得强推)",
         "action": "reject",
-        "check": lambda st: st.get("backtest_verdict", "") == "rejected",
+        "check": lambda st: _safe(st, "backtest_verdict", "") == "rejected",
     },
 }
 
@@ -202,6 +219,37 @@ def load_fundamentals(data_dir):
             result[code] = {"roe": 5, "pe": 70, "status": "downgrade", "cf_np": None}
         for code in passes:
             result[code] = {"roe": 15, "pe": 25, "status": "pass", "cf_np": None}
+
+    # ── mootdx 财务数据兜底: 当 ROE 大面积缺失时, 从通达信 TCP 补充 ──
+    roe_missing = sum(1 for v in result.values() if v.get("roe") is None)
+    if roe_missing > len(result) * 0.5 and len(result) > 0:
+        try:
+            from mootdx.affair import Affair
+            a = Affair()
+            df = a.parse(filename='gpcw20251231.zip')
+            COL_ROE, COL_NET_PROFIT = 6, 95
+            for code in list(result.keys()):
+                if result[code].get("roe") is not None:
+                    continue  # 已有ROE, 不覆盖
+                if code in df.index:
+                    row = df.loc[code]
+                    try:
+                        roe = float(row.iloc[COL_ROE])
+                        net_profit = float(row.iloc[COL_NET_PROFIT])
+                        if roe == roe:  # NaN check
+                            result[code]["roe"] = roe
+                            result[code]["net_profit"] = net_profit
+                            # 更新 status
+                            if net_profit < 0:
+                                result[code]["status"] = "reject"
+                            elif roe < 5:
+                                result[code]["status"] = "downgrade"
+                    except (ValueError, TypeError, IndexError):
+                        pass
+        except ImportError:
+            pass  # mootdx 不可用, 静默降级
+        except Exception:
+            pass  # 其他错误, 静默降级
 
     return result
 
@@ -398,17 +446,31 @@ def apply_gates(stocks, mcp_status):
     else:
         system_flags["adaptive_mode"] = "balanced"
 
+    # ── G7 补丁: MCP全挂导致ROE大面积缺失时, 强制动量优先 ──
+    # 无法评估基本面 → 不能依赖基本面因子, 必须切换到动量/资金/舆情驱动
+    if mcp_status == "all_down" and system_flags.get("adaptive_mode") != "momentum_priority":
+        roe_available = sum(1 for code, st in stocks.items() if st.get("roe") is not None)
+        roe_coverage = roe_available / max(len(stocks), 1)
+        if roe_coverage < 0.30:  # 不到30%的股票有ROE → 基本面数据不可靠
+            system_flags["adaptive_mode"] = "momentum_priority"
+            system_flags["g7_reason"] = (
+                f"MCP全挂+ROE覆盖率仅{roe_coverage*100:.0f}%({roe_available}/{len(stocks)})"
+                f" → 基本面数据不可靠, 强制动量优先: fundamentals权重降至5%, 因子排名权重升至50%"
+            )
+            system_flags["fund_weight_override"] = 0.05
+            system_flags["factor_rank_weight_override"] = 0.50
+
     # 动量优先模式下, G1 基本面阈值放宽 (全池基本面都差, 不能用正常标准)
     if system_flags.get("adaptive_mode") == "momentum_priority":
         system_flags["g1_relaxed"] = True
-        system_flags["g1_relaxed_desc"] = "G1阈值放宽: ROE<0%(亏损) AND PE>200(极端泡沫) → 才否决"
+        system_flags["g1_relaxed_desc"] = "G1阈值放宽: ROE<0%(亏损) AND (PE>200或PE<0亏损) → 才否决"
         system_flags["g2_relaxed"] = True
         system_flags["g2_relaxed_desc"] = "G2阈值放宽: social_heat>95 AND hype_risk>70 → 才否决(动量优先下社交热度是信号非噪音)"
         system_flags["g3_relaxed"] = True
         system_flags["g3_relaxed_desc"] = "G3阈值放宽: timing_score<-20(极端透支) → 才降级(动量优先下追涨合理)"
     elif system_flags.get("adaptive_mode") == "momentum_aware":
         system_flags["g1_relaxed"] = True
-        system_flags["g1_relaxed_desc"] = "G1阈值放宽: ROE<0%(亏损) AND PE>100 → 才否决"
+        system_flags["g1_relaxed_desc"] = "G1阈值放宽: ROE<0%(亏损) AND (PE>100或PE<0亏损) → 才否决"
 
     for code, st in stocks.items():
         gates_failed = []
@@ -426,30 +488,40 @@ def apply_gates(stocks, mcp_status):
             except (ValueError, TypeError):
                 roe_val, pe_val = 999, 0
             if system_flags["adaptive_mode"] == "momentum_priority":
-                g1_check = (roe_val < 0 and pe_val > 200)  # 仅极端情况否决
+                g1_check = (roe_val < 0 and (pe_val > 200 or pe_val < 0))  # 亏损+极端估值或亏损 → 否决
             else:
-                g1_check = (roe_val < 0 and pe_val > 100)
+                g1_check = (roe_val < 0 and (pe_val > 100 or pe_val < 0))  # 亏损股一律否决
         if g1_check:
             gates_failed.append(f"G1: ROE={st.get('roe','?')}% PE={st.get('pe','?')} → {GATES['G1_基本面']['desc']}")
             status = "reject"
 
         # G2: 社交过热否决 (动量优先模式下阈值放宽)
         g2_check = GATES["G2_社交过热"]["check"](st)
+        g2_downgrade = GATES["G2_社交过热"].get("check_downgrade", lambda s: False)(st)
         if system_flags.get("g2_relaxed"):
             g2_check = (st.get("social_heat", 0) > 95 and st.get("hype_risk", 0) > 70)
+            g2_downgrade = (st.get("social_heat", 0) > 90 and st.get("hype_risk", 0) > 50)
         if g2_check:
             gates_failed.append(f"G2: social_heat={st.get('social_heat','?')} hype_risk={st.get('hype_risk','?')} → {GATES['G2_社交过热']['desc']}")
             status = "reject"
+        elif g2_downgrade and status != "reject":
+            gates_failed.append(f"G2(warn): social_heat={st.get('social_heat','?')} hype_risk={st.get('hype_risk','?')} → 社交偏热, 降级观察")
+            if status == "ok":
+                status = "downgrade_observe"
 
         # G3: 入场时机降级 (动量优先模式下阈值放宽)
         g3_check = GATES["G3_入场时机"]["check"](st)
+        g3_warn = GATES["G3_入场时机"].get("check_warn", lambda s: False)(st)
         if system_flags.get("g3_relaxed"):
             g3_check = (st.get("timing_score", 99) < -20)  # 仅极端透支降级
+            g3_warn = (st.get("timing_score", 99) < -10)
         if g3_check:
             gates_failed.append(f"G3: timing_score={st.get('timing_score','?')} → {GATES['G3_入场时机']['desc']}")
             if status != "reject":
                 status = "downgrade_observe"
                 max_rank = None  # 观察仓不入TopN
+        elif g3_warn:
+            gates_failed.append(f"G3(warn): timing_score={st.get('timing_score','?')} → 入场时机偏低, 注意追涨风险")
 
         # G4: 供给风险否决
         if GATES["G4_供给风险"]["check"](st):

@@ -461,32 +461,93 @@ def main():
         if kf:
             kline_results.append(kf)
 
-    # 2. 读取LLM agent产出 (如果有)
+    # 2. 读取LLM agent产出 + 量化引擎产出 (自给自足模式)
     llm_factors_map = {}
     if args.data_dir:
-        for fname in ['catalyst.json', 'fundamentals.json', 'technical.json']:
-            fpath = os.path.join(args.data_dir, fname)
-            if os.path.exists(fpath):
-                try:
-                    with open(fpath, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                    # 从agent产出中提取因子评分
-                    agent_data = data.get('data', data)
-                    if isinstance(agent_data, dict):
-                        for item in agent_data.get('scores', agent_data.get('results', [])):
-                            code = str(item.get('code', ''))
-                            if code:
-                                llm_factors_map.setdefault(code, {}).update({
-                                    'catalyst_score': item.get('catalyst_score', 50),
-                                    'capital_score': item.get('capital_score', 50),
-                                    'sentiment_score': item.get('sentiment_score', 50),
-                                    'fundamentals_score': item.get('fundamentals_score', 50),
-                                    'valuation_score': item.get('valuation_score', 50),
-                                })
-                except Exception:
-                    pass
+        # ── 2a. 读取 technical-liquidity.json (流动性+技术因子) ──
+        tech_path = os.path.join(args.data_dir, 'technical-liquidity.json')
+        if os.path.exists(tech_path):
+            try:
+                with open(tech_path, 'r', encoding='utf-8') as f:
+                    tdata = json.load(f)
+                td = tdata.get('data', tdata)
+                for item in td.get('pass', []):
+                    code = str(item.get('code', ''))
+                    if code:
+                        llm_factors_map.setdefault(code, {}).update({
+                            'turnover20d': item.get('turnover20d'),
+                            'avgAmount20d': item.get('avgAmount20d'),
+                            'marketCap': item.get('marketCap'),
+                            'entryType': item.get('entryType'),
+                            'entryScore': item.get('entryScore'),
+                        })
+            except Exception:
+                pass
 
-        # 2b. 读取 sentiment_engine 产出 (社交舆情量化因子)
+        # ── 2b. 读取 fundamentals-analyst.json (基本面+估值因子) ──
+        fund_path = os.path.join(args.data_dir, 'fundamentals-analyst.json')
+        if os.path.exists(fund_path):
+            try:
+                with open(fund_path, 'r', encoding='utf-8') as f:
+                    fdata = json.load(f)
+                fd = fdata.get('data', fdata)
+                stocks_dict = fd.get('stocks', {})
+                if isinstance(stocks_dict, dict):
+                    for code, info in stocks_dict.items():
+                        code = str(code)
+                        if not isinstance(info, dict):
+                            continue
+                        financials = info.get('financials', {})
+                        valuation = info.get('valuation', {})
+                        roe = financials.get('roe')
+                        pe = valuation.get('peTtm')
+                        verdict = info.get('verdict', '')
+                        red_flags = info.get('redFlags', [])
+
+                        # 基本面评分: 从 verdict 和 redFlags 推导
+                        fund_score = 50  # 中性起点
+                        if verdict == '剔除':
+                            fund_score = 10
+                        elif verdict == '降权':
+                            fund_score = 30
+                        elif any(f.get('severity') == 'red' for f in red_flags):
+                            fund_score = 15
+                        elif verdict in ('通过', '清洁通过'):
+                            fund_score = 70
+                        elif '最优' in str(verdict):
+                            fund_score = 85
+
+                        # 估值评分: 从 PE 推导
+                        val_score = 50
+                        if pe is not None:
+                            try:
+                                pe_val = float(pe)
+                                if pe_val < 0:
+                                    val_score = 20  # 亏损
+                                elif pe_val <= 15:
+                                    val_score = 80  # 低估
+                                elif pe_val <= 30:
+                                    val_score = 60  # 合理
+                                elif pe_val <= 60:
+                                    val_score = 40  # 偏高
+                                elif pe_val <= 200:
+                                    val_score = 25  # 高估
+                                else:
+                                    val_score = 10  # 极高
+                            except (ValueError, TypeError):
+                                pass
+
+                        llm_factors_map.setdefault(code, {}).update({
+                            'roe': roe,
+                            'pe': pe,
+                            'fundamentals_score': fund_score,
+                            'valuation_score': val_score,
+                            'verdict': verdict,
+                        })
+            except Exception:
+                pass
+
+        # ── 2c. 读取 sentiment_engine 产出 (社交舆情量化因子) ──
         sentiment_path = os.path.join(args.data_dir, 'sentiment_scores.json')
         if os.path.exists(sentiment_path):
             try:
@@ -498,41 +559,109 @@ def main():
                         llm_factors_map.setdefault(code, {}).update({
                             'social_heat': item.get('social_heat', 50),
                             'hype_risk': item.get('hype_risk', 0),
+                            # 催化评分: 从社交热度+概念命中推导 (catalyst-scanner.json 可能不存在)
+                            'catalyst_score': min(90, item.get('social_heat', 50) * 0.7 + 20),
+                            'sentiment_score': item.get('market_sentiment', 50),
                         })
             except Exception:
                 pass
 
-        # 2c. 量化资金流评分 (astock_data: 120日资金流+融资融券+大宗交易)
-        try:
-            from astock_data import compute_capital_score
-            for code in codes:
-                cap_score = compute_capital_score(code)
-                llm_factors_map.setdefault(code, {})['capital_score'] = cap_score
-        except ImportError:
-            pass  # astock_data 不可用时降级为 LLM 评分
-
-        # 2d. 读取基本面 ROE/PE (从 fundamentals-analyst.json 嵌套结构提取)
-        fund_path = os.path.join(args.data_dir, 'fundamentals-analyst.json')
-        if os.path.exists(fund_path):
+        # ── 2d. 读取 capital_scores.json (资金流评分, 优先读文件) ──
+        capital_path = os.path.join(args.data_dir, 'capital_scores.json')
+        if os.path.exists(capital_path):
             try:
-                with open(fund_path, 'r', encoding='utf-8') as f:
-                    fdata = json.load(f)
-                fd = fdata.get('data', fdata)
-                stocks_dict = fd.get('stocks', {})
-                if isinstance(stocks_dict, dict):
-                    for code, info in stocks_dict.items():
-                        code = str(code)
-                        financials = info.get('financials', {}) if isinstance(info, dict) else {}
-                        valuation = info.get('valuation', {}) if isinstance(info, dict) else {}
-                        roe = financials.get('roe')
-                        pe = valuation.get('peTtm')
-                        if roe is not None or pe is not None:
-                            llm_factors_map.setdefault(code, {}).update({
-                                'roe': roe,
-                                'pe': pe,
-                            })
+                with open(capital_path, 'r', encoding='utf-8') as f:
+                    cdata = json.load(f)
+                for code, score in cdata.items():
+                    if isinstance(score, (int, float)):
+                        llm_factors_map.setdefault(str(code), {})['capital_score'] = score
             except Exception:
                 pass
+        else:
+            # 文件不存在时降级为实时计算
+            try:
+                from astock_data import compute_capital_score
+                for code in codes:
+                    cap_score = compute_capital_score(code)
+                    llm_factors_map.setdefault(code, {})['capital_score'] = cap_score
+            except ImportError:
+                pass
+
+        # ── 2e. 读取 supply_risk.json (供给端风险) ──
+        supply_path = os.path.join(args.data_dir, 'supply_risk.json')
+        if os.path.exists(supply_path):
+            try:
+                with open(supply_path, 'r', encoding='utf-8') as f:
+                    supdata = json.load(f)
+                for code, info in supdata.items():
+                    if isinstance(info, dict):
+                        risk_score = info.get('risk_score', 0)
+                        llm_factors_map.setdefault(str(code), {})['supply_risk'] = risk_score
+            except Exception:
+                pass
+
+        # ── 2f. mootdx 财务数据兜底 (当 ROE 大面积缺失时) ──
+        roe_missing = sum(1 for v in llm_factors_map.values() if v.get('roe') is None)
+        if roe_missing > len(codes) * 0.5:  # 超过50%的股票缺ROE → 启动mootdx兜底
+            try:
+                from mootdx.affair import Affair
+                a = Affair()
+                df = a.parse(filename='gpcw20251231.zip')
+                # 列索引 (参考 batch_fundamentals_screen.py)
+                COL_ROE, COL_GOODWILL = 6, 35
+                COL_TOTAL_EQUITY = 72
+                COL_REVENUE_GROWTH, COL_PROFIT_GROWTH = 183, 184
+                COL_GROSS_MARGIN, COL_DEBT_RATIO = 202, 210
+                COL_NET_PROFIT = 95
+                for code in codes:
+                    if code in df.index:
+                        row = df.loc[code]
+                        try:
+                            mootdx_roe = float(row.iloc[COL_ROE]) if row.iloc[COL_ROE] is not None and float(row.iloc[COL_ROE]) == float(row.iloc[COL_ROE]) else None
+                            goodwill = float(row.iloc[COL_GOODWILL]) if row.iloc[COL_GOODWILL] is not None else 0
+                            equity = float(row.iloc[COL_TOTAL_EQUITY]) if row.iloc[COL_TOTAL_EQUITY] is not None else 1
+                            goodwill_ratio = (goodwill / equity * 100) if equity > 0 else 0
+                            net_profit = float(row.iloc[COL_NET_PROFIT]) if row.iloc[COL_NET_PROFIT] is not None else None
+                            revenue_growth = float(row.iloc[COL_REVENUE_GROWTH]) if row.iloc[COL_REVENUE_GROWTH] is not None else None
+                            profit_growth = float(row.iloc[COL_PROFIT_GROWTH]) if row.iloc[COL_PROFIT_GROWTH] is not None else None
+                            gross_margin = float(row.iloc[COL_GROSS_MARGIN]) if row.iloc[COL_GROSS_MARGIN] is not None else None
+                            debt_ratio = float(row.iloc[COL_DEBT_RATIO]) if row.iloc[COL_DEBT_RATIO] is not None else None
+
+                            existing = llm_factors_map.setdefault(code, {})
+                            if existing.get('roe') is None and mootdx_roe is not None:
+                                existing['roe'] = mootdx_roe
+                            existing['goodwill_ratio'] = goodwill_ratio
+                            existing['net_profit'] = net_profit
+                            existing['revenue_growth'] = revenue_growth
+                            existing['profit_growth'] = profit_growth
+                            existing['gross_margin'] = gross_margin
+                            existing['debt_ratio'] = debt_ratio
+
+                            # 用 mootdx 数据修正 fundamentals_score（如果之前是默认50）
+                            if existing.get('fundamentals_score', 50) == 50:
+                                fund_score = 50
+                                if mootdx_roe is not None:
+                                    if mootdx_roe < 0:
+                                        fund_score = 15  # 亏损
+                                    elif mootdx_roe < 5:
+                                        fund_score = 30  # 盈利弱
+                                    elif mootdx_roe < 10:
+                                        fund_score = 55  # 一般
+                                    elif mootdx_roe < 20:
+                                        fund_score = 70  # 良好
+                                    else:
+                                        fund_score = 85  # 优秀
+                                if goodwill_ratio > 30:
+                                    fund_score = min(fund_score, 20)  # 商誉炸弹
+                                if net_profit is not None and net_profit < 0:
+                                    fund_score = min(fund_score, 15)  # 亏损
+                                existing['fundamentals_score'] = fund_score
+                        except (ValueError, TypeError, IndexError):
+                            pass
+            except ImportError:
+                pass  # mootdx 不可用, 静默降级
+            except Exception:
+                pass  # 其他错误(网络等), 静默降级
 
     # 3. 综合因子计算
     all_stocks = []
