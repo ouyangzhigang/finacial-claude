@@ -89,9 +89,10 @@ GATES = {
         "check_system": True,
     },
     "G8_回测": {
-        "desc": "backtest_verdict=rejected → 一票否决入TopN(驰宏锌锗纪律: 回测证伪不得强推)",
+        "desc": "backtest_verdict=rejected 且 sample_count≥20 → 一票否决; sample<20 → 降级不否决(改造1: 样本不足不得硬否决)",
         "action": "reject",
-        "check": lambda st: _safe(st, "backtest_verdict", "") == "rejected",
+        "check": lambda st: st.get("backtest_verdict", "") == "rejected" and (st.get("sample_count", 0) or 0) >= 20,
+        "check_warn": lambda st: st.get("backtest_verdict", "") == "rejected" and 0 <= (st.get("sample_count", 0) or 0) < 20,
     },
 }
 
@@ -289,6 +290,8 @@ def load_backtest_results(data_dir):
                     "avg_return": bt.get("avg_return", 0),
                     "max_drawdown": bt.get("max_drawdown", 0),
                     "pass_count": bt.get("pass_count", 0),
+                    "sample_count": bt.get("sample_count", 0),  # 改造1: 样本量
+                    "sample_insufficient": bt.get("sample_insufficient", False),
                 }
     return result
 
@@ -551,6 +554,18 @@ def apply_gates(stocks, mcp_status, data_dir=''):
             if status == "ok":
                 status = "downgrade_not_top1"
                 max_rank = 2  # 最多排Top2
+
+        # G8: 回测否决(改造1: 按样本量分级, 之前未执行仅定义)
+        g8_reject = GATES["G8_回测"]["check"](st)  # rejected AND sample≥20
+        g8_warn = GATES["G8_回测"].get("check_warn", lambda s: False)(st)  # rejected AND sample<20
+        if g8_reject:
+            gates_failed.append(f"G8: backtest={st.get('backtest_verdict','?')} sample={st.get('sample_count',0)} → {GATES['G8_回测']['desc']}")
+            status = "reject"
+        elif g8_warn:
+            gates_failed.append(f"G8(warn): backtest=rejected sample={st.get('sample_count',0)}<20 → 样本不足降级不否决(改造1)")
+            if status == "ok":
+                status = "downgrade_not_top1"
+                max_rank = 3  # 样本不足不否决, 仅限Top3后
 
         # 汇总
         if not gates_failed:

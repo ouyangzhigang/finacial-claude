@@ -198,6 +198,19 @@ def run_backtest(stock_rows: list, index_rows: list = None, window: int = 5) -> 
     else:
         verdict = 'approved'
 
+    # ── 改造1: 回测分级——样本量不足时不得硬否决 ──
+    # 3月≈12非重叠窗口, 样本不足以支撑硬阈值。按样本量分档:
+    #   sample<12  → rejected 强制降为 observation(回测降级为参考, 不否决)
+    #   sample12-19 → rejected 降为 cautious(不否决, 仅降仓位)
+    #   sample≥20  → 维持 rejected(可否决)
+    sample_n = len(windows)
+    sample_insufficient = sample_n < 12
+    if verdict == 'rejected':
+        if sample_n < 12:
+            verdict = 'observation'
+        elif sample_n < 20:
+            verdict = 'cautious'
+
     return {
         'sample_count': len(windows),
         'win_rate': round(win_rate, 1),
@@ -208,6 +221,7 @@ def run_backtest(stock_rows: list, index_rows: list = None, window: int = 5) -> 
         'confidence_interval': [round(ci_low, 1), round(ci_high, 1)],
         'pass_count': pass_count,
         'verdict': verdict,
+        'sample_insufficient': sample_insufficient,  # 改造1: 样本不足标记
         'env_stats': env_stats,
         'windows': windows,
     }
