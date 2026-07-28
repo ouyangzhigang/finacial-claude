@@ -33,6 +33,11 @@ emoji: 🎯
    **资金流审查项**(用 `python scripts/astock_cli.py capital_score --codes {TopN}`):
    - capital_score<30 vs 技术动量强? → 量价背离,资金在撤退
    - capital_score>70 且 social_heat 高? → 资金+社交共振,加分确认
+   **因子IC衰减审查项**(改造8, Read `data/factor_ic.json`):
+   - `factor_ic_t5 < -0.1`? → 因子反向,标注"因子失效需调权",降置信度
+   - `factor_ic_t5 ≈ 0 且 sample_size≥10`? → 因子无预测力,标注"因子失效,建议重校权重"
+   - `factor_ic_t5 > 0.1`? → 因子有效,正常
+   - 数据来源: `python scripts/recommendation_backtester.py` 每日产出
 5. **回测分级背书(改造1)**:回测 verdict 按**样本量**分级处置——3月≈12非重叠窗口样本不足以支撑硬阈值:
    - `sample≥20 + rejected` → 一票否决,不得入TopN(驰宏锌锗纪律)
    - `sample 12-19 + rejected` → 降级不否决,仓位砍半,标注"样本偏少·回测未背书"

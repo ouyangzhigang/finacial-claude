@@ -32,11 +32,11 @@ from cn_fetch import kline as _kline
 # ════════════════════════════════════════════
 
 def get_3month_kline(symbol: str) -> Optional[list]:
-    """获取3个月日K线 (~60交易日)"""
+    """获取12个月日K线 (~250交易日). 改造10: 从3月扩到12月, 回测窗口~50个非重叠5日窗口, 提升统计可信度."""
     sym = symbol if symbol.startswith(('sh', 'sz')) else (
         f"sh{symbol}" if symbol.startswith(('6', '9')) else f"sz{symbol}"
     )
-    arr = _kline(sym, 90)  # 取90天确保60交易日
+    arr = _kline(sym, 260)  # 改造10: 取260天确保250交易日(原90天=3月仅12窗口)
     if not arr or len(arr) < 25:
         return None
     rows = []
@@ -52,10 +52,10 @@ def get_3month_kline(symbol: str) -> Optional[list]:
 
 
 def get_index_3month(index_sym: str = 'sh000001') -> list:
-    """获取指数3个月K线 (用于环境分层)"""
+    """获取指数12个月K线 (用于环境分层). 改造10: 从3月扩到12月."""
     import urllib.request, ssl
     ctx = ssl._create_unverified_context()
-    url = f"http://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param={index_sym},day,,,90,qfq"
+    url = f"http://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param={index_sym},day,,,260,qfq"  # 改造10: 90→260
     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     try:
         with urllib.request.urlopen(req, timeout=15, context=ctx) as r:
