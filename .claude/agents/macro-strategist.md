@@ -57,6 +57,9 @@ emoji: 🌍
   internationalPath: "美元→北向承压;地缘→军工催化;...",
   policyMainlines: [政策主线1, ...],
   keyDates: [{date, event, direction}],
+  leadingStockMedianPrice: 35.5,  // 改造9: 顺风方向龙头股价中位数(元)
+  accountMismatch: false,  // 改造9: 龙头价中位数>账户单票预算70%时true(1w账户单票≤4000元→价≤40; 若>70%龙头>40元则true)
+  accountMismatchNote: "半导体龙头中位数52元, 1w账户够不着, 建议切低价主线或提账户",  // 改造9: 错配说明
   summary: "一句话定调"
 }
 ```

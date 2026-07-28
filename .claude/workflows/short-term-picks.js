@@ -48,7 +48,7 @@ let ctx = ''
 
 phase('宏观定调')
 log('🔄 宏观定调 — macro-strategist')
-const macro = await S('macro', () => agent(PREFETCH+P('macro-strategist','未来2周天时五维定调,输出顺风方向2-3。','用工具链取宏观读数+政策节点+情绪,锁定顺风方向。', ctx), {agentType:'macro-strategist',schema:RET,label:'macro',phase:'宏观定调'}))
+const macro = await S('macro', () => agent(PREFETCH+P('macro-strategist','未来2周天时五维定调,输出顺风方向2-3。','用工具链取宏观读数+政策节点+情绪,锁定顺风方向。改造9账户适配: 判断顺风方向龙头股价中位数 vs 账户'+acc+'单票预算(1w≤4000元→股价≤40元), 若>70%龙头>40元则accountMismatch=true+说明(建议切低价主线或提账户), 写入keyFields.leadingStockMedianPrice/accountMismatch/accountMismatchNote。', ctx), {agentType:'macro-strategist',schema:RET,label:'macro',phase:'宏观定调'}))
 ctx = ap(macro,'宏观')
 log('✅ 宏观定调完成')
 
