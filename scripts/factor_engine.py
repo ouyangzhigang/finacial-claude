@@ -271,12 +271,24 @@ def compute_composite_factors(kline_factors: dict, llm_factors: dict = None) -> 
         except (ValueError, TypeError):
             pass  # 非数值型 ROE/PE, 跳过扣分
 
+    # ── 数据可用性检测(改造3): 区分"有真实数据"和"默认50" ──
+    # K线维度: 有有效K线数据视为可用
+    data_availability = {}
+    data_availability['momentum'] = kf.get('m5') is not None or (kf.get('momentum_score', 0) or 0) != 0
+    data_availability['liquidity'] = (kf.get('amt20_yi') or 0) > 0
+    # 外部JSON维度: 键存在且非None视为有真实数据(默认50返回不算)
+    for dim, key in [('capital', 'capital_score'), ('sentiment', 'sentiment_score'),
+                     ('social', 'social_heat'), ('catalyst', 'catalyst_score'),
+                     ('fundamentals', 'fundamentals_score'), ('valuation', 'valuation_score')]:
+        data_availability[dim] = key in lf and lf[key] is not None
+
     return {
         'symbol': kf['symbol'],
         'raw_factors': {k: round(v, 1) for k, v in raw.items()},
         'kline_data': kf,
         'llm_data': lf,
         'fundamentals_penalty': fundamentals_penalty,  # 记录扣分, 供调试
+        'data_availability': data_availability,  # 改造3: 每维数据可用性
     }
 
 
@@ -396,6 +408,33 @@ def compute_scores(all_stocks: list, regime: str = 'ranging',
     regime_adj = REGIME_ADJUSTMENTS.get(regime, REGIME_ADJUSTMENTS['ranging'])
     ic_w = ic_weights or {}
 
+    # ── 数据可用率检测(改造3): 动态权重再分配 ──
+    # 可用率<50%的维度权重×0.3, 砍掉的份额转移给momentum(最可靠)
+    # 全部非K线维度<50% → data_link_broken=True, 置信度强制低
+    dim_available_count = {d: 0 for d in weights}
+    for stock in all_stocks:
+        da = stock.get('data_availability', {})
+        for d in weights:
+            if da.get(d, False):
+                dim_available_count[d] += 1
+    total_stocks = max(1, len(all_stocks))
+    dim_availability_rate = {d: dim_available_count[d] / total_stocks for d in weights}
+
+    adjusted_weights = dict(weights)
+    transfer_pool = 0.0
+    for d in list(weights.keys()):
+        if d != 'momentum' and dim_availability_rate.get(d, 1) < 0.5:
+            reduction = adjusted_weights[d] * 0.7  # 砍70%
+            transfer_pool += reduction
+            adjusted_weights[d] = adjusted_weights[d] * 0.3
+    if transfer_pool > 0 and 'momentum' in adjusted_weights:
+        adjusted_weights['momentum'] += transfer_pool
+
+    # 数据链断模式: 非K线维度全<50%可用率(≠动量优先,是数据缺失)
+    non_kline_dims = [d for d in weights if d not in ('momentum', 'liquidity')]
+    data_link_broken = len(non_kline_dims) > 0 and all(dim_availability_rate.get(d, 0) < 0.5 for d in non_kline_dims)
+    weights = adjusted_weights
+
     # 相关性降权
     corr_info = correlation_matrix(all_stocks)
     penalty = corr_info.get('penalty', {})
@@ -427,6 +466,12 @@ def compute_scores(all_stocks: list, regime: str = 'ranging',
     all_stocks.sort(key=lambda x: x['composite_score'], reverse=True)
     for i, stock in enumerate(all_stocks):
         stock['rank'] = i + 1
+
+    # 改造3: 把数据可用性元数据写入每只票(供governor/hard_gate读取)
+    for stock in all_stocks:
+        stock['data_link_broken'] = data_link_broken
+        stock['dim_availability_rate'] = {k: round(v, 2) for k, v in dim_availability_rate.items()}
+        stock['adjusted_weights'] = {k: round(v, 3) for k, v in adjusted_weights.items()}
 
     return all_stocks
 
@@ -682,10 +727,17 @@ def main():
                                 custom_weights=custom_weights)
 
     # 6. 输出
+    # 改造3: 顶层加数据链状态(供hard_gate/governor读取)
+    _data_link_broken = all_stocks[0].get('data_link_broken', False) if all_stocks else False
+    _dim_avail = all_stocks[0].get('dim_availability_rate', {}) if all_stocks else {}
+    _adj_w = all_stocks[0].get('adjusted_weights', BASE_WEIGHTS) if all_stocks else dict(BASE_WEIGHTS)
     result = {
         'regime': regime,
         'regime_adjustments': REGIME_ADJUSTMENTS.get(regime, {}),
         'base_weights': BASE_WEIGHTS,
+        'adjusted_weights': _adj_w,  # 改造3: 数据缺失再分配后的实际权重
+        'dim_availability_rate': _dim_avail,  # 改造3: 每维数据可用率
+        'data_link_broken': _data_link_broken,  # 改造3: 数据链断模式(全非K线维<50%)
         'correlation': correlation_matrix(all_stocks),
         'stocks': all_stocks,
         'summary': f'{len(all_stocks)}只股票评分完成, regime={regime}, Top1={all_stocks[0]["symbol"] if all_stocks else "N/A"}',

@@ -390,7 +390,7 @@ def merge_stock_data(data_dir):
     return stocks
 
 
-def apply_gates(stocks, mcp_status):
+def apply_gates(stocks, mcp_status, data_dir=''):
     """对每只股票逐票执行硬门检查"""
     results = {}
     system_flags = {
@@ -459,6 +459,23 @@ def apply_gates(stocks, mcp_status):
             )
             system_flags["fund_weight_override"] = 0.05
             system_flags["factor_rank_weight_override"] = 0.50
+
+    # ── 改造3: 数据链断检测(≠动量优先,是数据缺失) ──
+    # 读 factor_scores.json 顶层 data_link_broken: 非K线维度全<50%可用率
+    if data_dir:
+        _fs_data = load_json(os.path.join(data_dir, "factor_scores.json")) or {}
+        if _fs_data.get("data_link_broken"):
+            system_flags["data_link_broken"] = True
+            system_flags["confidence_floor"] = "低"
+            system_flags["position_cap"] = min(system_flags.get("position_cap", 0.70), 0.30)
+            system_flags["g_data_reason"] = (
+                f"非K线维度可用率全<50%: {_fs_data.get('dim_availability_rate', {})} "
+                f"→ 数据链断(≠动量优先), 置信度强制低, 仓位上限30%"
+            )
+        else:
+            system_flags["data_link_broken"] = False
+            if _fs_data.get("dim_availability_rate"):
+                system_flags["dim_availability_rate"] = _fs_data["dim_availability_rate"]
 
     # 动量优先模式下, G1 基本面阈值放宽 (全池基本面都差, 不能用正常标准)
     if system_flags.get("adaptive_mode") == "momentum_priority":
@@ -607,8 +624,8 @@ def main():
     # 2. 检测 MCP 状态
     mcp_status = check_mcp_status(data_dir)
 
-    # 3. 执行硬门
-    results, system_flags = apply_gates(stocks, mcp_status)
+    # 3. 执行硬门(改造3: 传 data_dir 以读 data_link_broken)
+    results, system_flags = apply_gates(stocks, mcp_status, data_dir)
 
     # 4. 筛选 eligible TopN
     eligible = find_eligible_topn(results, system_flags, args.top_n)
