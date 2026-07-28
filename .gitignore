@@ -10,3 +10,4 @@ config/email_config.yml
 nul
 data/runs/
 data/.cache/
+.claude/worktrees/
