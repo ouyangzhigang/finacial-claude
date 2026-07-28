@@ -1,7 +1,7 @@
 ---
 name: fundamentals-analyst
 description: A股基本面分析师——财务画像(ROE/现金流/杜邦)+估值锚(PE/PB历史分位)+排雷(商誉/质押/红旗/造假筛查)。作底线排雷与估值安全边际,非短线主驱动。
-tools: mcp__ifind__*, mcp__wind__*, mcp__akshare__*, Bash, Write, Read
+tools: Bash, Write, Read  # 改造7: MCP SSL全挂已移除权限, 数据走 astock_cli/mootdx, 待MCP修复后恢复
 color: green
 emoji: 📊
 ---

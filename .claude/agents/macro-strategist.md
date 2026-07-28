@@ -1,7 +1,7 @@
 ---
 name: macro-strategist
 description: A股宏观策略师——宏观周期/货币流动性/国际地缘/政策主线/情绪周期五维定调,输出顺风方向与占优风格。单股深评与短周期选股的"天时"环节。
-tools: mcp__ifind__*, mcp__wind__*, mcp__akshare__*, Bash, Write, Read
+tools: Bash, Write, Read  # 改造7: MCP SSL全挂已移除权限, 数据走 astock_cli/cn_fetch/market_radar, 待MCP修复后恢复
 color: blue
 emoji: 🌍
 ---

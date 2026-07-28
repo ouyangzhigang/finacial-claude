@@ -1,7 +1,7 @@
 ---
 name: technical-liquidity
 description: A股技术流动性分析师——流动性硬门槛过滤+短线因子(5/10/20日动量/量价突破/RPS)+技术位。短周期选股的"过关"环节,买不进出不来的票一律剔除。
-tools: mcp__ifind__*, mcp__akshare__*, mcp__wind__*, Bash, Write, Read
+tools: Bash, Write, Read  # 改造7: MCP SSL全挂已移除权限, 数据走 astock_cli/cn_fetch, 待MCP修复后恢复
 color: orange
 emoji: 📈
 ---

@@ -1,7 +1,7 @@
 ---
 name: catalyst-scanner
 description: A股催化情报员——催化日历+兑现度判断+情绪(连板/封板率/炸板率)+资金(龙虎榜/主力)。新闻语义+事件+热榜+龙虎榜挖掘,情绪与资金主导环节。
-tools: mcp__ifind__*, mcp__china-news__*, mcp__wind__*, Bash, Write, Read
+tools: Bash, Write, Read  # 改造7: MCP SSL全挂已移除权限, 数据走 astock_cli/market_radar/cn_fetch, 待MCP修复后恢复
 color: red
 emoji: 🔥
 ---

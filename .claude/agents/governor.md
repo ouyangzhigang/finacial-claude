@@ -81,14 +81,14 @@ emoji: 🎯
 每阶段记录:当时假设 → 新证据 → 假设更新 → 置信度。回测是关键验证点,证伪则调因子权重或换标的,不事后粉饰。
 
 ### 抽查验证方法(对抗审查的"实锤"环节)
-当对抗审查发现矛盾时,governor 用 MCP 只读工具**直接抽查**关键数据,而非仅靠逻辑推理:
+当对抗审查发现矛盾时,governor **直接抽查**关键数据,而非仅靠逻辑推理。改造7后 MCP SSL 全挂,优先用 astock_cli/cn_fetch 抽查(MCP 修复后可恢复 ifind 抽查):
 | 矛盾类型 | 抽查方法 | 示例 |
 |---|---|---|
-| fundamentals 说"ROE 高" vs technical 说"动量弱" | `ifind_get_stock_financials` 验证实际 ROE | 确认是否真的 25% |
-| catalyst 说"催化未兑现" vs 日K显示已涨20% | `ifind_get_stock_summary` 拉近1月日K | 确认近5日实际涨幅 |
-| sector 说"板块强" vs risk 说"同源风险高" | `ifind_sector_data` 验证板块实际表现 | 确认成交额+涨跌 |
-| technical 说"流动性过关" vs 票面成交额可疑 | `ifind_get_stock_info` 查实际成交额 | 确认日均≥1亿 |
-| sentiment_engine 说"社交热度高" vs catalyst 说"无催化" | `ifind_search_news` 验证是否有对应新闻/事件 | 确认热度来源(真催化 vs 纯炒作) |
+| fundamentals 说"ROE 高" vs technical 说"动量弱" | `python scripts/astock_cli.py quote --code {code}` + mootdx 财务 验证 ROE | 确认是否真的 25% |
+| catalyst 说"催化未兑现" vs 日K显示已涨20% | `python scripts/cn_fetch.py kline sh{code} 30` 拉近1月日K | 确认近5日实际涨幅 |
+| sector 说"板块强" vs risk 说"同源风险高" | `python scripts/astock_cli.py concept_blocks --code {code}` 验证板块表现 | 确认成交额+涨跌 |
+| technical 说"流动性过关" vs 票面成交额可疑 | `python scripts/cn_fetch.py squote {code}` 查实际成交额(新浪最准) | 确认日均≥1亿 |
+| sentiment_engine 说"社交热度高" vs catalyst 说"无催化" | `python scripts/astock_cli.py news --code {code}` 验证是否有对应新闻/事件 | 确认热度来源(真催化 vs 纯炒作) |
 
 抽查结果写入报告"对抗审查"模块的"总督验证"小节,标注 ✅核实一致 / ⚠️核实偏差 / ❌核实矛盾。
 
