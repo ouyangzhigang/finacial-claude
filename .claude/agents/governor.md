@@ -38,6 +38,11 @@ emoji: 🎯
    - `factor_ic_t5 ≈ 0 且 sample_size≥10`? → 因子无预测力,标注"因子失效,建议重校权重"
    - `factor_ic_t5 > 0.1`? → 因子有效,正常
    - 数据来源: `python scripts/recommendation_backtester.py` 每日产出
+   **数据源状态审查项(P1-2, Read factor_scores.json 的 source_status + data/runs/{runId}/_validation.json)**:
+   - 任一 companion JSON `source_status != ok`(missing/empty/parse_fail)? → 标"数据源失效",降置信度,报告显式列出失效维度(教训: 20260728 前 capital_scores.json 0字节、sentiment_scores.json 缺失,系统静默 GIGO)
+   - `_validation.json` verdict=red? → 标"数据不可信",仓位上限≤30%
+   - `_validation.json` verdict=yellow(schema 偏离)? → 标"schema漂移",降置信度,提示需修 parser
+   - factor_scores.json `data_link_broken=True`? → 非K线维全<50%可用率,标"数据链断",置信度强制低
 5. **回测分级背书(改造1)**:回测 verdict 按**样本量**分级处置——3月≈12非重叠窗口样本不足以支撑硬阈值:
    - `sample≥20 + rejected` → 一票否决,不得入TopN(驰宏锌锗纪律)
    - `sample 12-19 + rejected` → 降级不否决,仓位砍半,标注"样本偏少·回测未背书"

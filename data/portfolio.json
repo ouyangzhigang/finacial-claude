@@ -44,10 +44,10 @@
       "role": "弹性进攻",
       "workflow": "hot-trends",
       "confidence": "中",
-      "currentPrice": "16.30",
+      "currentPrice": "16.06",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-4.29"
+      "currentChangePct": "-5.70"
     },
     {
       "code": "301282",
@@ -57,10 +57,10 @@
       "role": "弹性进攻",
       "workflow": "hot-trends",
       "confidence": "中",
-      "currentPrice": "22.37",
+      "currentPrice": "22.20",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-3.12"
+      "currentChangePct": "-3.85"
     },
     {
       "code": "002185",
@@ -70,10 +70,10 @@
       "role": "价值底仓",
       "workflow": "hot-trends",
       "confidence": "中",
-      "currentPrice": "17.97",
+      "currentPrice": "17.47",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-3.34"
+      "currentChangePct": "-6.02"
     },
     {
       "code": "600460",
@@ -83,10 +83,10 @@
       "role": "弹性进攻(超跌反弹+半导体双确认)",
       "workflow": "short-term-picks",
       "confidence": "低",
-      "currentPrice": "30.90",
+      "currentPrice": "30.17",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-4.42"
+      "currentChangePct": "-6.68"
     },
     {
       "code": "000426",
@@ -96,10 +96,10 @@
       "role": "价值底仓(中报预增+财务优质)",
       "workflow": "short-term-picks",
       "confidence": "低",
-      "currentPrice": "31.88",
+      "currentPrice": "31.25",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-4.35"
+      "currentChangePct": "-6.24"
     },
     {
       "code": "300450",
@@ -109,10 +109,10 @@
       "role": "观察仓(储能+好入场时机)",
       "workflow": "short-term-picks",
       "confidence": "低",
-      "currentPrice": "33.10",
+      "currentPrice": "33.03",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-1.22"
+      "currentChangePct": "-1.43"
     },
     {
       "code": "600667",
@@ -122,10 +122,10 @@
       "role": "存储芯片+先进封装",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "18.68",
+      "currentPrice": "18.37",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "4.24"
+      "currentChangePct": "2.51"
     },
     {
       "code": "600522",
@@ -135,10 +135,10 @@
       "role": "观察仓-光纤光缆/AI算力",
       "workflow": "short-term-picks",
       "confidence": "中",
-      "currentPrice": "30.74",
+      "currentPrice": "29.96",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-5.88"
+      "currentChangePct": "-8.27"
     },
     {
       "code": "sz002185",
@@ -208,10 +208,10 @@
       "role": "",
       "workflow": "hot-trends",
       "confidence": "低",
-      "currentPrice": "5.60",
+      "currentPrice": "5.53",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-2.27"
+      "currentChangePct": "-3.49"
     },
     {
       "code": "002606",
@@ -221,11 +221,11 @@
       "role": "试探建仓(回测唯一survivor)",
       "workflow": "short-term-picks",
       "confidence": "中低",
-      "currentPrice": "13.85",
+      "currentPrice": "13.81",
       "changePct": null,
       "status": "active",
-      "currentChangePct": "-1.98",
-      "profitPct": 1.76
+      "currentChangePct": "-2.26",
+      "profitPct": 1.47
     },
     {
       "code": "CASH",
@@ -238,7 +238,35 @@
       "currentPrice": null,
       "changePct": null,
       "status": "active"
+    },
+    {
+      "code": "002309",
+      "name": "中利集团",
+      "recommendedAt": "20260728",
+      "recommendedPrice": 3.37,
+      "role": "科技弹性/中报扭亏催化(条件单2手~6.7%待回调至3.00-3.15触发,硬止损2.85)",
+      "workflow": "short-term-picks",
+      "confidence": "低",
+      "currentPrice": "3.37",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "10.13",
+      "profitPct": 0.0
+    },
+    {
+      "code": "600775",
+      "name": "南京熊猫",
+      "recommendedAt": "20260728",
+      "recommendedPrice": 10.35,
+      "role": "脑机接口/卫星通信(观察仓,待深回调8.80-9.20方考虑1手)",
+      "workflow": "short-term-picks",
+      "confidence": "低",
+      "currentPrice": "10.35",
+      "changePct": null,
+      "status": "active",
+      "currentChangePct": "9.99",
+      "profitPct": 0.0
     }
   ],
-  "lastUpdated": "2026-07-28 11:13:56"
+  "lastUpdated": "2026-07-28 19:46:44"
 }

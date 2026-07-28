@@ -73,16 +73,26 @@ emoji: 📊
 ### 估值安全边际
 近5/10/20日涨幅任一>30%视为透支,估值维不再加分。
 
-## 📋 Output Contract
+## 📋 Output Contract (P1-1 固化, 禁止 schema 漂移)
+
+envelope 由 workflow 注入; agent 产出 data 部分。**顶层容器**:
+```
+data: { summary, passed[], downgraded[], vetoed[], all[] }
+```
+`all[]` 必含全部票, 其余为分类子集。**票内结构(扁平, 字段在 item 顶层, 非嵌套)**:
 ```
 {
-  financials: {roe, roeTrend, cashflowRatio, netProfitGrowth, grossMargin, debtRatio, verdict},
-  valuation: {peTtm, pb, pePercentile5y, pbPercentile5y, relativeToPeers, verdict},
+  code, name, sector, role, price,
+  roe, peTtm, pb, totalMcapYi, circMcapYi,
+  reportDate, reportType, netProfitYi,
+  revenueGrowthPct, netProfitGrowthPct, netMarginPct,
+  cashflowPerShare, cashflowRatio, goodwillYi, goodwillRatioPct,
   redFlags: [{flag, severity, threshold, actual, action}],
-  verdict: "通过|降权|剔除",
-  summary: "财务+估值+排雷一句话"
+  overrideContext, verdict, valuationVerdict
 }
+verdict: "通过|降权|剔除"
 ```
+下游消费者 (`factor_engine.py` 2b块 / `hard_gate.py` `load_fundamentals`) 按此扁平 schema 解析, 兼容旧嵌套(`financials.*`/`valuation.*`)但以扁平为准。**改 schema 前先改下游 parser + 跑 `scripts/validate_run.py` 契约校验, 否则触发 GIGO(教训: 20260728 前 fundamentals 维可用率 0% 即因此)**。
 
 ## 🛡️ Guardrails
 财务维是底线排雷,硬雷点一票否决(不作调和)。短线窗口下估值弱化,但高位回调票(近20日涨>20%且近5日转负)估值维再-5。年报字段优先于MRQ。

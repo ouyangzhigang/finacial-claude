@@ -126,7 +126,8 @@ def compute_kline_factors(symbol: str, datalen: int = 60, factors_cache: Optiona
 
     # ── 20日均成交额（优先使用cn_fetch.factors()预计算值） ────────────
     # 原始k线重算可能因数据长度不足产生偏差，优先取cn_fetch.quote接口的amt20字段（腾讯行情直出，单位亿）
-    amt20_cn = factors_cache.get('avgAmount20d') if factors_cache else None  # cn_fetch返回单位已是亿元
+    # P0-2: 修正 key 名 — cn_fetch.factors() 实际返回 amt20_yi(已是亿元), 非 avgAmount20d
+    amt20_cn = factors_cache.get('amt20_yi') if factors_cache else None
 
     if amt20_cn is not None and amt20_cn > 0:
         # 使用cn_fetch预计算的金额（已转亿元），更可靠
@@ -197,7 +198,7 @@ def compute_kline_factors(symbol: str, datalen: int = 60, factors_cache: Optiona
         # 量价
         'breakout': breakout,
         'volume_ratio': round(volume_ratio, 2),
-        'amt20_yi': round(amt20 / 1e8, 2),
+        'amt20_yi': round(amt20, 2),  # P0-2: amt20 上方已转亿元, 删除多余的 /1e8
         # 动量质量
         'uniformity': round(uniformity, 2),
         'concentration': round(concentration, 2),
@@ -209,6 +210,8 @@ def compute_kline_factors(symbol: str, datalen: int = 60, factors_cache: Optiona
         'high_20d': round(high_20d, 2),
         # 流动性
         'turnover_yi': round(turnover_approx, 2),
+        # P0-2: 单位自检 — amt20 与 turnover_yi 应同量级,悬殊则单位异常
+        '_amt20_unit_warn': (amt20 < 0.01 and turnover_approx > 1),
         # 日K明细 (供 timing_engine 使用)
         'daily_returns_5d': [round(r, 2) for r in daily_returns_5d],
     }
@@ -491,6 +494,7 @@ def main():
     codes = [c.strip() for c in args.codes.split(',') if c.strip()]
     params = json.loads(args.json) if args.json else {}
     regime = params.get('regime', 'ranging')
+    source_status = {}  # P1-2: companion JSON 状态 (ok/missing/empty/parse_fail)
 
     # 1. 计算K线因子 (传入 cn_fetch.factors() 预计算缓存, 消除重复HTTP)
     kline_results = []
@@ -509,6 +513,21 @@ def main():
     # 2. 读取LLM agent产出 + 量化引擎产出 (自给自足模式)
     llm_factors_map = {}
     if args.data_dir:
+        # P1-2: 静默失败报警 — 扫描每个 companion JSON 状态, 空/缺不再静默吞掉
+        for _name in ('technical-liquidity.json','fundamentals-analyst.json','sentiment_scores.json','capital_scores.json','supply_risk.json'):
+            _p = os.path.join(args.data_dir, _name)
+            if not os.path.exists(_p):
+                source_status[_name] = 'missing'
+            else:
+                _raw = open(_p, 'rb').read()
+                if not _raw.strip():
+                    source_status[_name] = 'empty'
+                else:
+                    try:
+                        json.loads(_raw.decode('utf-8', 'ignore'))
+                        source_status[_name] = 'ok'
+                    except Exception:
+                        source_status[_name] = 'parse_fail'
         # ── 2a. 读取 technical-liquidity.json (流动性+技术因子) ──
         tech_path = os.path.join(args.data_dir, 'technical-liquidity.json')
         if os.path.exists(tech_path):
@@ -536,16 +555,31 @@ def main():
                 with open(fund_path, 'r', encoding='utf-8') as f:
                     fdata = json.load(f)
                 fd = fdata.get('data', fdata)
-                stocks_dict = fd.get('stocks', {})
+                # P0-1: schema 契约兼容 — agent 产出可能是 data.stocks dict(旧嵌套)
+                # 或 data.all/passed/downgraded/vetoed 列表(fresh 扁平),多版本 key 兼容
+                stocks_dict = fd.get('stocks')
+                if not isinstance(stocks_dict, dict) or not stocks_dict:
+                    stocks_dict = {}
+                    for _k in ('all','passed','downgraded','vetoed','pass','allSorted','reject','warn','missing'):
+                        _items = fd.get(_k)
+                        if isinstance(_items, list):
+                            for _item in _items:
+                                if isinstance(_item, dict) and _item.get('code'):
+                                    stocks_dict.setdefault(str(_item['code']), _item)
+                        elif isinstance(_items, dict):
+                            for _c, _v in _items.items():
+                                if isinstance(_v, dict):
+                                    stocks_dict.setdefault(str(_c), _v)
                 if isinstance(stocks_dict, dict):
                     for code, info in stocks_dict.items():
                         code = str(code)
                         if not isinstance(info, dict):
                             continue
-                        financials = info.get('financials', {})
-                        valuation = info.get('valuation', {})
-                        roe = financials.get('roe')
-                        pe = valuation.get('peTtm')
+                        # P0-1: 票内结构兼容 — 扁平(item.roe/peTtm)或嵌套(financials.roe/valuation.peTtm)
+                        financials = info.get('financials') if isinstance(info.get('financials'), dict) else {}
+                        valuation = info.get('valuation') if isinstance(info.get('valuation'), dict) else {}
+                        roe = info.get('roe') if info.get('roe') is not None else financials.get('roe')
+                        pe = info.get('peTtm') if info.get('peTtm') is not None else valuation.get('peTtm')
                         verdict = info.get('verdict', '')
                         red_flags = info.get('redFlags', [])
 
@@ -738,6 +772,7 @@ def main():
         'adjusted_weights': _adj_w,  # 改造3: 数据缺失再分配后的实际权重
         'dim_availability_rate': _dim_avail,  # 改造3: 每维数据可用率
         'data_link_broken': _data_link_broken,  # 改造3: 数据链断模式(全非K线维<50%)
+        'source_status': source_status,  # P1-2: 各 companion JSON 状态 (ok/missing/empty/parse_fail)
         'correlation': correlation_matrix(all_stocks),
         'stocks': all_stocks,
         'summary': f'{len(all_stocks)}只股票评分完成, regime={regime}, Top1={all_stocks[0]["symbol"] if all_stocks else "N/A"}',

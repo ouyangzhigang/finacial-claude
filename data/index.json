@@ -1,5 +1,14 @@
 [
   {
+    "runId": "20260728_short-term-picks",
+    "asOf": "20260728",
+    "goal": "short-term-picks",
+    "path": "data/runs/20260728_short-term-picks/final.json",
+    "headline": "momentum_priority模式按硬门第5条选股回归gate eligible_topn(002309/600775/300663/000566/002195),推翻风险-组合用603928替换因子排名的违规;5只全带硬伤(2硬雷TTM亏损/1回测证伪/2追涨半兑现),仅002309(龙虎榜+1.87亿最强资金+中报扭亏真实催化)条件单2手~6.7%待回调触发,现金≥93%;置信度低(G6强制+因子IC失效sample0+Top1无回测背书)。",
+    "confidence": "低",
+    "fetchedAt": "20260728"
+  },
+  {
     "runId": "20260727_single-stock-deep",
     "asOf": "20260727",
     "goal": "single-stock-deep",

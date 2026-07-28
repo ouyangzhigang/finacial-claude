@@ -136,7 +136,14 @@ if (passCodes) {
   }
 
 phase('硬门过滤')
-log('🔄 硬门过滤 — 6道硬门,代码执行,governor不可override')
+log('🔄 硬门过滤 — 先契约校验(validate_run)再6道硬门,代码执行,governor不可override')
+// P1-1: 契约校验 — companion JSON 非空+key对齐, 红=governor标"数据不可信"
+await S('validate_run', async () => {
+  const cmd = 'PYTHONIOENCODING=utf-8 python scripts/validate_run.py --run-id '+asOf+'_'+G+' 2>&1'
+  await agent('⚠️ 只运行不调试。\nBash: '+cmd+'\nRead '+RD+'/_validation.json', {label:'validate_run', phase:'硬门过滤'})
+  return {path: RD+'/_validation.json', summary:'契约校验完成'}
+})
+ctx += '\n【契约校验】'+RD+'/_validation.json (红=数据不可信,governor须降置信度)'
 await S('hard_gate', async () => {
   const cmd = 'PYTHONIOENCODING=utf-8 python scripts/hard_gate.py --run-id '+asOf+'_'+G+' 2>&1'
   await agent('⚠️ 只运行不调试。\nBash: '+cmd+'\nRead '+RD+'/gate_report.json', {label:'hard_gate', phase:'硬门过滤'})

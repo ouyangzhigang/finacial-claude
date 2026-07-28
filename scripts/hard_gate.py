@@ -192,21 +192,40 @@ def load_fundamentals(data_dir):
         return {}
 
     d = data.get("data", data)
-    stocks_dict = d.get("stocks", {})
+    # P0-1: schema 契约兼容 — agent 产出可能是 data.stocks dict 或 data.all/passed/... 列表
+    stocks_dict = d.get("stocks")
+    if not isinstance(stocks_dict, dict) or not stocks_dict:
+        stocks_dict = {}
+        for _k in ("all","passed","downgraded","vetoed","pass","allSorted","reject","warn","missing"):
+            _items = d.get(_k)
+            if isinstance(_items, list):
+                for _item in _items:
+                    if isinstance(_item, dict) and _item.get("code"):
+                        stocks_dict.setdefault(str(_item["code"]), _item)
+            elif isinstance(_items, dict):
+                for _c, _v in _items.items():
+                    if isinstance(_v, dict):
+                        stocks_dict.setdefault(str(_c), _v)
     result = {}
 
-    if isinstance(stocks_dict, dict):
+    if isinstance(stocks_dict, dict) and stocks_dict:
         for code, info in stocks_dict.items():
             code = str(code)
-            financials = info.get("financials", {}) if isinstance(info, dict) else {}
-            valuation = info.get("valuation", {}) if isinstance(info, dict) else {}
+            if not isinstance(info, dict):
+                continue
+            # P0-1: 票内结构兼容 — 扁平(item.roe/peTtm/cashflowRatio)或嵌套(financials.*)
+            financials = info.get("financials") if isinstance(info.get("financials"), dict) else {}
+            valuation = info.get("valuation") if isinstance(info.get("valuation"), dict) else {}
+            roe = info.get("roe") if info.get("roe") is not None else financials.get("roe")
+            pe = info.get("peTtm") if info.get("peTtm") is not None else valuation.get("peTtm")
+            cf = info.get("cashflowRatio") if info.get("cashflowRatio") is not None else financials.get("cashflowRatio")
             verdict = info.get("verdict", "")
             result[code] = {
-                "roe": financials.get("roe"),
-                "pe": valuation.get("peTtm"),
-                "status": "reject" if "剔除" in str(verdict) else (
-                    "downgrade" if "降权" in str(verdict) else "pass"),
-                "cf_np": financials.get("cashflowRatio"),
+                "roe": roe,
+                "pe": pe,
+                "status": "reject" if "剔除" in str(verdict) or "veto" in str(verdict).lower() else (
+                    "downgrade" if "降权" in str(verdict) or "downgrad" in str(verdict).lower() else "pass"),
+                "cf_np": cf,
             }
     else:
         # Fallback: keyFields 方式 (旧格式兼容)

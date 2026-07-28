@@ -103,14 +103,20 @@ def main():
         codes = [c.strip() for c in args.codes.split(',')]
         result = {}
         for code in codes:
-            result[code] = compute_capital_score(code)
+            try:
+                result[code] = compute_capital_score(code)
+            except Exception as e:
+                result[code] = None  # P1-2: 失败标 None, 不让 > 重定向产空文件
         print(json.dumps(result, ensure_ascii=False, indent=2))
 
     elif args.cmd == 'supply_risk':
         codes = [c.strip() for c in args.codes.split(',')]
         result = {}
         for code in codes:
-            result[code] = compute_supply_risk(code)
+            try:
+                result[code] = compute_supply_risk(code)
+            except Exception as e:
+                result[code] = {'risk_score': 0, 'details': {}, '_error': str(e)[:100]}  # P1-2
         print(json.dumps(result, ensure_ascii=False, indent=2))
 
     elif args.cmd == 'concept_blocks':
