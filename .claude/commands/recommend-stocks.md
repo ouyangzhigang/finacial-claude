@@ -3,6 +3,8 @@ description: A股短周期(2周)潜力价值股推荐——按 short-term-stock-
 argument-hint: [任务参数,如:Top5 2周 稳健偏积极 账户1w]
 ---
 
+> ⚠️ **改造4 路由引导**: 本命令已整合到 `/invest` 多 agent 编排入口。**推荐用法**: `/invest 短周期 top5` 走 `short-term-picks` workflow(governor+6专精agent+7维因子引擎+hard_gate硬门+回测验证+组合风控)。本命令保留为**单 agent 回退模式**(仅 prompt 框架驱动,无硬门/无回测),适合快速轻量分析;需严谨决策时优先用 `/invest`。
+
 @short-term-stock-picks-prompt-cn.md
 
 ## 本次任务参数

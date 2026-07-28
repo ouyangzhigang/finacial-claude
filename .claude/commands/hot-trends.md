@@ -3,6 +3,8 @@ description: A股潜力股综合推荐 — 层层递进 × 五维咬合 × 融�
 argument-hint: "[可选:覆盖默认约束,如:资金2万 单股<60 风格中线]"
 ---
 
+> ⚠️ **改造4 路由引导**: 本命令已整合到 `/invest` 多 agent 编排入口。**推荐用法**: `/invest 热门板块` 走 `hot-trends` workflow(governor+6专精agent+市场雷达+硬门+组合风控)。本命令保留为**单 agent 回退模式**(仅 prompt 框架驱动,无硬门/无回测),适合快速轻量分析;需严谨决策时优先用 `/invest`。
+
 读取并严格执行 `../../recommend_module_stocks.md` 中的完整分析 prompt。将该文件内容视为本次要执行的指令框架,按其中"层层递进 × 五维咬合 × 融会贯通"方法论,调用项目已接入的 MCP 数据层(wind / ifind / akshare / china-news)与分析 skill,**实时获取当前A股行情数据**,从 L1 大盘定调开始,逐层深入、交叉印证,完成一次完整的潜力股综合推荐分析,并严格按该文件 §4 输出格式交付。
 
 ## 本地取数工具(scripts/,免密钥 HTTP,本机已验证 — MCP 兜底 + 交叉验证)
