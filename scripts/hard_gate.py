@@ -567,6 +567,16 @@ def apply_gates(stocks, mcp_status, data_dir=''):
                 status = "downgrade_not_top1"
                 max_rank = 3  # 样本不足不否决, 仅限Top3后
 
+        # 改造2: 否决预算——单只票最多1个主否决, 其余否决门记为关联警示
+        # (避免一只票被G1+G4+G8三连否决的视觉过度, 取最严重为主否决)
+        if status == "reject":
+            veto_prefixes = ("G1:", "G2:", "G4:", "G8:")
+            veto_idxs = [i for i, g in enumerate(gates_failed)
+                         if g.startswith(veto_prefixes) and "(warn)" not in g and "(关联)" not in g]
+            if len(veto_idxs) > 1:
+                for idx in veto_idxs[1:]:  # 第一个保留为主否决, 其余标关联
+                    gates_failed[idx] = "(关联) " + gates_failed[idx]
+
         # 汇总
         if not gates_failed:
             gates_failed.append("✅ 全部通过")
