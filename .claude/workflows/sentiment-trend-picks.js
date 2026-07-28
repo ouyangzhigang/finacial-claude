@@ -7,6 +7,7 @@ export const meta = {
     {title: '板块候选', detail: 'sector 趋势板块+候选'},
     {title: '技术∥排雷', detail: 'technical + fundamentals 并行'},
     {title: '组合回测', detail: 'risk 组合+回测'},
+    {title: '硬门过滤', detail: '6道硬门,代码执行,governor不可override'},
     {title: '综合落盘', detail: 'governor 审查+裁决+报告+portfolio+notify'},
   ],
 }
@@ -15,14 +16,14 @@ const RET = {type:'object',properties:{path:{type:'string'},summary:{type:'strin
 const GOV = {type:'object',properties:{path:{type:'string'},dataPath:{type:'string'},oneLineConclusion:{type:'string'},topN:{type:'array',items:{type:'object'}},totalPosition:{type:'string'},confidence:{type:'string'},keyRisks:{type:'array',items:{type:'string'}}},required:['path','oneLineConclusion','confidence']}
 
 const keyword=args.keyword||'', trend=args.trend||'', topN=args.topN||5, acc=args.account||'1w', asOf=args.asOf||'YYYYMMDD'
-const G='sentiment-trend-picks', RD='data/runs/'+asOf+'_'+G
+const G='sentiment-trend-picks', RD=`data/runs/${asOf}_${G}`
 const focus=keyword||trend||'近期舆情热点'
-const goal='舆情趋势预判选股: 关键词['+focus+'] Top'+topN+' 账户'+acc+' | 基准日'+asOf
+const goal=`舆情趋势预判选股: 关键词[${focus}] Top${topN} 账户${acc} | 基准日${asOf}`
 const history = args.history || ''
-let SHARED = 'data/runs/'+asOf+'_'+G+'/_shared.json'
+const SHARED = `${RD}/_shared.json`
 
 // ── 预取指令(仅 catalyst agent 执行) ──
-let PREFETCH = '⚠️ 前置步骤(必须在分析之前完成):\n1. 运行 Bash: python scripts/prefetch_shared.py --run-id '+asOf+'_'+G+' 2>&1\n2. 运行 Bash: python scripts/portfolio_tracker.py update 2>&1\n3. Read '+SHARED+' 获取共享数据(核心信号🔴🟡🟢)\n完成后再进入下方分析任务。\n\n'
+const PREFETCH = '⚠️ 前置步骤(必须在分析之前完成):\n1. 运行 Bash: python scripts/prefetch_shared.py --run-id '+asOf+'_'+G+' 2>&1\n2. 运行 Bash: python scripts/portfolio_tracker.py update 2>&1\n3. Read '+SHARED+' 获取共享数据(核心信号🔴🟡🟢)\n完成后再进入下方分析任务。\n\n'
 
 const S = async (name, fn) => {
   try { const r = await fn(); if (r) return r } catch (e) {
@@ -70,36 +71,32 @@ phase('组合回测')
 const risk = await S('risk', () => agent(P('risk-portfolio','组合配置+回测验证。','Read 全链 json(舆情趋势+宏观验证+候选+技术因子+排雷);排Top'+topN+'(趋势强度+技术启动+排雷通过);5日窗口回测(胜率>=55%/均收>=3%/回撤<=8%);3项全不达标一票否决;组合分散(行业<=40%/催化同源<=50%)。', ctx), {agentType:'risk-portfolio',schema:RET,label:'risk',phase:'组合回测'}))
 ctx += ap(risk,'组合')
 
-// ── Phase 6: 综合落盘 ──
-phase('综合落盘')
-// ── Phase 5.5: 硬门过滤(代码执行,governor不可override) ──
-	phase('硬门过滤')
-	log('🔄 启动硬门过滤 — 6道硬门,代码执行,governor不可override')
-	await S('hard_gate', async () => {
-	  const cmd = 'PYTHONIOENCODING=utf-8 python scripts/hard_gate.py --run-id '+asOf+'_'+G+' 2>&1'
-	  await agent('⚠️ 只运行命令不调试。
-运行 Bash: '+cmd+'
-然后 Read '+RD+'/gate_report.json。', {label:'hard_gate', phase:'硬门过滤'})
-	  return {path: RD+'/gate_report.json', summary:'硬门过滤完成'}
-	})
-	ctx += '
-【硬门过滤】⚠️ governor不可override → '+RD+'/gate_report.json'
-	log('✅ 硬门过滤完成')
+// ── Phase 6: 硬门过滤(代码执行,governor不可override) ──
+phase('硬门过滤')
+log('🔄 硬门过滤 — 6道硬门,代码执行,governor不可override')
+await S('hard_gate', async () => {
+  const cmd = 'PYTHONIOENCODING=utf-8 python scripts/hard_gate.py --run-id '+asOf+'_'+G+' 2>&1'
+  await agent(`⚠️ 只运行命令不调试。\nBash: ${cmd}\nRead ${RD}/gate_report.json`, {label:'hard_gate', phase:'硬门过滤'})
+  return {path: `${RD}/gate_report.json`, summary:'硬门过滤完成'}
+})
+ctx += `\n【硬门过滤】⚠️ governor不可override → ${RD}/gate_report.json`
+log('✅ 硬门过滤完成')
 
-	// ── Phase 6: 综合落盘 ──
-	phase('综合落盘')
-	const report = await S('governor', () => agent('综合全链写舆情趋势预判选股报告。
+// ── Phase 7: 综合落盘 ──
+phase('综合落盘')
+log('🔄 综合落盘 — governor')
+const report = await S('governor', () => agent(`综合全链写舆情趋势预判选股报告。
 
 ## 投资目标
-'+goal+'
+${goal}
 
 ## 全链产出(用 Read 读各 json)
-'+ctx+'
-'+history+'
+${ctx}
+${history}
 
 ## 🚫 硬门约束(代码执行,不可override)
 
-**‼️ 第一步: Read '+RD+'/gate_report.json 获取硬门过滤结果。**
+**‼️ 第一步: Read ${RD}/gate_report.json 获取硬门过滤结果。**
 
 硬门由 scripts/hard_gate.py 代码执行, governor **不可推翻**:
 
@@ -133,16 +130,24 @@ phase('综合落盘')
 每项标注 ✅/⚠️/❌, ❌则剔除或降权。
 
 ## 第二步：写报告文件
-WRITE output/'+asOf+'_舆情趋势预判选股.md, 结构: 结论先行→总体策略→TopN逐一说明→风险免责
+WRITE output/${asOf}舆情趋势预判选股.md, 结构: 结论先行→总体策略→TopN逐一说明→风险免责
 头一句话: 趋势强度 + 置信度 + 回测达标情况。
 
 ## 第三步：落盘数据文件
-1. WRITE '+RD+'/final.json(envelope,data含oneLineConclusion/topN/totalPosition/confidence/keyRisks/contradictions/trends/modules)
-2. WRITE '+RD+'/_rec.json 含 {topN, confidence}
-3. Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1 (失败不影响)
-4. Bash: python scripts/notify_email.py --run-id '+asOf+'_'+G+' 2>&1
+1. WRITE ${RD}/final.json(envelope,data含oneLineConclusion/topN/totalPosition/confidence/keyRisks/contradictions/trends/modules)
+2. WRITE ${RD}/_rec.json 含 {topN, confidence}
+3. Bash: python scripts/portfolio_tracker.py record --run-id ${asOf}_${G} --json-file ${RD}/_rec.json 2>&1 (失败不影响)
+4. Bash: python scripts/notify_email.py --run-id ${asOf}_${G} 2>&1
 
 schema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。
-注意: 已移除 StructuredOutput 工具引用(W6修复), 直接按 schema 返回即可。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
+注意: 已移除 StructuredOutput 工具引用(W6修复), 直接按 schema 返回即可。`, {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
+log('✅ 综合落盘完成')
+log('🎉 Workflow 全部完成!')
+if (report?.path) {
+  log('📄 报告: '+report.path)
+}
+if (report?.topN?.length) {
+  log('📊 Top'+report.topN.length+': '+report.topN.map(t => t.code+' '+t.name).join(', '))
+}
 
 return report

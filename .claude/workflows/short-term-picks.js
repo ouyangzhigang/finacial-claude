@@ -110,6 +110,29 @@ if (passCodes) {
       log('✅ 量化引擎完成')
       ctx += '\n【量化引擎】4引擎并行(timing/sentiment/supply/capital) → factor_engine汇总 → '+RD+'/'
   } else {
+    // passCodes为空时从sector候选池降级取代码, 避免量化引擎完全跳过
+    const fallbackCodes = sector?.keyFields?.candidateCodes || ''
+    if (fallbackCodes) {
+      log('⚠️ passCodes为空, 从sector候选池降级取 '+fallbackCodes.split(',').length+' 只代码')
+      const RUN = '⚠️ 只运行命令+读结果+直接返回。不要调试。'
+      await parallel([
+        () => S('factor_engine', async () => {
+          const cmd = 'PYTHONIOENCODING=utf-8 python scripts/factor_engine.py --codes '+fallbackCodes+' --data-dir '+RD+' --json '+"'"+'{"regime":"'+regime+'"}'+"'"+' --output '+RD+'/factor_scores.json 2>&1'
+          await agent(RUN+'\nBash: '+cmd+'\nRead '+RD+'/factor_scores.json', {label:'factor_engine', phase:'量化引擎'})
+          return {path: RD+'/factor_scores.json', summary:'因子评分完成(降级代码)'}
+        }),
+        () => S('timing_engine', async () => {
+          const cmd = 'PYTHONIOENCODING=utf-8 python scripts/timing_engine.py --codes '+fallbackCodes+' --output '+RD+'/timing_scores.json 2>&1'
+          await agent(RUN+'\nBash: '+cmd+'\nRead '+RD+'/timing_scores.json', {label:'timing_engine', phase:'量化引擎'})
+          return {path: RD+'/timing_scores.json', summary:'入场评估完成(降级代码)'}
+        }),
+      ])
+      ctx += '\n【量化引擎】⚠️ 降级代码(sector候选池) → '+RD+'/'
+    } else {
+      log('⚠️ 量化引擎跳过 — 无过关票代码且无sector候选,降级到LLM评分')
+      ctx += '\n【量化引擎】⚠️ 跳过(无代码可用)'
+    }
+  }
 
 phase('硬门过滤')
 log('🔄 硬门过滤 — 6道硬门,代码执行,governor不可override')

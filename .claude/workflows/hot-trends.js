@@ -6,6 +6,7 @@ export const meta = {
     {title: '板块成分', detail: 'sector 龙头+候选'},
     {title: '技术∥排雷', detail: 'technical + fundamentals 并行'},
     {title: '组合', detail: 'risk 配置'},
+    {title: '硬门过滤', detail: '6道硬门,代码执行,governor不可override'},
     {title: '综合落盘', detail: 'governor 审查+裁决+报告+portfolio+notify'},
   ],
 }
@@ -17,10 +18,16 @@ const constraint=args.constraint||'热门板块潜力股综合推荐', topN=args
 const G='hot-trends', RD='data/runs/'+asOf+'_'+G
 const goal='热门板块/潜力股: Top'+topN+' 约束['+constraint+'] 账户'+acc+' | 基准日'+asOf
 const history = args.history || ''
-let SHARED = 'data/runs/'+asOf+'_'+G+'/_shared.json'
+const SHARED = 'data/runs/'+asOf+'_'+G+'/_shared.json'
 
 // ── 预取指令(仅 catalyst agent 执行) ──
-let PREFETCH = '⚠️ 前置步骤(必须在分析之前完成):\n1. 运行 Bash: python scripts/prefetch_shared.py --run-id '+asOf+'_'+G+' --extra hot 2>&1\n2. 运行 Bash: python scripts/portfolio_tracker.py update 2>&1\n3. Read '+SHARED+' 获取共享数据(板块/涨停池/核心信号🔴🟡🟢)\n完成后再进入下方分析任务。\n\n'
+const PREFETCH = `⚠️ 前置步骤(必须在分析之前完成):
+1. 运行 Bash: python scripts/prefetch_shared.py --run-id ${asOf}_${G} --extra hot 2>&1
+2. 运行 Bash: python scripts/portfolio_tracker.py update 2>&1
+3. Read ${SHARED} 获取共享数据(板块/涨停池/核心信号🔴🟡🟢)
+完成后再进入下方分析任务。
+
+`
 
 const S = async (name, fn) => {
   try {
@@ -76,38 +83,32 @@ const risk = await S('risk', () => agent(P('risk-portfolio','组合配置Top'+to
 ctx += ap(risk,'组合')
 log('✅ 组合配置完成 — ' + (risk?.summary || '空'))
 
-// ── Phase 5: 综合落盘 ──
-phase('综合落盘')
-log('🔄 启动综合落盘 — agent: governor (对抗审查+裁决+报告)')
-// ── Phase 4.5: 硬门过滤(代码执行,governor不可override) ──
-	phase('硬门过滤')
-	log('🔄 启动硬门过滤 — 6道硬门,代码执行,governor不可override')
-	await S('hard_gate', async () => {
-	  const cmd = 'PYTHONIOENCODING=utf-8 python scripts/hard_gate.py --run-id '+asOf+'_'+G+' 2>&1'
-	  await agent('⚠️ 只运行命令不调试。
-运行 Bash: '+cmd+'
-然后 Read '+RD+'/gate_report.json。', {label:'hard_gate', phase:'硬门过滤'})
-	  return {path: RD+'/gate_report.json', summary:'硬门过滤完成'}
-	})
-	ctx += '
-【硬门过滤】⚠️ governor不可override → '+RD+'/gate_report.json'
-	log('✅ 硬门过滤完成')
+// ── Phase 5: 硬门过滤(代码执行,governor不可override) ──
+phase('硬门过滤')
+log('🔄 硬门过滤 — 6道硬门,代码执行,governor不可override')
+await S('hard_gate', async () => {
+  const cmd = 'PYTHONIOENCODING=utf-8 python scripts/hard_gate.py --run-id '+asOf+'_'+G+' 2>&1'
+  await agent(`⚠️ 只运行命令不调试。\nBash: ${cmd}\nRead ${RD}/gate_report.json`, {label:'hard_gate', phase:'硬门过滤'})
+  return {path: `${RD}/gate_report.json`, summary:'硬门过滤完成'}
+})
+ctx += `\n【硬门过滤】⚠️ governor不可override → ${RD}/gate_report.json`
+log('✅ 硬门过滤完成')
 
-	// ── Phase 5: 综合落盘 ──
-	phase('综合落盘')
-	log('🔄 启动综合落盘 — agent: governor (对抗审查+裁决+报告)')
-	const report = await S('governor', () => agent('综合全链写热门板块潜力股报告。
+// ── Phase 6: 综合落盘 ──
+phase('综合落盘')
+log('🔄 综合落盘 — governor')
+const report = await S('governor', () => agent(`综合全链写热门板块潜力股报告。
 
 ## 投资目标
-'+goal+'
+${goal}
 
 ## 全链产出(用 Read 读各 json)
-'+ctx+'
-'+history+'
+${ctx}
+${history}
 
 ## 🚫 硬门约束(代码执行,不可override)
 
-**‼️ 第一步: Read '+RD+'/gate_report.json 获取硬门过滤结果。**
+**‼️ 第一步: Read ${RD}/gate_report.json 获取硬门过滤结果。**
 
 硬门由 scripts/hard_gate.py 代码执行, governor **不可推翻**:
 
@@ -141,17 +142,17 @@ log('🔄 启动综合落盘 — agent: governor (对抗审查+裁决+报告)')
 每项标注 ✅/⚠️/❌, ❌则剔除或降权。
 
 ## 第二步：写报告文件
-WRITE output/'+asOf+'_热门板块潜力股综合推荐.md, 结构: 结论先行→总体策略→TopN逐一说明→风险免责
+WRITE output/${asOf}_热门板块潜力股综合推荐.md, 结构: 结论先行→总体策略→TopN逐一说明→风险免责
 头一句话: 情绪温度 + 置信度 + 回测达标情况。
 
 ## 第三步：落盘数据文件
-1. WRITE '+RD+'/final.json(envelope,data含oneLineConclusion/topN/totalPosition/confidence/keyRisks/contradictions/mainThemes/modules)
-2. WRITE '+RD+'/_rec.json 含 {topN, confidence}
-3. Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1 (失败不影响)
-4. Bash: python scripts/notify_email.py --run-id '+asOf+'_'+G+' 2>&1
+1. WRITE ${RD}/final.json(envelope,data含oneLineConclusion/topN/totalPosition/confidence/keyRisks/contradictions/mainThemes/modules)
+2. WRITE ${RD}/_rec.json 含 {topN, confidence}
+3. Bash: python scripts/portfolio_tracker.py record --run-id ${asOf}_${G} --json-file ${RD}/_rec.json 2>&1 (失败不影响)
+4. Bash: python scripts/notify_email.py --run-id ${asOf}_${G} 2>&1
 
 schema 返回 {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。
-注意: 已移除 StructuredOutput 工具引用(W6修复), 直接按 schema 返回即可。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
+注意: 已移除 StructuredOutput 工具引用(W6修复), 直接按 schema 返回即可。`, {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
 log('✅ 综合落盘完成')
 log('🎉 Workflow 全部完成!')
 if (report?.path) {
