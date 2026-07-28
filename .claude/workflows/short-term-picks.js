@@ -24,6 +24,7 @@ const SHARED = 'data/runs/'+asOf+'_'+G+'/_shared.json'
 
 const PREFETCH = '⚠️ 前置步骤:\n1. Bash: python scripts/prefetch_shared.py --run-id '+asOf+'_'+G+' --extra hot 2>&1\n2. Bash: python scripts/portfolio_tracker.py update 2>&1\n3. Bash: PYTHONIOENCODING=utf-8 python scripts/regime_detector.py --output '+RD+'/regime.json 2>&1\n4. Read '+SHARED+'\n5. Read '+RD+'/regime.json\n完成后再分析。\n\n'
 
+// 公共 helper 标准实现见 .claude/workflows/_lib.js(改造5) — 改 helper 时先改 _lib.js 再同步本文件
 const S = async (name, fn) => {
   try { const r = await fn(); if (r) return r } catch (e) {
     const msg = (e?.message||String(e)).slice(0,200)
