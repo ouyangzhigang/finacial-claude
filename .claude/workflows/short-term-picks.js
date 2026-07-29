@@ -158,6 +158,16 @@ const risk = await S('risk', () => agent(P('risk-portfolio','综合评分排序+
 ctx += ap(risk,'组合')
 log('✅ 回测组合完成')
 
+phase('走势判断')
+log('🔄 走势判断 — core cli forecast(量化composite+质化偏移, 痛点6走势判断)')
+// 第三步接入: core forecasting 层 — composite 因子分 + agent 质化(catalyst/social/capital) → 概率路径
+await S('forecast', async () => {
+  const cmd = 'PYTHONIOENCODING=utf-8 python -m core forecast --run-id '+asOf+'_'+G+' --output '+RD+'/forecast_scores.json 2>&1'
+  await agent('⚠️ 只运行不调试。\nBash: '+cmd+'\nRead '+RD+'/forecast_scores.json', {label:'forecast', phase:'走势判断'})
+  return {path: RD+'/forecast_scores.json', summary:'走势判断完成(概率路径+质化偏移)'}
+})
+ctx += '\n【走势判断】core cli forecast → '+RD+'/forecast_scores.json (up/neutral/down概率+置信度+qual_bias, governor报告引用)'
+
 phase('综合落盘')
 log('🔄 综合落盘 — governor')
 const report = await S('governor', () => agent('综合全链产出写短周期选股报告+Top'+topN+'操作卡。\n\n投资目标:'+goal+'\n\n全链产出:'+ctx+'\n'+history+'\n\n🚫 硬门约束(代码执行,不可override):\n‼️ Read '+RD+'/gate_report.json 获取硬门过滤结果。\n1.否决的标的→不得入TopN\n2.降级的标的→遵守max_rank限制\n3.position_cap→仓位上限不可超过\n4.confidence_floor→置信度下限不可上调\n5.若momentum_priority→因子排名第一,不可用回测推翻\n违反→报告无效。\n\n硬约束:\n回测3项全不达标→剔出TopN\n2项不达标→仓位砍半\nTop1须回测胜率排名前列+非高位回调者\n\n对抗审查(4项):\n1.Top1回测胜率最优?\n2.Top1入场优势?\n3.催化同源超50%?\n4.社交vs基本面?\n\n写报告: WRITE output/'+asOf+'_短周期2周推荐清单.md\n落盘: 1.WRITE '+RD+'/final.json 2.WRITE '+RD+'/_rec.json 3.Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1\n返回schema: {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))

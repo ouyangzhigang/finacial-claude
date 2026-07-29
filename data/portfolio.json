@@ -266,7 +266,43 @@
       "status": "active",
       "currentChangePct": "9.99",
       "profitPct": 0.0
+    },
+    {
+      "code": "600629",
+      "name": "华建集团",
+      "recommendedAt": "20260728",
+      "recommendedPrice": null,
+      "role": "次龙头(启动)·光刻机/M&A重整",
+      "workflow": "hot-trends",
+      "confidence": "低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "002969",
+      "name": "嘉美包装",
+      "recommendedAt": "20260728",
+      "recommendedPrice": null,
+      "role": "跟风(半兑现)·中报预增+实控人变更",
+      "workflow": "hot-trends",
+      "confidence": "低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "603358",
+      "name": "华达科技",
+      "recommendedAt": "20260728",
+      "recommendedPrice": null,
+      "role": "跟风(启动)·1w不可配仅观察",
+      "workflow": "hot-trends",
+      "confidence": "低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
     }
   ],
-  "lastUpdated": "2026-07-28 19:46:44"
+  "lastUpdated": "2026-07-28 20:51:09"
 }

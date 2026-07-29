@@ -1,0 +1,69 @@
+# finacial-invest 核心包 — 行情接入/因子/回测/风控
+# 工程化地基 (P1 工程化改造) — 多人协作依赖锁定 + 工具链
+[project]
+name = "finacial-invest-core"
+version = "0.1.0"
+description = "A 股量化研究核心库 — 数据接入/因子/回测/风控, AI 编排解耦"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "finacial-invest" }]
+
+dependencies = [
+    "requests>=2.31",        # HTTP 行情接入(腾讯/东财)
+    "mootdx>=0.10",           # 通达信 TCP 7709 财务兜底
+    "pyarrow>=15.0",          # Parquet 列存落盘
+    "duckdb>=0.10.0",         # 回测时序查询
+    "structlog>=24.1",        # 规范日志(JSON 可追溯)
+    "pyyaml>=6.0",            # 配置文件
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.5.0",            # Lint + Format
+    "mypy>=1.10",             # 类型检查
+    "pytest>=8.0",            # 单测
+    "pytest-cov>=5.0",        # 覆盖率
+]
+mcp = [
+    # MCP 数据服务器(可选, 修复代理后启用)
+    "fastmcp>=2.0",
+]
+
+[project.scripts]
+core = "core.cli:main"       # 统一 CLI: core factor / core backtest / core gate ...
+
+# ─────────────── 工具链 ───────────────
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["core", "scripts", "tests"]
+
+[tool.ruff.lint]
+# E/F 基础 + I 导入排序 + UP pyupgrade + B bugbear + SIM 简化
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]   # 行长由 line-length 控, 不强制 79
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]   # 测试允许 assert False
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["core"]
+warn_unused_ignores = true
+warn_redundant_casts = true
+# 渐进式严格: 先非 strict, 覆盖全后再开
+strict_optional = true
+ignore_missing_imports = true   # mootdx/pyarrow 等无 stub
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra --strict-markers"
+markers = [
+    "slow: 标记慢测试(需网络), 可 -m 'not slow' 跳过",
+    "network: 需真实网络行情接入的测试",
+]
