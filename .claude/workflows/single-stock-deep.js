@@ -9,6 +9,15 @@ export const meta = {
   ],
 }
 
+log('🔍 DEBUG args注入检查: keys='+Object.keys(args||{}).join(',')+' | args='+JSON.stringify(args||{}).slice(0,200))
+
+// 兼容层:Workflow 的 args 可能被序列化成字符串(Object.keys 返回 0..N)而非对象。
+// 此时 args.ticker === undefined,导致单股深评目标标的丢失(agent 跑偏成 portfolio 残留)。
+// 检测并解析回对象。
+if (typeof args === 'string') {
+  try { args = JSON.parse(args); } catch (e) { args = {}; }
+}
+
 const RET = {type:'object',properties:{path:{type:'string'},summary:{type:'string'},keyFields:{type:'object'}},required:['path','summary']}
 const GOV = {type:'object',properties:{path:{type:'string'},dataPath:{type:'string'},oneLineConclusion:{type:'string'},topN:{type:'array',items:{type:'object'}},totalPosition:{type:'string'},confidence:{type:'string'},keyRisks:{type:'array',items:{type:'string'}}},required:['path','oneLineConclusion','confidence']}
 
@@ -19,7 +28,9 @@ const history = args.history || ''
 const SHARED = 'data/runs/'+asOf+'_'+G+'/_shared.json'
 
 // 预取指令(仅 macro agent 执行,创建 _shared.json)
-const PREFETCH = '⚠️ 前置步骤(必须在分析之前完成):\n1. 运行 Bash: python scripts/prefetch_shared.py --run-id '+asOf+'_'+G+' --ticker '+tk+' 2>&1\n2. 运行 Bash: python scripts/portfolio_tracker.py update 2>&1\n3. Read '+SHARED+' 获取共享市场数据(核心信号🔴🟡🟢)\n完成后再进入下方分析任务。\n\n'
+// 注:不跑 portfolio_tracker.py update —— 单股深评不涉及组合更新,且 update 会把历史推荐(含其他代码)
+// 刷新进 agent 工作环境,曾导致 agent 把目标标的 002031 跑偏成 portfolio 里的 600499(07-29 事故)。
+const PREFETCH = '⚠️ 前置步骤(必须在分析之前完成):\n1. 运行 Bash: python scripts/prefetch_shared.py --run-id '+asOf+'_'+G+' --ticker '+tk+' 2>&1\n2. Read '+SHARED+' 获取共享市场数据(核心信号🔴🟡🟢)\n完成后再进入下方分析任务。\n\n'
 
 // 通用 helper
 const S = async (name, fn) => {
@@ -33,9 +44,9 @@ const S = async (name, fn) => {
   return {path:'',summary:name+' 返回空',keyFields:{_error:'empty'}}
 }
 
-// P() 构建 agent prompt; target 参数生成「目标标的」段(非单股深评时不传)
+// P() 构建 agent prompt; target 参数生成「目标标的硬约束」段(非单股深评时不传)
 const P = (ag, task, extra, ctx, target) => {
-  const targetSec = target ? '\n\n## 目标标的\n'+target : ''
+  const targetSec = target ? '\n\n## ⚠️ 目标标的硬约束(最高优先级)\n'+target : ''
   return task+'\n\n## 投资目标\n'+goal+targetSec+'\n\n## 前序环节产出\n'+(ctx||'(本环节为起点,无前序)')+'\n\n## 你的任务\n'+extra+'\n\n## 数据落盘\n完整输出 WRITE 到 '+RD+'/'+ag+'.json,envelope:{"runId":"'+asOf+'_'+G+'","asOf":"'+asOf+'","goal":"'+G+'","agent":"'+ag+'","fetchedAt":"'+asOf+'","data":{完整输出},"summary":"一句话","keyFields":{小摘录}}\nschema 只返回 {path,summary,keyFields}。'
 }
 const ap = (r, l) => {
@@ -44,8 +55,15 @@ const ap = (r, l) => {
   return '\n【'+l+'】'+r.summary+pathInfo
 }
 
-// 目标标的字符串(传给每个 agent 的 P() 第5参数)
-const TGT = tk+' '+nm+' — 你分析的正是这只股票,所有数据查询和结论都围绕它展开。'
+// 目标标的硬约束字符串(传给每个 agent 的 P() 第5参数)
+// 07-29 事故:agent 被 portfolio_tracker 活跃列表(600499)带偏,把 002031 跑成 600499。
+// 故措辞升级为硬约束:明确锁定代码,禁止参考其他代码。
+const TGT = '你本次分析的标的严格锁定为「'+nm+'」(证券代码 '+tk+')。\n'+
+  '硬约束:\n'+
+  '1. 所有数据查询工具的 code/symbol/ticker 参数,必须且只能填 \"'+tk+'\"(或对应交易所前缀 sh'+tk+'/sz'+tk+')。\n'+
+  '2. 不得分析、参考、比较 data/portfolio.json 或 portfolio_tracker 活跃列表中的任何其他股票 —— 它们是历史推荐残留,与本次单股深评任务无关。若执行中遇到其他代码(如 update 命令的输出),一律忽略,只认 \"'+tk+'\"。\n'+
+  '3. 你的所有结论、估值、技术位、催化判断,都必须围绕 '+nm+'('+tk+') 展开。任何环节若出现其他代码,视为执行错误,立即纠正回 '+tk+'。\n'+
+  '4. keyFields.target 字段必须写 \"'+tk+' '+nm+'\",不得写任何其他代码。'
 
 // Phase 1: 4 维独立分析(并行,macro 含 prefetch,其他读 _shared.json)
 phase('独立分析')

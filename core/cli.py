@@ -114,7 +114,8 @@ def cmd_factor(args):
             for sym, s in scores.items()
         ],
         "ic_status": reg.status(),
-        "source_status": {"tencent": True, "mootdx": False},  # 简化
+        "source_status": qc.source_status(),
+        "data_link_broken": not any(qc.source_status().values()),  # 全源挂→True
     }
     _output(out, args.output)
 

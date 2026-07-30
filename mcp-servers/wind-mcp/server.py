@@ -82,9 +82,17 @@ if _SSL_NO_VERIFY:
 
 
 class CompatibleSSLAdapter(HTTPAdapter):
-    """SSL adapter enforcing TLS 1.2+ with hostname verification enabled."""
+    """SSL adapter enforcing TLS 1.2+; hostname verification disabled when WIND_SSL_NO_VERIFY=1.
+
+    必须与 _session(verify=not _SSL_NO_VERIFY)配合：verify=False 时 urllib3 会尝试
+    设 ssl_context.verify_mode=CERT_NONE，若 check_hostname 仍为 True（Python ssl 默认）
+    则抛 'Cannot set verify_mode to CERT_NONE when check_hostname is enabled'。
+    故 NO_VERIFY 时须先 check_hostname=False 再 CERT_NONE（与 ifind-mcp 一致）。"""
     def init_poolmanager(self, *args, **kwargs):
         ctx = create_urllib3_context()
+        if _SSL_NO_VERIFY:
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
         ctx.minimum_version = ssl.TLSVersion.TLSv1_2
         kwargs["ssl_context"] = ctx
         return super().init_poolmanager(*args, **kwargs)

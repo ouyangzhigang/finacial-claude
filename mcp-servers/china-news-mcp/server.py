@@ -14,6 +14,24 @@ import sys
 from datetime import datetime, timedelta
 from typing import Optional
 
+import requests
+import urllib3
+# akshare 内部 requests 默认 verify=True，本机证书链不全致东方财富 HTTPS 端点
+# SSL CERTIFICATE_VERIFY_FAILED，get_stock_news/get_market_headlines 返回空 DataFrame
+# 被 _df_to_json 当作"SSL/限流失败"。强制所有 requests 调用 verify=False 绕过证书验证
+# （MCP 服务器为独立进程，影响域可控，且数据源为公开新闻，可接受）。
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+_orig_session_request = requests.Session.request
+
+
+def _session_request_no_verify(self, *args, **kwargs):
+    self.trust_env = False  # 绕过系统代理(Whistle 8899),与 ifind/wind-mcp 一致
+    kwargs.setdefault("verify", False)
+    return _orig_session_request(self, *args, **kwargs)
+
+
+requests.Session.request = _session_request_no_verify
+
 import akshare as ak
 import pandas as pd
 

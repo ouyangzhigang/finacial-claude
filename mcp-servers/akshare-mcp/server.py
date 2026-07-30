@@ -18,6 +18,24 @@ import sys
 from datetime import date, datetime
 from typing import Any
 
+import requests
+import urllib3
+# akshare 内部 requests 默认 verify=True,本机证书链不全致 HTTPS 端点
+# (82.push2.eastmoney.com:443 等)SSL CERTIFICATE_VERIFY_FAILED,全链路返回空响应被
+# 当作"无数据"误判。强制所有 requests 调用 verify=False 绕过证书验证
+# (MCP 服务器为独立进程,影响域可控,且数据源为公开行情,可接受)。
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+_orig_session_request = requests.Session.request
+
+
+def _session_request_no_verify(self, *args, **kwargs):
+    self.trust_env = False  # 绕过系统代理(Whistle 8899),与 ifind/wind-mcp 一致
+    kwargs.setdefault("verify", False)
+    return _orig_session_request(self, *args, **kwargs)
+
+
+requests.Session.request = _session_request_no_verify
+
 import akshare as ak
 import pandas as pd
 
