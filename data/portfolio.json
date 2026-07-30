@@ -1,0 +1,65 @@
+{
+  "recommendations": [
+    {
+      "code": "601857",
+      "name": "中国石油",
+      "recommendedAt": "20260730",
+      "recommendedPrice": 11.27,
+      "role": "Top1降级lead·油气/地缘避险·防御进攻混合·live11.3%",
+      "workflow": "short-term-picks",
+      "confidence": "低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "000630",
+      "name": "铜陵有色",
+      "recommendedAt": "20260730",
+      "recommendedPrice": 6.09,
+      "role": "观察仓·铜·健康回调·live6.1%",
+      "workflow": "short-term-picks",
+      "confidence": "低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "603993",
+      "name": "洛阳钼业",
+      "recommendedAt": "20260730",
+      "recommendedPrice": 18.96,
+      "role": "staged·价格门(实测18.96,原报8.50数据错误已修正)",
+      "workflow": "short-term-picks",
+      "confidence": "低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "002258",
+      "name": "利尔化学",
+      "recommendedAt": "20260730",
+      "recommendedPrice": 16.18,
+      "role": "staged·8/1并购重组催化回踩确认",
+      "workflow": "short-term-picks",
+      "confidence": "低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "601899",
+      "name": "紫金矿业",
+      "recommendedAt": "20260730",
+      "recommendedPrice": 32.7,
+      "role": "staged/大账户·forecast最强(>25%单票门)",
+      "workflow": "short-term-picks",
+      "confidence": "低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    }
+  ],
+  "lastUpdated": "2026-07-30 17:51:43"
+}

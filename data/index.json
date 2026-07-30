@@ -1,0 +1,12 @@
+[
+  {
+    "runId": "20260730_short-term-picks",
+    "asOf": "20260730",
+    "goal": "short-term-picks",
+    "path": "output/20260730_短周期2周推荐清单.md",
+    "dataPath": "data/runs/20260730_short-term-picks/final.json",
+    "headline": "下行regime+回测全未背书+MCP全挂(G6低/≤40%)+1w手数→仅601857/000630可配,live17.4%,3 staged,无标准Top1,601857降级lead;总督修正603993价8.50→18.96改staged。置信度低。",
+    "confidence": "低",
+    "fetchedAt": "2026-07-30"
+  }
+]
