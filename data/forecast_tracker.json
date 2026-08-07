@@ -1,0 +1,764 @@
+{
+  "predictions": [
+    {
+      "code": "000725",
+      "name": "京东方A",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260731",
+      "expireDate": "20260805",
+      "basePrice": 5.51,
+      "role": "核心仓·4路全共振",
+      "position": "22%",
+      "reasoningChain": [
+        "面板存储周期向上+全球龙头",
+        "超跌-34%但176亿天量资金在场+今日未大涨=底部待点火",
+        "主力+3.76亿+控股股东增持+回购+7份机构调研+中报将兑现",
+        "PB1.52历史底+现金流9.71极佳+无雷"
+      ],
+      "runId": "20260731_future-picks_短线",
+      "verified": true,
+      "actualChangePct": 7.08,
+      "hit": true,
+      "benchBase": {
+        "sh000001": 3832.26,
+        "sz399006": 3343.96
+      },
+      "benchChangePct": 1.01,
+      "alphaPct": 6.07
+    },
+    {
+      "code": "600176",
+      "name": "中国巨石",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260731",
+      "expireDate": "20260805",
+      "basePrice": 37.84,
+      "role": "核心仓·4路全共振(手数例外)",
+      "position": "38%",
+      "reasoningChain": [
+        "电子布顺AI服务器PCB+全球产能第一+央企",
+        "超跌-47%最深但107.9亿巨量资金在场+今日未大涨",
+        "主力+19.02亿全样本最大净买+中报预增8月兑现",
+        "超跌最深+双位数成长+无雷"
+      ],
+      "runId": "20260731_future-picks_短线",
+      "verified": true,
+      "actualChangePct": 4.18,
+      "hit": true,
+      "benchBase": {
+        "sh000001": 3832.26,
+        "sz399006": 3343.96
+      },
+      "benchChangePct": 1.01,
+      "alphaPct": 3.17
+    },
+    {
+      "code": "000938",
+      "name": "紫光股份",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260731",
+      "expireDate": "20260805",
+      "basePrice": 34.89,
+      "role": "触发观察仓·3路",
+      "position": "待触发腾仓",
+      "reasoningChain": [
+        "紫光=新华三AI算力核心",
+        "超跌回调-15.83%但158.57亿巨量资金在场+今日未大涨",
+        "主力+3.21亿+重组新华三收购0722推进"
+      ],
+      "runId": "20260731_future-picks_短线",
+      "verified": true,
+      "actualChangePct": 7.51,
+      "hit": true,
+      "benchBase": {
+        "sh000001": 3832.26,
+        "sz399006": 3343.96
+      },
+      "benchChangePct": 1.01,
+      "alphaPct": 6.5
+    },
+    {
+      "code": "300229",
+      "name": "拓尔思",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260731",
+      "expireDate": "20260805",
+      "basePrice": 14.04,
+      "role": "跟风突破仓·2路",
+      "position": "14%",
+      "reasoningChain": [
+        "AI应用端今日主线+成长占优",
+        "软件开发板块龙头涨停+拓尔思AI大模型属性纯度最高",
+        "+8.33%突破幅度最大+m5+17.88%趋势最强+breakout"
+      ],
+      "runId": "20260731_future-picks_短线",
+      "verified": true,
+      "actualChangePct": 15.6,
+      "hit": true,
+      "benchBase": {
+        "sh000001": 3832.26,
+        "sz399006": 3343.96
+      },
+      "benchChangePct": 1.01,
+      "alphaPct": 14.59
+    },
+    {
+      "code": "002400",
+      "name": "省广集团",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260731",
+      "expireDate": "20260805",
+      "basePrice": 6.8,
+      "role": "跟风突破仓·2路",
+      "position": "7%",
+      "reasoningChain": [
+        "AI应用端主线+成长占优",
+        "广告营销板块涨停最密集6只+两大20cm龙头",
+        "+7.94%突破+m5+17.24%+breakout+低价6.80弹性大"
+      ],
+      "runId": "20260731_future-picks_短线",
+      "verified": true,
+      "actualChangePct": 4.41,
+      "hit": true,
+      "benchBase": {
+        "sh000001": 3832.26,
+        "sz399006": 3343.96
+      },
+      "benchChangePct": 1.01,
+      "alphaPct": 3.4
+    },
+    {
+      "code": "600089",
+      "name": "特变电工",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260803",
+      "expireDate": "20260808",
+      "basePrice": 21.21,
+      "role": "电网大盘跟风+业绩反转",
+      "position": 18,
+      "reasoningChain": [
+        "A",
+        "B",
+        "E",
+        "宏观"
+      ],
+      "runId": "20260803_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "hit": null,
+      "benchBase": {
+        "sh000001": 3809.66,
+        "sz399006": 3302.55
+      }
+    },
+    {
+      "code": "002015",
+      "name": "协鑫能科",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260803",
+      "expireDate": "20260808",
+      "basePrice": 15.67,
+      "role": "电力机构锁仓+催化兑现",
+      "position": 14,
+      "reasoningChain": [
+        "B",
+        "D",
+        "A",
+        "宏观"
+      ],
+      "runId": "20260803_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "hit": null,
+      "benchBase": {
+        "sh000001": 3809.66,
+        "sz399006": 3302.55
+      }
+    },
+    {
+      "code": "600522",
+      "name": "中天科技",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260803",
+      "expireDate": "20260808",
+      "basePrice": 28.62,
+      "role": "核聚变最强接力天量",
+      "position": 13,
+      "reasoningChain": [
+        "B",
+        "A",
+        "宏观"
+      ],
+      "runId": "20260803_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "hit": null,
+      "benchBase": {
+        "sh000001": 3809.66,
+        "sz399006": 3302.55
+      }
+    },
+    {
+      "code": "300605",
+      "name": "新开普",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260803",
+      "expireDate": "20260808",
+      "basePrice": 10.29,
+      "role": "AI应用建仓未拉升洗盘",
+      "position": 18,
+      "reasoningChain": [
+        "B",
+        "D",
+        "宏观"
+      ],
+      "runId": "20260803_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "hit": null,
+      "benchBase": {
+        "sh000001": 3809.66,
+        "sz399006": 3302.55
+      }
+    },
+    {
+      "code": "002126",
+      "name": "银轮股份",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260803",
+      "expireDate": "20260808",
+      "basePrice": 38.06,
+      "role": "智驾超跌估值修复",
+      "position": 12,
+      "reasoningChain": [
+        "E",
+        "D",
+        "宏观"
+      ],
+      "runId": "20260803_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "hit": null,
+      "benchBase": {
+        "sh000001": 3809.66,
+        "sz399006": 3302.55
+      }
+    },
+    {
+      "code": "300499",
+      "name": "高澜股份",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260804",
+      "expireDate": "20260809",
+      "basePrice": 27.23,
+      "benchBase": {
+        "sh000001": 3830.28,
+        "sz399006": 3499.55
+      },
+      "role": "液冷接力首推(3路共振)",
+      "position": "20%",
+      "reasoningChain": [],
+      "runId": "20260804_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "603533",
+      "name": "掌阅科技",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260804",
+      "expireDate": "20260809",
+      "basePrice": 22.78,
+      "benchBase": {
+        "sh000001": 3830.28,
+        "sz399006": 3499.55
+      },
+      "role": "AI应用低价二线(3路共振)",
+      "position": "15%",
+      "reasoningChain": [],
+      "runId": "20260804_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "688106",
+      "name": "金宏气体",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260804",
+      "expireDate": "20260809",
+      "basePrice": 26.73,
+      "benchBase": {
+        "sh000001": 3830.28,
+        "sz399006": 3499.55
+      },
+      "role": "电子特气超跌建仓(3路共振)",
+      "position": "15%",
+      "reasoningChain": [],
+      "runId": "20260804_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002315",
+      "name": "焦点科技",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260804",
+      "expireDate": "20260809",
+      "basePrice": 27.75,
+      "benchBase": {
+        "sh000001": 3830.28,
+        "sz399006": 3499.55
+      },
+      "role": "AI应用+业绩双护城河(3路共振)",
+      "position": "12%",
+      "reasoningChain": [],
+      "runId": "20260804_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "601360",
+      "name": "三六零",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260804",
+      "expireDate": "20260809",
+      "basePrice": 9.69,
+      "benchBase": {
+        "sh000001": 3830.28,
+        "sz399006": 3499.55
+      },
+      "role": "AI应用超低价底部吸筹(2路共振)",
+      "position": "8%",
+      "reasoningChain": [],
+      "runId": "20260804_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "000612",
+      "name": "焦作万方",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260805",
+      "expireDate": "20260810",
+      "basePrice": 11.53,
+      "benchBase": {
+        "sh000001": 3873.56,
+        "sz399006": 3519.86
+      },
+      "role": "小金属接力+中报预增·4路共振首推",
+      "position": "23%",
+      "reasoningChain": [],
+      "runId": "20260805_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "603386",
+      "name": "骏亚科技",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260805",
+      "expireDate": "20260810",
+      "basePrice": 12.41,
+      "benchBase": {
+        "sh000001": 3873.56,
+        "sz399006": 3519.86
+      },
+      "role": "PCB接力+资金分最高",
+      "position": "24.8%",
+      "reasoningChain": [],
+      "runId": "20260805_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002425",
+      "name": "凯撒文化",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260805",
+      "expireDate": "20260810",
+      "basePrice": 3.47,
+      "benchBase": {
+        "sh000001": 3873.56,
+        "sz399006": 3519.86
+      },
+      "role": "中报扭亏+大单建仓+AI应用·须盘中复核",
+      "position": "15-20%待复核",
+      "reasoningChain": [],
+      "runId": "20260805_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "300364",
+      "name": "中文在线",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260805",
+      "expireDate": "20260810",
+      "basePrice": 25.93,
+      "benchBase": {
+        "sh000001": 3873.56,
+        "sz399006": 3519.86
+      },
+      "role": "AI应用+传媒接力·最严重滞后(观察仓)",
+      "position": "观察",
+      "reasoningChain": [],
+      "runId": "20260805_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "600522",
+      "name": "中天科技",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260805",
+      "expireDate": "20260810",
+      "basePrice": 31.74,
+      "benchBase": {
+        "sh000001": 3873.56,
+        "sz399006": 3519.86
+      },
+      "role": "估值修复+业绩拐点+光通信接力(观察仓)",
+      "position": "观察",
+      "reasoningChain": [],
+      "runId": "20260805_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002805",
+      "name": "丰元股份",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260806",
+      "expireDate": "20260811",
+      "basePrice": 18.22,
+      "benchBase": {
+        "sh000001": 3876.52,
+        "sz399006": 3505.87
+      },
+      "role": "固态电池困境反转-3路共振首选",
+      "position": 25,
+      "reasoningChain": [],
+      "runId": "20260806_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002354",
+      "name": "天娱数科",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260806",
+      "expireDate": "20260811",
+      "basePrice": 8.01,
+      "benchBase": {
+        "sh000001": 3876.52,
+        "sz399006": 3505.87
+      },
+      "role": "AI算力-机构建仓未拉升",
+      "position": 25,
+      "reasoningChain": [],
+      "runId": "20260806_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "000815",
+      "name": "美利云",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260806",
+      "expireDate": "20260811",
+      "basePrice": 18.08,
+      "benchBase": {
+        "sh000001": 3876.52,
+        "sz399006": 3505.87
+      },
+      "role": "AI算力-机构4家建仓洗盘回踩",
+      "position": 20,
+      "reasoningChain": [],
+      "runId": "20260806_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002407",
+      "name": "多氟多",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260806",
+      "expireDate": "20260811",
+      "basePrice": 33.56,
+      "benchBase": {
+        "sh000001": 3876.52,
+        "sz399006": 3505.87
+      },
+      "role": "固态电池-六氟周期反转估值修复",
+      "position": 15,
+      "reasoningChain": [],
+      "runId": "20260806_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002549",
+      "name": "凯美特气",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260806",
+      "expireDate": "20260811",
+      "basePrice": 14.08,
+      "benchBase": {
+        "sh000001": 3876.52,
+        "sz399006": 3505.87
+      },
+      "role": "电子特气-最低价超跌+温和回升",
+      "position": 15,
+      "reasoningChain": [],
+      "runId": "20260806_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002414",
+      "name": "高德红外",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260806",
+      "expireDate": "20260811",
+      "basePrice": 13.49,
+      "benchBase": {
+        "sh000001": 3878.92,
+        "sz399006": 3511.47
+      },
+      "role": "军工电子最强跟风补涨",
+      "position": "15%",
+      "reasoningChain": [
+        "军工电子nextSector接力",
+        "板块龙头涨停个股下跌最强跟风补涨"
+      ],
+      "runId": "20260806_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "000400",
+      "name": "许继电气",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260807",
+      "expireDate": "20260812",
+      "basePrice": 22.74,
+      "benchBase": {
+        "sh000001": 3919.51,
+        "sz399006": 3577.2
+      },
+      "role": "特高压·突破前夜(首选,Top1)",
+      "position": "1手100股=23%",
+      "reasoningChain": [
+        "因为[板块轮动A]能源局《电力安全生产十五五行动计划》今日11:25刚印发(特高压组件),涨停池61只中无1只电力股→预判政策催化完全未price-in,滞后1-3日发酵,特高压为下个接力板块确定性最高",
+        "因为[资金建仓B]许继m20+12.07%(20日资金持续进场)但m5-0.26%(近5日未透支)+rng10=0.031(全样本最窄振幅)+ma5>ma10>ma20均线多头→预判资金已建仓待拉升,缩量收敛=突破前夜洗盘末端",
+        "因为[形态回踩C]setup82三信号(回踩缩量企稳/近5日未透支/区间收敛待变盘)+回调深度-6.19%(健康回调-3~-8%)+站上MA20→预判回踩MA20企稳的将启动买点,非已涨透支",
+        "因为[催化将兑现D]催化今日刚发未兑现+形态突破前夜+资金进场未拉升三重共振→预判[许继电气]未来1-3日有上涨潜力,政策发酵+突破23.5即触发",
+        "风险:今日缩量(volRatio1.07)+capital_score40中性=资金今日未主动进场,主力净流入endpoint SSL挂以形态代理;须收盘复核MA20(22.01)支撑不破,次日放量破23.5确认突破"
+      ],
+      "runId": "20260807_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002020",
+      "name": "京新药业",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260807",
+      "expireDate": "20260812",
+      "basePrice": 14.11,
+      "benchBase": {
+        "sh000001": 3919.51,
+        "sz399006": 3577.2
+      },
+      "role": "创新药·setup满分跟风补涨",
+      "position": "1手100股=14%(2手28%超25%故1手)",
+      "reasoningChain": [
+        "因为[板块轮动A]化学制药主线今日6只涨停但京新今日仅+3.37%(未涨停相对滞涨)→预判龙头涨停后跟风票补涨,主线顺风已确认",
+        "因为[形态回踩C]setup100满分(全样本唯一5信号全中)+m5仅+3.45%(<5%未透支)+m20-1.47%(底部区间)+回调深度-8.67%(健康回调)+贴近MA20(14.11≈ma20 14.03)+区间收敛rc0.41+回调量比0.66缩量→预判回踩MA20缩量企稳的将启动买点",
+        "因为[催化主线D]创新药为macro双确认主线(医保谈判预期+中报预增8/15截止+估值低位+热度11只涨停)→预判主线持续发酵,滞涨票跟风补涨",
+        "因为[板块轮动A+形态回踩C+催化主线D]三路共振→预判[京新药业]未来1-5日有跟风补涨潜力,区间变盘向上",
+        "风险:amt20 2.95亿偏薄+量比0.73地量+capital_score40中性→若催化未至可能继续横盘蓄势;须收盘复核MA20(14.03)支撑不破"
+      ],
+      "runId": "20260807_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "601179",
+      "name": "中国西电",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260807",
+      "expireDate": "20260812",
+      "basePrice": 13.99,
+      "benchBase": {
+        "sh000001": 3919.51,
+        "sz399006": 3577.2
+      },
+      "role": "特高压·低价高流动性",
+      "position": "1手100股=14%",
+      "reasoningChain": [
+        "因为[板块轮动A]中国西电为特高压一次设备/GIS龙头,m5+4.87%/m20+4.25%温和上行但今日-0.29%→预判资金持续进场未拉升,属接力集群",
+        "因为[形态回踩C]setup82三信号+回调深度-3.98%(健康回调)+站上MA20(13.99>ma20 13.15)+区间收敛rc0.52强收敛→预判回踩MA20支撑企稳的将启动买点",
+        "因为[催化将兑现D]能源局政策今日11:25刚发(特高压一次设备),涨停池无电力股=未price-in,滞后1-3日发酵→预判随政策发酵补涨",
+        "因为[流动性+低价]amt20达24.94亿(pass列表最优流动性)+价格13.99元(1w可买1手)→预判1w账户可买可卖流动性适配最佳",
+        "因为[板块轮动A+形态回踩C+催化将兑现D]三路共振+流动性最优→预判[中国西电]未来1-3日有补涨潜力",
+        "风险:回调量比1.11微放量非纯缩量+above_ma5假(跌破MA5)+capital_score60中性偏多→若MA20(13.15)支撑失守则破位,须收盘复核"
+      ],
+      "runId": "20260807_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "600406",
+      "name": "国电南瑞",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260807",
+      "expireDate": "20260812",
+      "basePrice": 24.12,
+      "benchBase": {
+        "sh000001": 3919.51,
+        "sz399006": 3577.2
+      },
+      "role": "特高压·绝对龙头(组合B列reserve,组合A纳入)",
+      "position": "组合B:reserve待轮动/组合A:1手=24%(forced)",
+      "reasoningChain": [
+        "因为[板块轮动A]国电南瑞为电力自动化/特高压绝对龙头,m20+9.44%(20日资金进场)但m5-0.94%(近5日回调末段未透支)+今日-0.21%→预判资金建仓后洗盘待拉升",
+        "因为[形态回踩C]setup82+底部结构距低仅3.17%(全样本最纯底部企稳)+区间收敛rc0.58强收敛+回调深度-4.81%(健康回调)+站上MA20→预判回踩MA20缩量企稳的将启动买点,底部结构最纯",
+        "因为[催化将兑现D]能源局政策今日刚发(电力芯片/特高压组件),涨停池无电力股=未price-in→预判政策发酵1-3日内领涨(绝对龙头地位)",
+        "因为[板块轮动A+形态回踩C+催化将兑现D]三路共振+龙头地位→预判[国电南瑞]未来1-3日有补涨潜力,政策兑现时领涨",
+        "组合相关性裁决:国电南瑞分86>中孚分72但组合B被剔→非信号弱,纯因3只特高压同持=61%超行业≤40%+催化同源≤50%,100股最小手(1手=24%)无法降配,符合'组合风控主导→替换次高分'纪律,列reserve待许继/中国西电兑现后轮动切入",
+        "风险:above_ma5假(跌破MA5)+uniformity0.2(5日仅1天涨,动量均匀度低)+capital_score50中性→须确认企稳,收盘复核MA20(23.61)支撑"
+      ],
+      "runId": "20260807_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "600026",
+      "name": "中远海能",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260807",
+      "expireDate": "20260812",
+      "basePrice": 17.71,
+      "benchBase": {
+        "sh000001": 3919.51,
+        "sz399006": 3577.2
+      },
+      "role": "油运·油价接力",
+      "position": "1手100股=18%",
+      "reasoningChain": [
+        "因为[板块轮动A]上海原油主力日内+5%但涨停池61只无石化/油运股→预判油价催化未在现货股兑现,油运滞后1-2日接力(macro预判锚定)",
+        "因为[资金建仓B]中远海能m20+15.07%(20日资金进场)但今日仅+1.43%温和未大涨+ma5>ma10>ma20均线多头→预判油运资金已进场未拉升",
+        "因为[形态回踩C]setup63+m5+4.98%(<5%未透支)+贴近上轨待突破+缩量蓄势(volRatio0.87)→预判贴近上轨待突破的将启动形态(setup较弱故止损较紧)",
+        "因为[催化将兑现D]油价+5%供给冲击+VLCC运价预期+油价共振→预判[中远海能]未来1-2日有油运接力补涨潜力",
+        "风险:volRatio0.87缩量+capital_score55中性偏多=资金今日未明显进场,油价催化若次日被证伪(期货回落)则回落;油运弹性依赖油价持续+运价非纯政策催化;setup63较弱故止损17.20较紧,须收盘复核油价持续"
+      ],
+      "runId": "20260807_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    }
+  ],
+  "lastUpdated": "2026-08-07 12:10:30",
+  "stats": {
+    "totalPredictions": 36,
+    "verified": 5,
+    "hits": 5,
+    "hitRate": 100.0,
+    "avgAlpha": 6.75,
+    "benchChange": 2.28
+  }
+}

@@ -237,6 +237,16 @@ def main():
     rank_data = fetch_rank("changepercent", 50)
     market_data = fetch_market_overview()
 
+    # ── 第三步b: 国际形势快照(隔夜美股+大宗, 走 global_snapshot.py) ──
+    # 轻量增强:为 macro-strategist 提供国际传导路径的实证数据(非新闻拼凑)
+    global_snap = {}
+    try:
+        from global_snapshot import build_snapshot
+        global_snap = build_snapshot()
+    except Exception as e:
+        sys.stderr.write(f"[prefetch] global_snapshot 失败: {e}\n")
+        global_snap = {"_error": str(e)[:200]}
+
     # ── 合并输出 _shared.json ──
     shared = {
         "runId": args.run_id,
@@ -253,6 +263,8 @@ def main():
         # 来自 cn_fetch.py / sector_data.py
         "rankChangePct": rank_data,
         "marketBreadth": market_data,
+        # 来自 global_snapshot.py (隔夜美股三大指数+大宗商品+对A股传导路径)
+        "globalSnapshot": global_snap,
     }
 
     elapsed = round(time.time() - t0, 1)

@@ -21,6 +21,9 @@ argument-hint: "[目标关键词+参数,如:短周期 2周 账户1w | 600519 深
 | 热门/板块/热点/潜力 | `hot-trends` | — | constraint, topN, account |
 | 体检/复盘/持仓 | `portfolio-review` | holdings:[{code,shares,cost}] | account |
 | 舆情/趋势/预判 | `sentiment-trend-picks` | keyword 或 trend | topN, account |
+| **未来/预判/短线/波段/中线/预测** | `future-picks` | — | topN, account, horizon(短线/波段/中线), riskPref, position |
+
+> ⭐ **future-picks 是全新预判型工作流**(2026-07-31 新建):不是当日排行榜,是"今天分析→预测未来N天将涨"的票,推理链驱动(因为A→B→C→D→预判E将涨),含未来催化日历+板块轮动接力+操作卡+跟踪兑现。**用户要"涨幅最高/最具潜力/未来"时优先用这个**,而非旧的 short-term-picks(当日选股)。
 
 > ⚠️ **周期下限硬约束**:短周期目标解析出投资周期 < 5 个交易日(2日/3日/隔日)时,workflow 内会拒绝选股,降级日内跟踪简报(只给观察位,不给买入区间/仓位)。
 > ⚠️ **缺失必填参数**(如单股的 ticker、体检的 holdings)→ 先向用户追问,不臆测。
@@ -38,6 +41,11 @@ argument-hint: "[目标关键词+参数,如:短周期 2周 账户1w | 600519 深
 - `舆情 AI算力` → `{asOf:"<今天>", keyword:"AI算力", topN:5, account:"1w"}`
 - `热门板块 Top8` → `{asOf:"<今天>", constraint:"热门板块潜力股综合推荐", topN:8, account:"1w"}`
 - `超短 1日 打板 账户1w` → `{asOf:"<今天>", topN:3, account:"1w", riskPref:"积极"}`
+- `未来 波段 账户1w` → `{asOf:"<今天>", topN:5, account:"1w", horizon:"波段", riskPref:"稳健偏积极", position:"无持仓"}`
+- `短线 预判 Top3` → `{asOf:"<今天>", topN:3, account:"1w", horizon:"短线", riskPref:"积极", position:"无持仓"}`
+- `中线 预测 账户1w` → `{asOf:"<今天>", topN:5, account:"1w", horizon:"中线", riskPref:"稳健", position:"无持仓"}`
+
+> ⭐ **future-picks 调用优先用 `scriptPath` 指向源脚本**(避免 name 模式缓存):`Workflow({scriptPath:"E:/finacial-invest/.claude/workflows/future-picks.js", args:{...}})`。args 会被序列化成字符串,脚本顶部已加 `if(typeof args==='string') args=JSON.parse(args)` 兼容层。
 
 > ⚠️ **超短周期特殊约束**: 超短选股仅适用于交易时段(09:30-15:00)。尾盘(14:30-15:00)买入封板票, 次日开盘冲高出。市场温度<30°时拒绝选股。不看基本面, 核心看封板质量+资金流+舆情+龙虎榜。
 

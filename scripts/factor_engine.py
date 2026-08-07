@@ -27,8 +27,11 @@ from cn_fetch import kline as _kline, factors as _cn_factors
 # ════════════════════════════════════════════
 # 基础权重 (旧版七维作为起点)
 # ════════════════════════════════════════════
+# T7.1/T7.2: 降低 momentum(已涨)权重, 加 setup(将涨信号)权重
+# 病根:旧 momentum 0.22 最高→选出已涨透支票;现 momentum 降 + setup 加→倾向将启动票
 BASE_WEIGHTS = {
-    'momentum':     0.22,  # 技术动量
+    'momentum':     0.13,  # 技术动量(已涨)——降低,避免选已透支票
+    'setup':         0.17,  # T7.2 将涨信号(回踩缩量企稳/蓄势)——新加,倾向将启动
     'capital':      0.18,  # 资金推动
     'sentiment':    0.05,  # 市场情绪(封板率等, market_radar)
     'social':       0.10,  # 社交舆情热度(sentiment_engine)
@@ -178,6 +181,54 @@ def compute_kline_factors(symbol: str, datalen: int = 60, factors_cache: Optiona
     v15_prior = sum(vols[-20:-5]) / 15 if len(vols) >= 20 else v5_recent
     pullback_volume = v5_recent / max(v15_prior, 1) if v15_prior > 0 else 1.0
 
+    # ── 将涨信号(蓄势待涨分) ──
+    # 病根:旧 momentum 只看"已涨"(m5/m10/m20),选出的是当日已涨停追不进的票。
+    # 将涨信号:回踩缩量企稳 + 蓄势待突破 + 区间收敛 + 底部结构
+    # setup_score 越高 = 越接近"将启动未启动"的买点,非"已涨完"
+
+    # 区间收敛度:近10日振幅 / 前10日振幅, <1 = 收敛 = 蓄势待变盘
+    high_10d = max(highs[-10:]) if len(highs) >= 10 else max(highs)
+    low_10d = min(lows[-10:]) if len(lows) >= 10 else min(lows)
+    range_10d = (high_10d - low_10d) / low_10d * 100 if low_10d > 0 else 0
+    high_10d_prior = max(highs[-20:-10]) if len(highs) >= 20 else high_10d
+    low_10d_prior = min(lows[-20:-10]) if len(lows) >= 20 else low_10d
+    range_10d_prior = (high_10d_prior - low_10d_prior) / low_10d_prior * 100 if low_10d_prior > 0 else 1
+    range_contraction = range_10d / max(range_10d_prior, 0.1) if range_10d_prior > 0 else 1.0
+
+    # 底部结构:当前价贴近20日低点(低位企稳,非破位下跌)
+    near_20d_low = (last['close'] - low_10d) / low_10d * 100 if low_10d > 0 else 0  # 距低点幅度
+
+    setup_score = 50  # 基线
+    setup_signals = []  # 记录具体信号,供报告推理链使用
+    # 回踩缩量企稳加分(深度回调-5%~-15% 且缩量)
+    if pullback_depth is not None and -15 <= pullback_depth <= -3:
+        setup_score += 15  # 健康回调深度
+        setup_signals.append('回踩缩量企稳')
+        if pullback_volume < 0.8:
+            setup_score += 10  # 缩量回调=主力未出逃
+            setup_signals.append('缩量回调主力未出逃')
+    # 站稳MA20加分(回踩到MA20附近企稳,非破位)
+    if ma20 > 0 and abs(last['close'] - ma20) / ma20 < 0.02:
+        setup_score += 10  # 贴近MA20=回踩买点
+        setup_signals.append('贴近MA20回踩买点')
+    # 未大涨加分(当日/近期未透支,有上涨空间)——配合G9门,未涨的票才有潜力
+    if m5 is not None and m5 < 5:
+        setup_score += 5  # 近5日未大涨,有启动空间
+        setup_signals.append('近5日未透支有启动空间')
+    # 蓄势待突破(区间收敛+贴近20日高点)
+    if pullback_depth is not None and -3 <= pullback_depth <= 0:
+        setup_score += 8  # 贴近上轨待突破
+        setup_signals.append('贴近上轨待突破')
+    # 区间收敛待变盘(近10日振幅明显小于前10日)
+    if range_contraction < 0.7:
+        setup_score += 12  # 收敛=蓄势待变盘,将选择方向
+        setup_signals.append('区间收敛待变盘')
+    # 底部结构企稳(低位贴近20日低点但未破位,且有企稳迹象)
+    if 0 <= near_20d_low < 3 and m5 is not None and m5 > -2:
+        setup_score += 10  # 低位企稳将反弹
+        setup_signals.append('底部结构企稳')
+    setup_score = max(0, min(100, setup_score))
+
     # ── 流动性因子 ──
     turnover_approx = (v20 * 100 * last['close']) / 1e8  # 粗略估算日均成交额(亿)
     volume_ratio = v5 / max(v20, 1) if v20 > 0 else 1.0
@@ -208,6 +259,11 @@ def compute_kline_factors(symbol: str, datalen: int = 60, factors_cache: Optiona
         'pullback_depth': round(pullback_depth, 2),
         'pullback_volume': round(pullback_volume, 2),
         'high_20d': round(high_20d, 2),
+        # T7.2 将涨信号(蓄势待涨分):回踩缩量企稳+贴近MA20+未透支,高=将启动非已涨
+        'setup_score': round(setup_score, 2),
+        'setup_signals': setup_signals,  # 具体将涨信号清单,供报告推理链使用
+        'range_contraction': round(range_contraction, 2),  # 区间收敛度<0.7=待变盘
+        'near_20d_low_pct': round(near_20d_low, 2),  # 距20日低点幅度
         # 流动性
         'turnover_yi': round(turnover_approx, 2),
         # P0-2: 单位自检 — amt20 与 turnover_yi 应同量级,悬殊则单位异常
@@ -254,6 +310,10 @@ def compute_composite_factors(kline_factors: dict, llm_factors: dict = None) -> 
     amt = kf.get('amt20_yi', 0) or 0
     vr = kf.get('volume_ratio', 1) or 1
     liq_score = min(100, amt * 10)  # 1亿=10分, 10亿=100分
+
+    # 8. T7.2 将涨信号因子(蓄势待涨分):回踩缩量企稳+贴近MA20+未透支
+    # 与 momentum(已涨)互补:setup 高=将启动未启动,momentum 高=已涨透支
+    raw['setup'] = kf.get('setup_score', 50) or 50
     if 0.8 <= vr <= 3:
         liq_score = min(100, liq_score + 20)  # 量比健康加分
     raw['liquidity'] = liq_score
@@ -278,6 +338,7 @@ def compute_composite_factors(kline_factors: dict, llm_factors: dict = None) -> 
     # K线维度: 有有效K线数据视为可用
     data_availability = {}
     data_availability['momentum'] = kf.get('m5') is not None or (kf.get('momentum_score', 0) or 0) != 0
+    data_availability['setup'] = (kf.get('setup_score', 0) or 0) != 0  # T7.2
     data_availability['liquidity'] = (kf.get('amt20_yi') or 0) > 0
     # 外部JSON维度: 键存在且非None视为有真实数据(默认50返回不算)
     for dim, key in [('capital', 'capital_score'), ('sentiment', 'sentiment_score'),

@@ -93,6 +93,18 @@ GATES = {
         "action": "reject",
         "check": lambda st: st.get("backtest_verdict", "") == "rejected" and (st.get("sample_count", 0) or 0) >= 20,
         "check_warn": lambda st: st.get("backtest_verdict", "") == "rejected" and 0 <= (st.get("sample_count", 0) or 0) < 20,
+        # 进攻模式(aggressive):回测证伪不踢出,改高风险观察仓——让高弹性票(回测回撤大但动量强)能进TopN
+        # 根因:高潜力=高波动=回测回撤大=被证伪踢出,导致TopN只剩防御票(银行/石油)。进攻模式破此矛盾。
+        "aggressive_action": "downgrade_not_top1",
+        "aggressive_desc": "进攻模式:回测rejected不否决→降级高风险观察仓(可入TopN不排Top1,须严止损)",
+    },
+    "G9_当日涨停": {
+        # T7.3: 当日已涨停/封板/大涨的票买不进或追高风险,不进TopN可执行仓
+        # 病根:7-31推鼎捷数智等当日涨停票,用户买不进,称"废物"
+        "desc": "当日pctToday>=9.5(涨停/封板)→不可买入·剔除TopN; pctToday>=7(大涨)→降级观察须T+1回调",
+        "action": "reject",
+        "check": lambda st: (st.get("pctToday") is not None and st.get("pctToday") >= 9.5),
+        "check_warn": lambda st: (st.get("pctToday") is not None and 7 <= st.get("pctToday") < 9.5),
     },
 }
 
@@ -126,6 +138,34 @@ def load_factor_scores(data_dir):
                 "rank": i,
                 "name": s.get("name", ""),
             }
+    return result
+
+
+def load_technical_quotes(data_dir):
+    """加载 technical-liquidity 的当日行情 → {code: {pctToday, price, limit_up}}
+    T7.3: 用于 G9 门过滤当日已涨停/封板/大涨的票(买不进/追高风险)。
+    """
+    path = os.path.join(data_dir, "technical-liquidity.json")
+    data = load_json(path)
+    if not data:
+        return {}
+    factors = data.get("data", {}).get("factors", [])
+    if not isinstance(factors, list):
+        return {}
+    result = {}
+    for s in factors:
+        code = str(s.get("code", "")).replace("sh", "").replace("sz", "")
+        if not code:
+            continue
+        pct = s.get("pctToday")
+        if pct is None:
+            pct = s.get("maxGain")  # 兜底
+        result[code] = {
+            "pctToday": pct,
+            "price": s.get("price"),
+            "limit_up": (pct is not None and pct >= 9.5),  # 涨停/封板(含ST 5%则需另判,这里保守9.5)
+            "name": s.get("name", ""),
+        }
     return result
 
 
@@ -386,6 +426,7 @@ def merge_stock_data(data_dir):
     fundamentals = load_fundamentals(data_dir)
     capital = load_capital_scores(data_dir)
     backtest = load_backtest_results(data_dir)
+    quotes = load_technical_quotes(data_dir)  # T7.3: 当日涨跌幅,用于G9
 
     # 收集所有代码
     all_codes = set()
@@ -396,6 +437,7 @@ def merge_stock_data(data_dir):
     all_codes.update(fundamentals.keys())
     all_codes.update(capital.keys())
     all_codes.update(backtest.keys())
+    all_codes.update(quotes.keys())
 
     stocks = {}
     for code in all_codes:
@@ -407,18 +449,22 @@ def merge_stock_data(data_dir):
         st.update(fundamentals.get(code, {}))
         st.update(capital.get(code, {}))
         st.update(backtest.get(code, {}))
+        st.update(quotes.get(code, {}))  # T7.3: pctToday/limit_up
         stocks[code] = st
 
     return stocks
 
 
-def apply_gates(stocks, mcp_status, data_dir=''):
-    """对每只股票逐票执行硬门检查"""
+def apply_gates(stocks, mcp_status, data_dir='', mode='normal'):
+    """对每只股票逐票执行硬门检查。
+    mode: 'normal'(默认,回测证伪踢出) | 'aggressive'(进攻模式,回测证伪降级观察仓,保留高弹性票)
+    """
     results = {}
     system_flags = {
         "mcp_status": mcp_status,
         "confidence_floor": "中",
         "position_cap": 0.70,
+        "mode": mode,
     }
 
     # G6: 系统级数据降级
@@ -578,18 +624,39 @@ def apply_gates(stocks, mcp_status, data_dir=''):
         g8_reject = GATES["G8_回测"]["check"](st)  # rejected AND sample≥20
         g8_warn = GATES["G8_回测"].get("check_warn", lambda s: False)(st)  # rejected AND sample<20
         if g8_reject:
-            gates_failed.append(f"G8: backtest={st.get('backtest_verdict','?')} sample={st.get('sample_count',0)} → {GATES['G8_回测']['desc']}")
-            status = "reject"
+            # 进攻模式(aggressive):回测证伪不踢出,改高风险观察仓——保留高弹性票进TopN
+            # (根因:高潜力=高波动=回测回撤大=被证伪,致TopN只剩防御票。进攻模式破此矛盾)
+            if mode == "aggressive":
+                gates_failed.append(f"G8(进攻模式): backtest=rejected sample={st.get('sample_count',0)} → 降级高风险观察仓不否决({GATES['G8_回测']['aggressive_desc']})")
+                if status == "ok":
+                    status = "downgrade_not_top1"
+                    max_rank = 3  # 可入TopN但不排Top1, 须严止损
+            else:
+                gates_failed.append(f"G8: backtest={st.get('backtest_verdict','?')} sample={st.get('sample_count',0)} → {GATES['G8_回测']['desc']}")
+                status = "reject"
         elif g8_warn:
             gates_failed.append(f"G8(warn): backtest=rejected sample={st.get('sample_count',0)}<20 → 样本不足降级不否决(改造1)")
             if status == "ok":
                 status = "downgrade_not_top1"
                 max_rank = 3  # 样本不足不否决, 仅限Top3后
 
+        # G9: 当日涨停/封板/大涨(T7.3)
+        # 病根:推当日已涨停票(鼎捷数智等),用户买不进。当日pctToday>=9.5→剔出TopN;7-9.5→降级观察
+        g9_reject = GATES["G9_当日涨停"]["check"](st)  # pctToday>=9.5 涨停/封板
+        g9_warn = GATES["G9_当日涨停"].get("check_warn", lambda s: False)(st)  # 7<=pct<9.5 大涨
+        if g9_reject:
+            gates_failed.append(f"G9: pctToday={st.get('pctToday','?')} → {GATES['G9_当日涨停']['desc']}")
+            status = "reject"  # 涨停/封板买不进,直接剔出TopN
+        elif g9_warn:
+            gates_failed.append(f"G9(warn): pctToday={st.get('pctToday','?')} 大涨未封板 → 降级观察须T+1回调,不追高")
+            if status == "ok":
+                status = "downgrade_not_top1"
+                max_rank = 3  # 大涨票可入TopN但不排Top1,须T+1回调买
+
         # 改造2: 否决预算——单只票最多1个主否决, 其余否决门记为关联警示
         # (避免一只票被G1+G4+G8三连否决的视觉过度, 取最严重为主否决)
         if status == "reject":
-            veto_prefixes = ("G1:", "G2:", "G4:", "G8:")
+            veto_prefixes = ("G1:", "G2:", "G4:", "G8:", "G9:")
             veto_idxs = [i for i, g in enumerate(gates_failed)
                          if g.startswith(veto_prefixes) and "(warn)" not in g and "(关联)" not in g]
             if len(veto_idxs) > 1:
@@ -654,6 +721,8 @@ def main():
     p = argparse.ArgumentParser(description="硬门过滤引擎")
     p.add_argument("--run-id", required=True, help="运行 ID")
     p.add_argument("--top-n", type=int, default=5, help="TopN 数量")
+    p.add_argument("--mode", choices=["normal", "aggressive"], default="normal",
+                   help="normal=回测证伪踢出; aggressive=进攻模式,回测证伪降级观察仓保留高弹性票")
     args = p.parse_args()
 
     data_dir = f"data/runs/{args.run_id}"
@@ -669,7 +738,7 @@ def main():
     mcp_status = check_mcp_status(data_dir)
 
     # 3. 执行硬门(改造3: 传 data_dir 以读 data_link_broken)
-    results, system_flags = apply_gates(stocks, mcp_status, data_dir)
+    results, system_flags = apply_gates(stocks, mcp_status, data_dir, mode=args.mode)
 
     # 4. 筛选 eligible TopN
     eligible = find_eligible_topn(results, system_flags, args.top_n)

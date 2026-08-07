@@ -1,12 +1,52 @@
 [
   {
-    "runId": "20260730_short-term-picks",
-    "asOf": "20260730",
-    "goal": "short-term-picks",
-    "path": "output/20260730_短周期2周推荐清单.md",
-    "dataPath": "data/runs/20260730_short-term-picks/final.json",
-    "headline": "下行regime+回测全未背书+MCP全挂(G6低/≤40%)+1w手数→仅601857/000630可配,live17.4%,3 staged,无标准Top1,601857降级lead;总督修正603993价8.50→18.96改staged。置信度低。",
-    "confidence": "低",
-    "fetchedAt": "2026-07-30"
+    "runId": "20260731_future-picks_短线",
+    "asOf": "20260731",
+    "goal": "future-picks",
+    "path": "output/20260731_未来潜力预判_短线.md",
+    "dataPath": "data/runs/20260731_future-picks_短线/final.json",
+    "headline": "Top5=京东方A/中国巨石/紫光/拓尔思/省广集团,前2只4路共振催化硬,置信度中-高",
+    "confidence": "中-高",
+    "fetchedAt": "2026-07-31"
+  },
+  {
+    "runId": "20260803_future-picks_短线",
+    "asOf": "20260803",
+    "goal": "future-picks",
+    "path": "output/20260803_未来潜力预判_短线.md",
+    "dataPath": "data/runs/20260803_future-picks_短线/final.json",
+    "headline": "Top5=特变电工/协鑫能科/中天科技/新开普/银轮股份,资金已进场未拉升四路共振,总仓位75%,置信度中",
+    "confidence": "中",
+    "fetchedAt": "2026-08-03"
+  },
+  {
+    "runId": "20260804_future-picks_短线",
+    "asOf": "20260804",
+    "goal": "future-picks",
+    "path": "output/20260804_未来潜力预判_短线.md",
+    "dataPath": "data/runs/20260804_future-picks_短线/final.json",
+    "headline": "Top5=高澜/掌阅/金宏气体/焦点/三六零,CPO透支后接力液冷+AI应用低价+电子特气,总仓位70%,置信度中",
+    "confidence": "中",
+    "fetchedAt": "2026-08-04"
+  },
+  {
+    "runId": "20260806_future-picks_短线",
+    "asOf": "20260806",
+    "goal": "future-picks",
+    "path": "output/20260806_未来潜力预判_短线.md",
+    "dataPath": "data/runs/20260806_future-picks_短线/final.json",
+    "headline": "Top5=丰元股份/凯美特气/多氟多/天娱数科/高德红外,板块龙头涨停+个股未涨跟风补涨叠加基本面反转或资金建仓未拉升≥2路共振,总仓位95%,置信度中",
+    "confidence": "中",
+    "fetchedAt": "2026-08-06"
+  },
+  {
+    "runId": "20260807_future-picks_短线",
+    "asOf": "20260807",
+    "goal": "future-picks",
+    "path": "output/20260807_未来潜力预判_短线.md",
+    "dataPath": "data/runs/20260807_future-picks_短线/final.json",
+    "headline": "Top5=许继电气/京新药业/中国西电/国电南瑞(reserve)/中远海能,特高压政策今日刚发未price-in+setup82回踩缩量企稳+资金m20进场未拉升三路共振,全部m5<5%未透支将涨未涨,组合B合规主推89%,置信度中",
+    "confidence": "中",
+    "fetchedAt": "2026-08-07"
   }
 ]

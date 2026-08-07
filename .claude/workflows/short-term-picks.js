@@ -25,8 +25,11 @@ const RET = {type:'object',properties:{path:{type:'string'},summary:{type:'strin
 const GOV = {type:'object',properties:{path:{type:'string'},dataPath:{type:'string'},oneLineConclusion:{type:'string'},topN:{type:'array',items:{type:'object'}},totalPosition:{type:'string'},confidence:{type:'string'},keyRisks:{type:'array',items:{type:'string'}}},required:['path','oneLineConclusion','confidence']}
 
 const topN=args.topN||5, period=args.period||'2周', acc=args.account||'1w', rp=args.riskPref||'稳健偏积极', pos=args.position||'无持仓', asOf=args.asOf||'YYYYMMDD'
+// 进攻模式:用户要"涨幅最高/最具潜力"时 riskPref=积极/进攻 → hard_gate 用 aggressive 模式
+// (根因:回测硬门把高弹性票全杀,致TopN只剩防御票。进攻模式让回测证伪的弹性票降级观察仓保留)
+const AGGRO = (rp === '积极' || rp === '进攻' || /涨幅|潜力|弹性|进攻/.test(rp)) ? 'aggressive' : 'normal'
 const G='short-term-picks', RD='data/runs/'+asOf+'_'+G
-const goal='短周期选股: Top'+topN+' 周期'+period+' 风险'+rp+' 账户'+acc+' 持仓'+pos+' | 基准日'+asOf
+const goal='短周期选股: Top'+topN+' 周期'+period+' 风险'+rp+' 账户'+acc+' 持仓'+pos+' | 基准日'+asOf+' | 模式'+AGGRO
 const history = args.history || ''
 const SHARED = 'data/runs/'+asOf+'_'+G+'/_shared.json'
 
@@ -62,7 +65,8 @@ log('✅ 宏观定调完成')
 
 phase('候选池')
 log('🔄 候选池 — sector-analyst')
-const sector = await S('sector', () => agent(P('sector-analyst','在顺风方向内撒网,生成候选池>=30只。','⚠️ Read '+macro.path+' 的 data.tailwinds 确定顺风行业。用 cn_fetch.py rank + astock_data.py tencent_quote + cn_fetch.py kline 多源汇总30-50只。1w账户优先<40元。', ctx), {agentType:'sector-analyst',schema:RET,label:'sector',phase:'候选池'}))
+const sectorDir = AGGRO==='aggressive' ? '\n🔥 进攻模式定向:候选池须含≥30%进攻方向票——成长/题材/小盘弹性/次新/政策催化/动量突破,不能只撒防御板块(银行/石油/红利)。用 cn_fetch.py ths_hot(同花顺热点)+ hot_trend_dig.py(龙虎榜/资金)挖掘进攻主线。' : ''
+const sector = await S('sector', () => agent(P('sector-analyst','在顺风方向内撒网,生成候选池>=30只。','⚠️ Read '+macro.path+' 的 data.tailwinds 确定顺风行业。用 cn_fetch.py rank + astock_data.py tencent_quote + cn_fetch.py kline 多源汇总30-50只。1w账户优先<40元。'+sectorDir, ctx), {agentType:'sector-analyst',schema:RET,label:'sector',phase:'候选池'}))
 ctx += ap(sector,'候选池')
 log('✅ 候选池完成')
 
@@ -156,9 +160,9 @@ const [gateResult, forecastResult] = await parallel([
       return {path: RD+'/_validation.json', summary:'契约校验完成'}
     })
     return await S('hard_gate', async () => {
-      const cmd = 'PYTHONIOENCODING=utf-8 python scripts/hard_gate.py --run-id '+asOf+'_'+G+' 2>&1'
+      const cmd = 'PYTHONIOENCODING=utf-8 python scripts/hard_gate.py --run-id '+asOf+'_'+G+' --mode '+AGGRO+' 2>&1'
       await agent('⚠️ 只运行不调试。\nBash: '+cmd+'\nRead '+RD+'/gate_report.json', {label:'hard_gate', phase:'硬门∥走势'})
-      return {path: RD+'/gate_report.json', summary:'硬门过滤完成'}
+      return {path: RD+'/gate_report.json', summary:'硬门过滤完成(模式'+AGGRO+')'}
     })
   },
   // Branch B: forecast (独立, 只读 factor_scores.json)
@@ -175,13 +179,13 @@ log('✅ 硬门∥走势完成')
 
 phase('回测组合')
 log('🔄 回测组合 — risk-portfolio(引用 forecast 概率路径)')
-const risk = await S('risk', () => agent(P('risk-portfolio','综合评分排序+回测(环境分层)+组合配置。\n\n## 量化引擎+走势产出(必读)\n1. Read '+RD+'/factor_scores.json\n2. Read '+RD+'/timing_scores.json\n3. Read '+RD+'/sentiment_scores.json\n4. Read '+RD+'/supply_risk.json\n5. Read '+RD+'/capital_scores.json\n6. Read '+RD+'/regime.json\n7. Read '+RD+'/forecast_scores.json\n\n## 走势判断引用规则\n- forecast up概率>60%→可加仓; down概率>50%→降仓或剔除\n- qual_bias与量化分背离(如同涨跌方向但幅度差>20%)→警惕,降低置信度\n\n## 任务\n1. 融合量化引擎+走势判断产出+LLM质化评分,做最终排序\n2. 社交排序: social_heat>80且hype_risk>70→过热降权; heat_momentum正且bull_ratio>0.6→加分; 社交vs基本面背离→警惕\n3. 供给端: supply_risk>50→降仓; 大额解禁→否决; 股东户数增加→降权\n4. 资金流: capital<30→降权; capital>70→加分\n5. Bash: PYTHONIOENCODING=utf-8 python scripts/portfolio_optimizer.py --codes {Top'+topN+'代码} --account '+acc.replace("w","0000")+' --risk-budget '+({trending:'0.8',ranging:'0.6',high_volatility:'0.4'}[regime]||'0.5')+' --output '+RD+'/backtest.json 2>&1\n6. Read '+RD+'/backtest.json\n7. timing<-10不得排Top1; 回测rejected不入TopN; forecast down>50%→仓位再砍一档\n8. 组合分散(行业<=40%/催化同源<=50%/单票<=25%)', ctx), {agentType:'risk-portfolio',schema:RET,label:'risk',phase:'回测组合'}))
+const risk = await S('risk', () => agent(P('risk-portfolio','综合评分排序+回测(环境分层)+组合配置。\n\n## 量化引擎+走势产出(必读)\n1. Read '+RD+'/factor_scores.json\n2. Read '+RD+'/timing_scores.json\n3. Read '+RD+'/sentiment_scores.json\n4. Read '+RD+'/supply_risk.json\n5. Read '+RD+'/capital_scores.json\n6. Read '+RD+'/regime.json\n7. Read '+RD+'/forecast_scores.json\n\n## 走势判断引用规则\n- forecast up概率>60%→可加仓; down概率>50%→降仓或剔除\n- qual_bias与量化分背离(如同涨跌方向但幅度差>20%)→警惕,降低置信度\n\n## 任务\n1. 融合量化引擎+走势判断产出+LLM质化评分,做最终排序\n2. 社交排序: social_heat>80且hype_risk>70→过热降权; heat_momentum正且bull_ratio>0.6→加分; 社交vs基本面背离→警惕\n3. 供给端: supply_risk>50→降仓; 大额解禁→否决; 股东户数增加→降权\n4. 资金流: capital<30→降权; capital>70→加分\n5. Bash: PYTHONIOENCODING=utf-8 python scripts/portfolio_optimizer.py --codes {Top'+topN+'代码} --account '+acc.replace("w","0000")+' --risk-budget '+({trending:'0.8',ranging:'0.6',high_volatility:'0.4'}[regime]||'0.5')+' --output '+RD+'/backtest.json 2>&1\n6. Read '+RD+'/backtest.json\n7. timing<-10不得排Top1; 回测rejected不入TopN'+(AGGRO==='aggressive'?'(进攻模式例外:rejected的弹性票降级高风险观察仓,不直接踢出,须严止损-5%)':'')+'; forecast down>50%→仓位再砍一档\n8. 组合分散(行业<=40%/催化同源<=50%/单票<=25%)', ctx), {agentType:'risk-portfolio',schema:RET,label:'risk',phase:'回测组合'}))
 ctx += ap(risk,'组合')
 log('✅ 回测组合完成')
 
 phase('综合落盘')
 log('🔄 综合落盘 — governor')
-const report = await S('governor', () => agent('综合全链产出写短周期选股报告+Top'+topN+'操作卡。\n\n投资目标:'+goal+'\n\n全链产出:'+ctx+'\n'+history+'\n\n🚫 硬门约束(代码执行,不可override):\n‼️ Read '+RD+'/gate_report.json 获取硬门过滤结果。\n1.否决的标的→不得入TopN\n2.降级的标的→遵守max_rank限制\n3.position_cap→仓位上限不可超过\n4.confidence_floor→置信度下限不可上调\n5.若momentum_priority→因子排名第一,不可用回测推翻\n违反→报告无效。\n\n📊 走势判断引用:\n‼️ Read '+RD+'/forecast_scores.json 获取概率路径。\n- Top1 forecast up概率应>50%, 若down概率>40%→须在报告显眼处标注"走势判断有分歧"\n- qual_bias与quant_score方向背离→置信度降一档\n\n硬约束:\n回测3项全不达标→剔出TopN\n2项不达标→仓位砍半\nTop1须回测胜率排名前列+非高位回调者\nforecast down>50%的标的→不入Top3\n\n对抗审查(5项):\n1.Top1回测胜率最优?\n2.Top1入场优势?\n3.催化同源超50%?\n4.社交vs基本面?\n5.走势判断一致性:Top1 forecast up概率是否>50%? 若否,须说明理由\n\n写报告: WRITE output/'+asOf+'_短周期2周推荐清单.md\n落盘: 1.WRITE '+RD+'/final.json 2.WRITE '+RD+'/_rec.json 3.Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1\n返回schema: {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
+const report = await S('governor', () => agent('综合全链产出写短周期选股报告+Top'+topN+'操作卡。\n\n投资目标:'+goal+'\n\n全链产出:'+ctx+'\n'+history+'\n\n🚫 硬门约束(代码执行,不可override):\n‼️ Read '+RD+'/gate_report.json 获取硬门过滤结果。\n1.否决的标的→不得入TopN\n2.降级的标的→遵守max_rank限制\n3.position_cap→仓位上限不可超过\n4.confidence_floor→置信度下限不可上调\n5.若momentum_priority→因子排名第一,不可用回测推翻\n违反→报告无效。\n\n📊 走势判断引用:\n‼️ Read '+RD+'/forecast_scores.json 获取概率路径。\n- Top1 forecast up概率应>50%, 若down概率>40%→须在报告显眼处标注"走势判断有分歧"\n- qual_bias与quant_score方向背离→置信度降一档\n\n硬约束:\n回测3项全不达标→剔出TopN\n2项不达标→仓位砍半\nTop1须回测胜率排名前列+非高位回调者\nforecast down>50%的标的→不入Top3\n\n🔥 进攻模式约束(本轮 mode='+AGGRO+', 当 AGGRO=aggressive 时生效):\n- 回测rejected的弹性票(动量强/RPS高/催化真)→不剔出,以"高风险观察仓"保留进TopN(标注·须严止损-5%)\n- TopN至少保留2只进攻弹性票(非纯防御银行/石油/红利),若候选池无进攻票须显式说明\n- 追涨型标的可进TopN但标注"追涨·须T+1收盘复核不追封板价"\n- 进攻票仓位可至单票上限,但须附明确止损位\n\n对抗审查(5项):\n1.Top1回测胜率最优?\n2.Top1入场优势?\n3.催化同源超50%?\n4.社交vs基本面?\n5.走势判断一致性:Top1 forecast up概率是否>50%? 若否,须说明理由\n\n写报告: WRITE output/'+asOf+'_短周期2周推荐清单.md\n落盘: 1.WRITE '+RD+'/final.json 2.WRITE '+RD+'/_rec.json 3.Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+' --json-file '+RD+'/_rec.json 2>&1\n返回schema: {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}。', {agentType:'governor',schema:GOV,label:'governor',phase:'综合落盘'}))
 log('✅ 综合落盘完成')
 log('🎉 Workflow 全部完成!')
 if (report?.path) log('📄 报告: '+report.path)
