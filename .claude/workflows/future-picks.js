@@ -76,7 +76,7 @@ const [sector, tech, cat, fund] = await parallel([
   // 2a. 板块轮动接力 + 跟风补涨票
   () => S('sector', () => agent(P('sector-analyst',
     '找板块轮动接力的跟风补涨票(龙头已涨→今天没涨的跟风票将补涨)。复用 sector-rotation-detector 思维。',
-    '1. Read '+macro.path+' 的 data.nextRotation 获取接力方向预判\n2. 用 market_radar fetch_sector_ranking 找今日强势板块,预判下个接力板块\n3. ⭐ 核心:找龙头今日涨停/大涨的板块里,今天【没涨】的跟风票(将补涨)\n4. 用 cn_fetch.py rank + astock_data.py tencent_quote 汇总候选20-30只\n5. 输出keyFields: {candidates:[{code,name,sector,relaySignal(接力信号),reasoningChain}], nextSector(下个接力板块)}\n\n'+FOCUS, ctx), {agentType:'sector-analyst',schema:RET,label:'sector',phase:'证据收集'})),
+    '1. Read '+macro.path+' 的 data.nextRotation 获取接力方向预判\n2. 用 market_radar fetch_sector_ranking 找今日强势板块,预判下个接力板块\n3. ⭐ 核心:找龙头今日涨停/大涨的板块里,今天【没涨】的跟风票(将补涨)\n4. ⭐ 用 ifind_search_stocks 自然语言筛\"主线板块里近20日跌>5%+PE<30+未涨停\"的跟风补涨票(全市场未涨来源,补 cn_fetch.py rank=已涨榜单的滞后) + cn_fetch.py rank 补充龙头已涨信号; 汇总候选20-30只\n5. 输出keyFields: {candidates:[{code,name,sector,relaySignal(接力信号),reasoningChain}], nextSector(下个接力板块)}\n\n'+FOCUS, ctx), {agentType:'sector-analyst',schema:RET,label:'sector',phase:'证据收集'})),
   // 2b. 技术形态将涨信号(回踩企稳/区间收敛/底部结构)——用setup_score
   // ⚠️ 本路与2a sector并行,不能引用sector结果(TDZ),用阶段1已完成的macro.path
   () => S('technical', () => agent(P('technical-liquidity',
@@ -89,7 +89,7 @@ const [sector, tech, cat, fund] = await parallel([
   // 2d. 估值修复 + 业绩预增
   () => S('fundamentals', () => agent(P('fundamentals-analyst',
     '找估值修复+业绩预增的票(超跌低估值+基本面反转)。复用 sentiment-reality-gap + undervalued 思维。',
-    '1. Read '+SHARED+' 或候选清单\n2. 用 astock_data.py tencent_quote 取PE/PB/市值 + mootdx财务\n3. ⭐ 核心:找超跌(近20日跌>15%)+估值低(PE分位<30%)+业绩预增/扭转的票(将修复)\n4. 硬雷排雷(商誉>30%/质押>50%一票否决)\n5. 输出keyFields: {valueCandidates:[{code,pe,pb,pullback(超跌深度),earningsSignal(业绩信号),reasoningChain}]}\n\n⚠️ 中线周期重点看这路,短线可降权', ctx), {agentType:'fundamentals-analyst',schema:RET,label:'fundamentals',phase:'证据收集'})),
+    '1. Read '+SHARED+' 或候选清单\n2. ⭐ 用 ifind_search_stocks 自然语言筛\"近20日跌>10%+PE<30+归母净利同比>0的非ST股票\"(全市场超跌低估未涨票,补\"龙虎榜/涨停池=已动\"滞后来源) + astock_data.py tencent_quote 取PE分位/PB/市值 + mootdx财务复核\n3. ⭐ 核心:找超跌(近20日跌>15%)+估值低(PE分位<30%)+业绩预增/扭转的票(将修复)\n4. 硬雷排雷(商誉>30%/质押>50%一票否决)\n5. 输出keyFields: {valueCandidates:[{code,pe,pb,pullback(超跌深度),earningsSignal(业绩信号),reasoningChain}]}\n\n⚠️ 中线周期重点看这路,短线可降权', ctx), {agentType:'fundamentals-analyst',schema:RET,label:'fundamentals',phase:'证据收集'})),
 ])
 ctx += ap(sector,'板块接力') + ap(tech,'形态将涨') + ap(cat,'催化建仓') + ap(fund,'估值修复')
 log('✅ 证据收集完成')
@@ -112,7 +112,7 @@ phase('潜力锁定')
 log('🔄 潜力锁定 — governor/risk 选TopN+操作卡')
 const report = await S('governor', () => agent(P('risk-portfolio',
   '基于推理验证结果,锁定Top'+topN+'潜力票+操作卡。复用 risk-adjusted-return-optimizer 思维。',
-  '1. Read '+reasoning.path+' 取reasonedPicks\n2. 按 potentialScore(多信号共振强度)+风险收益比排序选Top'+topN+'\n3. ⭐ 输出每只票的操作卡:触发时间窗+买入区间+止损+止盈\n4. 仓位配置(组合分散:行业<=40%/催化同源<=50%/单票<=25%)\n5. 不再回测证伪踢出——回测只作风险参考(标注),不否决预判\n6. WRITE output/'+asOf+'_未来潜力预判_'+horizon+'.md 报告结构:\n   一、预判方向(未来'+horDays+'占优风格/顺风板块/接力方向+宏观推理)\n   二、潜力票清单(每只附完整推理链A→B→C→D→E)\n   三、未来催化日历(哪些事件将兑现)\n   四、板块轮动图(今天热点→明天接力)\n   五、操作卡(触发窗+买入区间+止损+止盈)\n   六、预测跟踪表(本次预测记录,待未来兑现验证)\n7. WRITE '+RD+'/final.json + '+RD+'/_rec.json\n8. Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+'_'+horizon+' --json-file '+RD+'/_rec.json 2>&1\n9. Bash: python scripts/forecast_tracker.py record --run-id '+asOf+'_'+G+'_'+horizon+' --json-file '+RD+'/_rec.json --horizon '+horizon+' 2>&1 (失败不影响)\n返回schema: {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}', ctx), {agentType:'governor',schema:GOV,label:'governor',phase:'潜力锁定'}))
+  '1. Read '+reasoning.path+' 取reasonedPicks\n2. 按 potentialScore(多信号共振强度)+风险收益比排序选Top'+topN+'\n3. ⭐ 输出每只票的操作卡:触发时间窗+买入区间+止损+止盈\n4. 仓位配置(组合分散:行业<=40%/催化同源<=50%/单票<=25%)\n5. 不再回测证伪踢出——回测只作风险参考(标注),不否决预判\n5b. ⚠️估值/业绩硬约束(future-picks不跑hard_gate.py,由你代码级执行,不可override):Read '+RD+'/fundamentals.json取每只票pePercentile+netProfitGrowthPct;pePercentile>80%→降级观察仓不入TopN(标估值已贵·位置不佳);pePercentile>95%→不得排Top1;netProfitGrowthPct<-30%→不得排Top1/3(业绩雷标低置信).病根:凯美PE分位100%/许继Q1-46%这类估值天花板+业绩雷票不该推给用户.\n6. WRITE output/'+asOf+'_未来潜力预判_'+horizon+'.md 报告结构:\n   一、预判方向(未来'+horDays+'占优风格/顺风板块/接力方向+宏观推理)\n   二、潜力票清单(每只附完整推理链A→B→C→D→E)\n   三、未来催化日历(哪些事件将兑现)\n   四、板块轮动图(今天热点→明天接力)\n   五、操作卡(触发窗+买入区间+止损+止盈)\n   六、预测跟踪表(本次预测记录,待未来兑现验证)\n7. WRITE '+RD+'/final.json + '+RD+'/_rec.json\n8. Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+'_'+horizon+' --json-file '+RD+'/_rec.json 2>&1\n9. Bash: python scripts/forecast_tracker.py record --run-id '+asOf+'_'+G+'_'+horizon+' --json-file '+RD+'/_rec.json --horizon '+horizon+' 2>&1 (失败不影响)\n返回schema: {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}', ctx), {agentType:'governor',schema:GOV,label:'governor',phase:'潜力锁定'}))
 ctx += ap(report,'潜力锁定')
 log('✅ 潜力锁定完成')
 

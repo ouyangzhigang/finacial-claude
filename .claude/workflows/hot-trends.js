@@ -79,7 +79,7 @@ log('  财务: ' + (fund?.summary || '空'))
 // ── Phase 4: 组合(综合全链) ──
 phase('组合')
 log('🔄 启动组合配置 — agent: risk-portfolio')
-const risk = await S('risk', () => agent(P('risk-portfolio','组合配置Top'+topN+'。','Read 全链 json(主线方向+候选+技术因子+排雷结论);按情绪/资金主导(权重高于基本面)排Top'+topN+';组合分散(行业<=40%/催化同源<=50%);1w手数致分层建仓须标注。回测未背书不入TopN。', ctx), {agentType:'risk-portfolio',schema:RET,label:'risk',phase:'组合'}))
+const risk = await S('risk', () => agent(P('risk-portfolio','组合配置Top'+topN+'。','Read 全链 json(主线方向+候选+技术因子+排雷结论);按情绪/资金主导(权重高于基本面)排Top'+topN+';组合分散(行业<=40%/催化同源<=50%);1w手数致分层建仓须标注。回测未背书不入TopN。前瞻减分(防已涨到位):近5日涨>15%且催化7日内→-15;近20日涨>30%→-20;高位回调伪装(近20日涨>20%且近5日转负)→-12;减分后<40不入TopN。', ctx), {agentType:'risk-portfolio',schema:RET,label:'risk',phase:'组合'}))
 ctx += ap(risk,'组合')
 log('✅ 组合配置完成 — ' + (risk?.summary || '空'))
 

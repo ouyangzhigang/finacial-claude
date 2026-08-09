@@ -16,14 +16,14 @@ argument-hint: "[目标关键词+参数,如:短周期 2周 账户1w | 600519 深
 | 目标关键词 | workflow 名 | 必填参数 | 可选参数 |
 |---|---|---|---|
 | 深评/深度/单股/<6位代码> | `single-stock-deep` | ticker(6位代码), name | account, horizon, riskPref, position |
-| 短周期/选股/2周/推荐 | `short-term-picks` | — | topN, period, account, riskPref, position |
+| 短周期/2周/推荐清单 | `short-term-picks` | — | topN, period, account, riskPref, position |
 | 超短/1日/隔日/次日/打板/涨停/尾盘 | `ultra-short-picks` | — | topN, account, riskPref |
 | 热门/板块/热点/潜力 | `hot-trends` | — | constraint, topN, account |
 | 体检/复盘/持仓 | `portfolio-review` | holdings:[{code,shares,cost}] | account |
 | 舆情/趋势/预判 | `sentiment-trend-picks` | keyword 或 trend | topN, account |
-| **未来/预判/短线/波段/中线/预测** | `future-picks` | — | topN, account, horizon(短线/波段/中线), riskPref, position |
+| **选股/推荐/未来/预判/能涨/短线/波段/中线/预测** | `future-picks` | — | topN, account, horizon(短线/波段/中线), riskPref, position |
 
-> ⭐ **future-picks 是全新预判型工作流**(2026-07-31 新建):不是当日排行榜,是"今天分析→预测未来N天将涨"的票,推理链驱动(因为A→B→C→D→预判E将涨),含未来催化日历+板块轮动接力+操作卡+跟踪兑现。**用户要"涨幅最高/最具潜力/未来"时优先用这个**,而非旧的 short-term-picks(当日选股)。
+> ⭐ **future-picks 是全新预判型工作流**(2026-07-31 新建):不是当日排行榜,是"今天分析→预测未来N天将涨"的票,推理链驱动(因为A→B→C→D→预判E将涨),含未来催化日历+板块轮动接力+操作卡+跟踪兑现。**用户要"选股/推荐/涨幅最高/最具潜力/未来/能涨"时优先用这个**,而非旧的 short-term-picks(当日已涨榜单)。病根:旧 short-term-picks 候选来自龙虎榜/涨停池=已动票,易推"已涨到位";future-picks 用 ifind_search_stocks 全市场筛"超跌+低估+未涨"票,补此短板。
 
 > ⚠️ **周期下限硬约束**:短周期目标解析出投资周期 < 5 个交易日(2日/3日/隔日)时,workflow 内会拒绝选股,降级日内跟踪简报(只给观察位,不给买入区间/仓位)。
 > ⚠️ **缺失必填参数**(如单股的 ticker、体检的 holdings)→ 先向用户追问,不臆测。
@@ -42,6 +42,7 @@ argument-hint: "[目标关键词+参数,如:短周期 2周 账户1w | 600519 深
 - `热门板块 Top8` → `{asOf:"<今天>", constraint:"热门板块潜力股综合推荐", topN:8, account:"1w"}`
 - `超短 1日 打板 账户1w` → `{asOf:"<今天>", topN:3, account:"1w", riskPref:"积极"}`
 - `未来 波段 账户1w` → `{asOf:"<今天>", topN:5, account:"1w", horizon:"波段", riskPref:"稳健偏积极", position:"无持仓"}`
+- `选股 推荐 账户1w` → `{asOf:"<今天>", topN:5, account:"1w", horizon:"短线", riskPref:"稳健偏积极", position:"无持仓"}` (选股/推荐默认走预判型 future-picks, 找未涨潜力票)
 - `短线 预判 Top3` → `{asOf:"<今天>", topN:3, account:"1w", horizon:"短线", riskPref:"积极", position:"无持仓"}`
 - `中线 预测 账户1w` → `{asOf:"<今天>", topN:5, account:"1w", horizon:"中线", riskPref:"稳健", position:"无持仓"}`
 

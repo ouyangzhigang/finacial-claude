@@ -149,13 +149,15 @@
         "宏观"
       ],
       "runId": "20260803_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "hit": null,
+      "verified": true,
+      "actualChangePct": 0.57,
+      "hit": false,
       "benchBase": {
         "sh000001": 3809.66,
         "sz399006": 3302.55
-      }
+      },
+      "benchChangePct": 2.81,
+      "alphaPct": -2.25
     },
     {
       "code": "002015",
@@ -174,13 +176,15 @@
         "宏观"
       ],
       "runId": "20260803_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "hit": null,
+      "verified": true,
+      "actualChangePct": 0.83,
+      "hit": false,
       "benchBase": {
         "sh000001": 3809.66,
         "sz399006": 3302.55
-      }
+      },
+      "benchChangePct": 2.81,
+      "alphaPct": -1.98
     },
     {
       "code": "600522",
@@ -198,13 +202,15 @@
         "宏观"
       ],
       "runId": "20260803_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "hit": null,
+      "verified": true,
+      "actualChangePct": 17.65,
+      "hit": true,
       "benchBase": {
         "sh000001": 3809.66,
         "sz399006": 3302.55
-      }
+      },
+      "benchChangePct": 2.81,
+      "alphaPct": 14.83
     },
     {
       "code": "300605",
@@ -222,13 +228,15 @@
         "宏观"
       ],
       "runId": "20260803_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "hit": null,
+      "verified": true,
+      "actualChangePct": 1.75,
+      "hit": false,
       "benchBase": {
         "sh000001": 3809.66,
         "sz399006": 3302.55
-      }
+      },
+      "benchChangePct": 2.81,
+      "alphaPct": -1.06
     },
     {
       "code": "002126",
@@ -246,13 +254,15 @@
         "宏观"
       ],
       "runId": "20260803_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "hit": null,
+      "verified": true,
+      "actualChangePct": 8.54,
+      "hit": true,
       "benchBase": {
         "sh000001": 3809.66,
         "sz399006": 3302.55
-      }
+      },
+      "benchChangePct": 2.81,
+      "alphaPct": 5.73
     },
     {
       "code": "300499",
@@ -752,13 +762,13 @@
       "hit": null
     }
   ],
-  "lastUpdated": "2026-08-07 12:10:30",
+  "lastUpdated": "2026-08-08 23:35:49",
   "stats": {
-    "totalPredictions": 36,
-    "verified": 5,
-    "hits": 5,
-    "hitRate": 100.0,
-    "avgAlpha": 6.75,
-    "benchChange": 2.28
+    "totalPredictions": 31,
+    "verified": 10,
+    "hits": 7,
+    "hitRate": 70.0,
+    "avgAlpha": 4.9,
+    "benchChange": 2.81
   }
 }

@@ -1,7 +1,7 @@
 ---
 name: sector-analyst
 description: A股行业分析师——承接宏观顺风方向,生成候选池30-50只(板块成分+龙头+量化筛选+事件+错杀+催化),去重并标注来源。短周期选股的"撒网"环节。
-tools: Bash, Write, Read  # 改造7: MCP SSL全挂已移除权限, 数据走 astock_cli/cn_fetch, 待MCP修复后恢复
+tools: Bash, Write, Read, mcp__ifind__ifind_search_stocks, mcp__ifind__ifind_sector_data  # iFind MCP 已恢复(2026-08 验证全链路可用); ifind_search_stocks=全市场智能选股(PE分位/超跌/未涨停的补涨票,补"榜单=已动"滞后来源); ifind_sector_data=板块行情/成分股; SSL再挂时 soft-fail 退回 cn_fetch.py
 color: purple
 emoji: 🏭
 ---

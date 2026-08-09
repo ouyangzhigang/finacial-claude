@@ -106,6 +106,22 @@ GATES = {
         "check": lambda st: (st.get("pctToday") is not None and st.get("pctToday") >= 9.5),
         "check_warn": lambda st: (st.get("pctToday") is not None and 7 <= st.get("pctToday") < 9.5),
     },
+    "G10_估值已贵": {
+        # 病根:凯美特气PE历史分位100%、许继PE分位100%这类"估值天花板"票被推给用户,
+        # 追高赔率差。PE绝对值门(G1)只拦PE>50且ROE<5,挡不住"PE高但有增速/合理"的票。
+        # G10 用 PE/PB 历史分位(相对自身历史位置)拦截"已涨到天花板"的票。
+        "desc": "PE/PB历史分位>80%→降级观察(估值已贵位置不佳); 分位>95%→不得排Top1; 分位缺失但PE>200→兜底降级",
+        "action": "downgrade_observe",
+        "check": lambda st: _safe(st, "pe_percentile", -1) > 80,
+        "check_top1_block": lambda st: _safe(st, "pe_percentile", -1) > 95,
+    },
+    "G11_业绩趋势雷": {
+        # 病根:许继电气Q1归母净利同比-46%这类"业绩大幅下滑"票被推出,短期承压。
+        # G1只看亏损(净利<0),拦不住"仍盈利但同比大跌"的雷。
+        "desc": "最近报告期归母净利同比<-30%→不得排Top1/3(业绩下滑雷,标注低置信不建议重仓)",
+        "action": "downgrade_not_top1",
+        "check": lambda st: _safe(st, "np_yoy", 0) < -30,
+    },
 }
 
 
@@ -222,12 +238,17 @@ def load_supply_risk(data_dir):
 
 
 def load_fundamentals(data_dir):
-    """加载基本面数据 → {code: {roe, pe, status, cf_np}}
+    """加载基本面数据 → {code: {roe, pe, pe_percentile, np_yoy, status, cf_np}}
     从 fundamentals-analyst.json 的嵌套结构读取:
     data.stocks.{code}.financials.roe + data.stocks.{code}.valuation.peTtm
+    + financials.np_yoy(归母净利同比,G11) + valuation.pe_percentile(PE历史分位,G10)
+    文件名兼容: agent label 'fundamentals' 写 fundamentals.json, 兜底读取
     """
     path = os.path.join(data_dir, "fundamentals-analyst.json")
     data = load_json(path)
+    if not data:
+        path = os.path.join(data_dir, "fundamentals.json")  # 兼容 workflow label 名
+        data = load_json(path)
     if not data:
         return {}
 
@@ -260,12 +281,23 @@ def load_fundamentals(data_dir):
             pe = info.get("peTtm") if info.get("peTtm") is not None else valuation.get("peTtm")
             cf = info.get("cashflowRatio") if info.get("cashflowRatio") is not None else financials.get("cashflowRatio")
             verdict = info.get("verdict", "")
+            # G10/G11 数据: PE历史分位 + 归母净利同比(由 fundamentals-analyst agent 产出)
+            pe_pctile = info.get("pe_percentile") if info.get("pe_percentile") is not None else valuation.get("pe_percentile")
+            if pe_pctile is None:  # 兼容驼峰别名(fundamentals-analyst 产出 pePercentile)
+                pe_pctile = info.get("pePercentile") if info.get("pePercentile") is not None else valuation.get("pePercentile")
+            np_yoy = info.get("np_yoy") if info.get("np_yoy") is not None else financials.get("np_yoy")
+            if np_yoy is None:  # 兼容别名: netProfitGrowthPct(驼峰, fundamentals-analyst 产出)/ net_profit_yoy
+                np_yoy = info.get("netProfitGrowthPct") if info.get("netProfitGrowthPct") is not None else info.get("net_profit_yoy")
+            if np_yoy is None and isinstance(financials, dict):
+                np_yoy = financials.get("netProfitGrowthPct", financials.get("net_profit_yoy"))
             result[code] = {
                 "roe": roe,
                 "pe": pe,
                 "status": "reject" if "剔除" in str(verdict) or "veto" in str(verdict).lower() else (
                     "downgrade" if "降权" in str(verdict) or "downgrad" in str(verdict).lower() else "pass"),
                 "cf_np": cf,
+                "pe_percentile": pe_pctile,
+                "np_yoy": np_yoy,
             }
     else:
         # Fallback: keyFields 方式 (旧格式兼容)
@@ -653,6 +685,33 @@ def apply_gates(stocks, mcp_status, data_dir='', mode='normal'):
                 status = "downgrade_not_top1"
                 max_rank = 3  # 大涨票可入TopN但不排Top1,须T+1回调买
 
+        # G10: 估值已贵(PE/PB历史分位高位) — 拦截"估值天花板"票
+        # 病根:凯美PE分位100%、许继PE分位100%被推出,追高赔率差
+        g10_check = GATES["G10_估值已贵"]["check"](st)  # pe_percentile>80
+        g10_top1_block = GATES["G10_估值已贵"].get("check_top1_block", lambda s: False)(st)  # >95
+        # 兜底: 分位数据缺失但PE极端高(>200)→视为估值高风险(如凯美PE289)
+        g10_fallback = (_safe(st, "pe_percentile", -1) < 0 and _safe(st, "pe", 0) > 200)
+        if g10_check or g10_fallback:
+            tag = f"分位{st.get('pe_percentile','?')}%" if g10_check else f"PE>{_safe(st,'pe',0):.0f}(分位缺失兜底)"
+            gates_failed.append(f"G10: pe_percentile={st.get('pe_percentile','?')} pe={st.get('pe','?')} → 估值已贵({tag})降级观察")
+            if status == "ok":
+                status = "downgrade_observe"
+                max_rank = None  # 观察仓,不入TopN
+        if g10_top1_block and status not in ("reject",):
+            gates_failed.append(f"G10(top1block): pe_percentile>95% → 不得排Top1")
+            if status in ("ok", "downgrade_observe"):
+                status = "downgrade_not_top1"
+                max_rank = 2
+
+        # G11: 业绩趋势雷(归母净利同比大幅下滑) — 拦截"仍盈利但业绩雷"票
+        # 病根:许继Q1归母-46%被推出,G1只看亏损拦不住
+        g11_check = GATES["G11_业绩趋势雷"]["check"](st)  # np_yoy<-30
+        if g11_check:
+            gates_failed.append(f"G11: np_yoy={st.get('np_yoy','?')}% → 归母净利同比大幅下滑(业绩雷),不得排Top1/3,低置信")
+            if status == "ok":
+                status = "downgrade_not_top1"
+                max_rank = 3  # 业绩雷票可入TopN但不排Top1/3,须严标注
+
         # 改造2: 否决预算——单只票最多1个主否决, 其余否决门记为关联警示
         # (避免一只票被G1+G4+G8三连否决的视觉过度, 取最严重为主否决)
         if status == "reject":
@@ -760,6 +819,9 @@ def main():
             "G6_数据降级": GATES["G6_数据降级"]["desc"],
             "G7_自适应动量": GATES["G7_自适应动量"]["desc"],
             "G8_回测": GATES["G8_回测"]["desc"],
+            "G9_当日涨停": GATES["G9_当日涨停"]["desc"],
+            "G10_估值已贵": GATES["G10_估值已贵"]["desc"],
+            "G11_业绩趋势雷": GATES["G11_业绩趋势雷"]["desc"],
         },
         "system_flags": system_flags,
         "summary": {
