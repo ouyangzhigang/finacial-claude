@@ -48,5 +48,44 @@
     "headline": "Top5=许继电气/京新药业/中国西电/国电南瑞(reserve)/中远海能,特高压政策今日刚发未price-in+setup82回踩缩量企稳+资金m20进场未拉升三路共振,全部m5<5%未透支将涨未涨,组合B合规主推89%,置信度中",
     "confidence": "中",
     "fetchedAt": "2026-08-07"
+  },
+  {
+    "runId": "20260809_future-picks_波段",
+    "asOf": "20260809",
+    "goal": "future-picks",
+    "path": "data/runs/20260809_future-picks_波段/final.json",
+    "headline": "弱复苏+通胀降温打开宽松窗口,4路共振确认贵金属/小金属+半导体材料+算力接力三主线,锁定Top5总仓位75%置信度中",
+    "confidence": "中",
+    "fetchedAt": "2026-08-09"
+  },
+  {
+    "runId": "20260810_future-picks_短线",
+    "asOf": "20260810",
+    "goal": "future-picks",
+    "path": "output/20260810_未来潜力预判_短线.md",
+    "dataPath": "data/runs/20260810_future-picks_短线/final.json",
+    "headline": "Top5=以岭药业/特变电工/中国西电/康缘药业/许继电气(降级观察0%),中药扩散+特高压接力+回踩缩量企稳将涨未涨,许继Q1-46%业绩雷+supply2笔折价大宗机构出逃降级,首仓44%满仓65%,置信度中偏低",
+    "confidence": "中偏低",
+    "fetchedAt": "2026-08-10"
+  },
+  {
+    "runId": "20260810_future-picks_波段",
+    "asOf": "20260810",
+    "goal": "future-picks",
+    "path": "output/20260810_未来潜力预判_波段.md",
+    "dataPath": "data/runs/20260810_future-picks_波段/final.json",
+    "headline": "四重共振首选东方电子000682(Top1,85分capital80建仓未拉升)+洛阳钼业错杀低吸76+紫金防御73观察+国电南瑞setup100首选70+美畅中报反转68;5只排雷全干净(risk_audit复核hard_veto全false,无估值>80%/业绩全正);1w账户4只1手74.2%,持仓许继/凯美业绩雷剔除;置信度中",
+    "confidence": "中",
+    "fetchedAt": "2026-08-10"
+  },
+  {
+    "runId": "20260810_single-stock-deep",
+    "asOf": "20260810",
+    "goal": "single-stock-deep",
+    "path": "output/002185_20260810_深度分析报告.md",
+    "dataPath": "data/runs/20260810_single-stock-deep/final.json",
+    "headline": "002185华天科技:双顺风(半导体封测+并购重组)+8/13重组硬催化+排雷干净(Q1净利+568%/PEG0.13),但回测未背书(pass_count=1,均收1.52%+maxDD-37%两项不达标)+入场优势弱(10/25)+催化半兑现(近5日+22%)→催化博弈观察仓2手36%分批,留64%现金,信心低·回测未背书,MA20(18.07)多空分水岭须收盘复核",
+    "confidence": "低·回测未背书",
+    "fetchedAt": "2026-08-10"
   }
 ]

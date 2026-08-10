@@ -280,11 +280,11 @@
       "position": "20%",
       "reasoningChain": [],
       "runId": "20260804_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "benchChangePct": null,
-      "alphaPct": null,
-      "hit": null
+      "verified": true,
+      "actualChangePct": 6.87,
+      "benchChangePct": 2.81,
+      "alphaPct": 4.05,
+      "hit": true
     },
     {
       "code": "603533",
@@ -302,11 +302,11 @@
       "position": "15%",
       "reasoningChain": [],
       "runId": "20260804_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "benchChangePct": null,
-      "alphaPct": null,
-      "hit": null
+      "verified": true,
+      "actualChangePct": 2.41,
+      "benchChangePct": 2.81,
+      "alphaPct": -0.4,
+      "hit": false
     },
     {
       "code": "688106",
@@ -324,11 +324,11 @@
       "position": "15%",
       "reasoningChain": [],
       "runId": "20260804_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "benchChangePct": null,
-      "alphaPct": null,
-      "hit": null
+      "verified": true,
+      "actualChangePct": 13.69,
+      "benchChangePct": 2.81,
+      "alphaPct": 10.88,
+      "hit": true
     },
     {
       "code": "002315",
@@ -346,11 +346,11 @@
       "position": "12%",
       "reasoningChain": [],
       "runId": "20260804_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "benchChangePct": null,
-      "alphaPct": null,
-      "hit": null
+      "verified": true,
+      "actualChangePct": -1.62,
+      "benchChangePct": 2.81,
+      "alphaPct": -4.43,
+      "hit": false
     },
     {
       "code": "601360",
@@ -368,11 +368,11 @@
       "position": "8%",
       "reasoningChain": [],
       "runId": "20260804_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "benchChangePct": null,
-      "alphaPct": null,
-      "hit": null
+      "verified": true,
+      "actualChangePct": -0.52,
+      "benchChangePct": 2.81,
+      "alphaPct": -3.33,
+      "hit": false
     },
     {
       "code": "000612",
@@ -390,11 +390,11 @@
       "position": "23%",
       "reasoningChain": [],
       "runId": "20260805_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "benchChangePct": null,
-      "alphaPct": null,
-      "hit": null
+      "verified": true,
+      "actualChangePct": 0.26,
+      "benchChangePct": 3.05,
+      "alphaPct": -2.79,
+      "hit": false
     },
     {
       "code": "603386",
@@ -412,11 +412,11 @@
       "position": "24.8%",
       "reasoningChain": [],
       "runId": "20260805_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "benchChangePct": null,
-      "alphaPct": null,
-      "hit": null
+      "verified": true,
+      "actualChangePct": 4.75,
+      "benchChangePct": 3.05,
+      "alphaPct": 1.71,
+      "hit": true
     },
     {
       "code": "002425",
@@ -434,11 +434,11 @@
       "position": "15-20%待复核",
       "reasoningChain": [],
       "runId": "20260805_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "benchChangePct": null,
-      "alphaPct": null,
-      "hit": null
+      "verified": true,
+      "actualChangePct": -5.48,
+      "benchChangePct": 3.05,
+      "alphaPct": -8.52,
+      "hit": false
     },
     {
       "code": "300364",
@@ -456,11 +456,11 @@
       "position": "观察",
       "reasoningChain": [],
       "runId": "20260805_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "benchChangePct": null,
-      "alphaPct": null,
-      "hit": null
+      "verified": true,
+      "actualChangePct": -2.78,
+      "benchChangePct": 3.05,
+      "alphaPct": -5.82,
+      "hit": false
     },
     {
       "code": "600522",
@@ -478,11 +478,11 @@
       "position": "观察",
       "reasoningChain": [],
       "runId": "20260805_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "benchChangePct": null,
-      "alphaPct": null,
-      "hit": null
+      "verified": true,
+      "actualChangePct": 2.46,
+      "benchChangePct": 3.05,
+      "alphaPct": -0.59,
+      "hit": false
     },
     {
       "code": "002805",
@@ -760,15 +760,397 @@
       "benchChangePct": null,
       "alphaPct": null,
       "hit": null
+    },
+    {
+      "code": "600988",
+      "name": "赤峰黄金",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260809",
+      "expireDate": "20260823",
+      "basePrice": 42.09,
+      "benchBase": {
+        "sh000001": 3940.04,
+        "sz399006": 3563.12
+      },
+      "role": "贵金属主线·最低风险将涨买点",
+      "position": "20%",
+      "reasoningChain": [],
+      "runId": "20260809_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002842",
+      "name": "翔鹭钨业",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260809",
+      "expireDate": "20260823",
+      "basePrice": 38.38,
+      "benchBase": {
+        "sh000001": 3940.04,
+        "sz399006": 3563.12
+      },
+      "role": "小金属·机构建仓未拉升最强信号",
+      "position": "18%",
+      "reasoningChain": [],
+      "runId": "20260809_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002079",
+      "name": "苏州固锝",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260809",
+      "expireDate": "20260823",
+      "basePrice": 9.71,
+      "benchBase": {
+        "sh000001": 3940.04,
+        "sz399006": 3563.12
+      },
+      "role": "半导体材料·基本面最干净超跌修复",
+      "position": "15%",
+      "reasoningChain": [],
+      "runId": "20260809_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002185",
+      "name": "华天科技",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260809",
+      "expireDate": "20260823",
+      "basePrice": 17.98,
+      "benchBase": {
+        "sh000001": 3940.04,
+        "sz399006": 3563.12
+      },
+      "role": "半导体封测·超跌反弹启动(5b降权)",
+      "position": "12%",
+      "reasoningChain": [],
+      "runId": "20260809_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "600449",
+      "name": "宁夏建材",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260809",
+      "expireDate": "20260823",
+      "basePrice": 15.5,
+      "benchBase": {
+        "sh000001": 3940.04,
+        "sz399006": 3563.12
+      },
+      "role": "算力接力·央企低价催化(5b降权)",
+      "position": "10%",
+      "reasoningChain": [],
+      "runId": "20260809_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002603",
+      "name": "以岭药业",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260810",
+      "expireDate": "20260815",
+      "basePrice": 16.91,
+      "benchBase": {
+        "sh000001": 3947.91,
+        "sz399006": 3485.44
+      },
+      "role": "Top1主攻-回踩MA20缩量企稳买点入场优势最强",
+      "position": "17%(1手约1691元)",
+      "reasoningChain": [
+        "M宏观接力1中药扩散",
+        "S板块接力确认",
+        "T setup100+5信号全齐+pullback_volume0.71主力未出逃",
+        "C中报季+医保谈判未price-in5日1.6%",
+        "supply抽查0洁净"
+      ],
+      "runId": "20260810_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "600089",
+      "name": "特变电工",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260810",
+      "expireDate": "20260815",
+      "basePrice": 21.39,
+      "benchBase": {
+        "sh000001": 3947.91,
+        "sz399006": 3485.44
+      },
+      "role": "Top2加仓备选-虚拟电厂双龙头贴近上轨待突破",
+      "position": "21%(1手约2139元,待突破确认加仓)",
+      "reasoningChain": [
+        "M宏观接力2电力电网→特高压/虚拟电厂",
+        "S板块接力确认",
+        "T setup75+contraction0.54贴近上轨待突破",
+        "C新型电力系统+夏季用电+虚拟电厂三重催化未price-in5日3.3%",
+        "F PE17.52低估",
+        "supply抽查0洁净"
+      ],
+      "runId": "20260810_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "601179",
+      "name": "中国西电",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260810",
+      "expireDate": "20260815",
+      "basePrice": 14.09,
+      "benchBase": {
+        "sh000001": 3947.91,
+        "sz399006": 3485.44
+      },
+      "role": "Top3最收敛-区间极致收敛0.52资金锁仓+流动性最优25亿",
+      "position": "14%(1手约1409元)",
+      "reasoningChain": [
+        "M宏观接力2电力电网→特高压",
+        "T setup82+contraction0.52全候选最低资金锁仓",
+        "C特高压建设+新型电力系统+夏季负荷未price-in5日2.9%",
+        "L流动性最优amt20=25.42亿",
+        "supply抽查5(1折价minor可接受)"
+      ],
+      "runId": "20260810_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "600557",
+      "name": "康缘药业",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260810",
+      "expireDate": "20260815",
+      "basePrice": 12.83,
+      "benchBase": {
+        "sh000001": 3947.91,
+        "sz399006": 3485.44
+      },
+      "role": "Top4配对分散-由Top5升(回踩MA20企稳+supply0洁净)",
+      "position": "13%(1手约1283元)",
+      "reasoningChain": [
+        "M宏观接力1中药扩散",
+        "S板块接力确认",
+        "T setup92四信号齐备+回踩MA20企稳pullback_volume0.84",
+        "C中报季+医保谈判+现代中药创新未price-in5日-0.1%",
+        "supply抽查0洁净+capital55温和流入"
+      ],
+      "runId": "20260810_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "000400",
+      "name": "许继电气",
+      "horizon": "短线",
+      "windowDays": 5,
+      "predictDate": "20260810",
+      "expireDate": "20260815",
+      "basePrice": 22.9,
+      "benchBase": {
+        "sh000001": 3947.91,
+        "sz399006": 3485.44
+      },
+      "role": "Top5降级观察0%不配-Q1-46%业绩雷+supply2笔折价大宗机构出逃",
+      "position": "0%(观察仓,1手2290超预算)",
+      "reasoningChain": [
+        "M宏观接力2电力电网",
+        "T setup82+m5-3.13%超跌企稳",
+        "5b业绩雷Q1-46%<-30%不得Top1/3",
+        "supply抽查10(2笔折价大宗机构出逃)",
+        "capital40温和流出"
+      ],
+      "runId": "20260810_future-picks_短线",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "000682",
+      "name": "东方电子",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260810",
+      "expireDate": "20260824",
+      "basePrice": 12.22,
+      "benchBase": {
+        "sh000001": 3964.72,
+        "sz399006": 3535.6
+      },
+      "role": "Top1首选(电网,主力建仓未拉升)",
+      "position": "12%(1手约1218元)",
+      "reasoningChain": [
+        "A板块轮动:电网5小票涨停+电力4涨停+电网投资政策双确认",
+        "B资金建仓:capital80全候选最高+近5日-1.1%回踩缩量+今日-0.08%完全未涨=主力建仓未拉升",
+        "D催化将兑现:2026一季报预增+8月中报密集披露未price-in",
+        "E排雷干净:earnings+95.06%大增+无解禁无出逃supply15"
+      ],
+      "runId": "20260810_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "603993",
+      "name": "洛阳钼业",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260810",
+      "expireDate": "20260824",
+      "basePrice": 20.75,
+      "benchBase": {
+        "sh000001": 3964.72,
+        "sz399006": 3535.6
+      },
+      "role": "Top2(贵金属,错杀补涨低吸)",
+      "position": "21%(1手约2067元)",
+      "reasoningChain": [
+        "A板块轮动:贵金属+5.65%全面启动而洛阳钼业今日-0.77%错杀背离",
+        "D催化将兑现:NPM铜金矿黄金权益产量增56-69%+厄瓜多尔金矿收购直接受益",
+        "E排雷干净:earnings+96.65%大增+无解禁supply5"
+      ],
+      "runId": "20260810_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "601899",
+      "name": "紫金矿业",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260810",
+      "expireDate": "20260824",
+      "basePrice": 35.39,
+      "benchBase": {
+        "sh000001": 3964.72,
+        "sz399006": 3535.6
+      },
+      "role": "Top3(贵金属大票补涨末端,防御价值,1w观察仓)",
+      "position": "0%(观察仓,1手3543元超25%单票上限)",
+      "reasoningChain": [
+        "A板块轮动:贵金属大票补涨末端(三段式第三段,板块最大市值紫金仅+0.80%未启动)",
+        "D催化将兑现:COMEX白银+3%+黄金4408+地缘+MSCI8/10生效被动资金",
+        "E排雷最干净:earnings+97.5%大增+supply0满分(资金解禁业绩三无雷)"
+      ],
+      "runId": "20260810_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "600406",
+      "name": "国电南瑞",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260810",
+      "expireDate": "20260824",
+      "basePrice": 24.1,
+      "benchBase": {
+        "sh000001": 3964.72,
+        "sz399006": 3535.6
+      },
+      "role": "Top4(电网技术回踩,setup100首选)",
+      "position": "24%(1手约2412元)",
+      "reasoningChain": [
+        "A板块轮动:电网设备/电力双确认顺风",
+        "C形态回踩:setup100技术首选5信号全+range0.58极致收敛+m5-3.79回调缩量pullback_volume0.78主力未出逃",
+        "E排雷干净:earnings+6.04%正增(弱)+supply5"
+      ],
+      "runId": "20260810_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "300861",
+      "name": "美畅股份",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260810",
+      "expireDate": "20260824",
+      "basePrice": 17.38,
+      "benchBase": {
+        "sh000001": 3964.72,
+        "sz399006": 3535.6
+      },
+      "role": "Top5(中报反转弹性,超跌+机构接盘)",
+      "position": "17%(1手约1721元)",
+      "reasoningChain": [
+        "D催化将兑现:中报扭亏横切接力方向匹配macro+8月中报披露窗口",
+        "E排雷干净:PB分位31.24%低估+Q1净利+634%+1笔买方机构专用接盘+商誉为零",
+        "C形态回踩:近20日-21.05%深度超跌在底部未反弹"
+      ],
+      "runId": "20260810_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
     }
   ],
-  "lastUpdated": "2026-08-08 23:35:49",
+  "lastUpdated": "2026-08-10 14:46:34",
   "stats": {
-    "totalPredictions": 31,
-    "verified": 10,
-    "hits": 7,
-    "hitRate": 70.0,
-    "avgAlpha": 4.9,
-    "benchChange": 2.81
+    "totalPredictions": 46,
+    "verified": 20,
+    "hits": 10,
+    "hitRate": 50.0,
+    "avgAlpha": 1.99,
+    "benchChange": 3.45
   }
 }

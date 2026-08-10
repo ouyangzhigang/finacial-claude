@@ -359,7 +359,151 @@
       "currentPrice": null,
       "changePct": null,
       "status": "active"
+    },
+    {
+      "code": "600988",
+      "name": "赤峰黄金",
+      "recommendedAt": "20260809",
+      "recommendedPrice": 42.09,
+      "role": "贵金属主线·最低风险将涨买点",
+      "workflow": "future-picks_波段",
+      "confidence": "中",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "002842",
+      "name": "翔鹭钨业",
+      "recommendedAt": "20260809",
+      "recommendedPrice": 38.38,
+      "role": "小金属·机构建仓未拉升最强信号",
+      "workflow": "future-picks_波段",
+      "confidence": "中",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "002079",
+      "name": "苏州固锝",
+      "recommendedAt": "20260809",
+      "recommendedPrice": 9.78,
+      "role": "半导体材料·基本面最干净超跌修复",
+      "workflow": "future-picks_波段",
+      "confidence": "中",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "002185",
+      "name": "华天科技",
+      "recommendedAt": "20260809",
+      "recommendedPrice": 17.98,
+      "role": "半导体封测·超跌反弹启动(5b降权)",
+      "workflow": "future-picks_波段",
+      "confidence": "中",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "600449",
+      "name": "宁夏建材",
+      "recommendedAt": "20260809",
+      "recommendedPrice": 15.5,
+      "role": "算力接力·央企低价催化(5b降权)",
+      "workflow": "future-picks_波段",
+      "confidence": "中",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "002603",
+      "name": "以岭药业",
+      "recommendedAt": "20260810",
+      "recommendedPrice": 16.91,
+      "role": "Top1主攻-回踩MA20缩量企稳买点入场优势最强",
+      "workflow": "future-picks_短线",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "600557",
+      "name": "康缘药业",
+      "recommendedAt": "20260810",
+      "recommendedPrice": 12.83,
+      "role": "Top4配对分散-由Top5升(回踩MA20企稳+supply0洁净)",
+      "workflow": "future-picks_短线",
+      "confidence": "中偏低",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "000682",
+      "name": "东方电子",
+      "recommendedAt": "20260810",
+      "recommendedPrice": 12.18,
+      "role": "Top1首选(电网,主力建仓未拉升)",
+      "workflow": "future-picks_波段",
+      "confidence": "中",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "603993",
+      "name": "洛阳钼业",
+      "recommendedAt": "20260810",
+      "recommendedPrice": 20.67,
+      "role": "Top2(贵金属,错杀补涨低吸)",
+      "workflow": "future-picks_波段",
+      "confidence": "中",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "601899",
+      "name": "紫金矿业",
+      "recommendedAt": "20260810",
+      "recommendedPrice": 35.43,
+      "role": "Top3(贵金属大票补涨末端,防御价值,1w观察仓)",
+      "workflow": "future-picks_波段",
+      "confidence": "中",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "300861",
+      "name": "美畅股份",
+      "recommendedAt": "20260810",
+      "recommendedPrice": 17.21,
+      "role": "Top5(中报反转弹性,超跌+机构接盘)",
+      "workflow": "future-picks_波段",
+      "confidence": "中",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
+    },
+    {
+      "code": "002156",
+      "name": "通富微电",
+      "recommendedAt": "20260810",
+      "recommendedPrice": 63.2,
+      "role": "单股深评·观察标的(0%仓位不建仓)",
+      "workflow": "single-stock-deep",
+      "confidence": "中",
+      "currentPrice": null,
+      "changePct": null,
+      "status": "active"
     }
   ],
-  "lastUpdated": "2026-08-07 12:07:35"
+  "lastUpdated": "2026-08-10 20:07:37"
 }

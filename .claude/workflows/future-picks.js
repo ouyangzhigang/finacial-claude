@@ -22,7 +22,7 @@ log('🔍 DEBUG args: typeof='+typeof args+' asOf='+(args&&args.asOf)+' horizon=
 const RET = {type:'object',properties:{path:{type:'string'},summary:{type:'string'},keyFields:{type:'object'}},required:['path','summary']}
 const GOV = {type:'object',properties:{path:{type:'string'},dataPath:{type:'string'},oneLineConclusion:{type:'string'},topN:{type:'array',items:{type:'object'}},totalPosition:{type:'string'},confidence:{type:'string'},keyRisks:{type:'array',items:{type:'string'}}},required:['path','oneLineConclusion','confidence']}
 
-const topN=args.topN||5, acc=args.account||'1w', rp=args.riskPref||'稳健偏积极', pos=args.position||'无持仓', asOf=args.asOf||'YYYYMMDD'
+const topN=args.topN||11, acc=args.account||'1w', rp=args.riskPref||'稳健偏积极', pos=args.position||'无持仓', asOf=args.asOf||'YYYYMMDD'
 // horizon: 短线(1-5日)/波段(1-2周)/中线(1-3月) —— 决定预判周期+主因子
 const horizon=args.horizon||'波段'
 const HOR_MAP = {'短线':'1-5日','波段':'1-2周','中线':'1-3月'}
@@ -101,7 +101,7 @@ phase('推理验证')
 log('🔄 推理验证 — governor综合演绎')
 const reasoning = await S('reasoning', () => agent(P('governor',
   '综合4路证据+宏观预判,做推理演绎:哪些票未来'+horDays+'有上涨潜力,且说清为什么。',
-  '1. Read全部证据: '+sector.path+' '+tech.path+' '+cat.path+' '+fund.path+' '+macro.path+'\n2. ⭐ 核心:对每只候选票,综合多路信号形成完整推理链\n   模板:因为[板块轮动A]+[资金建仓B]+[形态回踩C]+[催化将兑现D]→预判[票E]未来'+horDays+'有上涨潜力\n3. 剔除只有单一信号(无共振)的票——需≥2路信号共振才入选\n4. 输出keyFields: {reasonedPicks:[{code,name,signals:[信号清单],reasoningChain:[A→B→C→D→E],potentialScore,triggerWindow(触发时间窗)}]}\n\n⚠️ 这是核心环节:你的价值在"综合推理预判",不是拼数据。每只票必须说清"为什么预判它将涨"。', ctx), {agentType:'governor',schema:RET,label:'reasoning',phase:'推理验证'}))
+  '1. Read全部证据: '+sector.path+' '+tech.path+' '+cat.path+' '+fund.path+' '+macro.path+'\n2. ⭐ 排雷先行(硬否决,不可override):从4路证据汇总所有候选票代码(不论来自哪路),Bash跑 python scripts/risk_audit.py --codes <所有候选逗号分隔> --json,对hard_veto=true的票(业绩雷归母净利同比<-30%/卖方机构专用折价大宗出逃≥2笔/未来30日解禁>流通市值10%)直接剔除不入选——技术分再高有硬雷也踢。排雷干净度(无硬雷+业绩正增+买方机构接盘)在potentialScore加权(+10~15分)。这是8-07许继电气漏排雷的根因修复:许继是sector选的(非超跌股fundamentals没覆盖),5b只查fundamentals.json会漏——必须governor统一排雷所有候选。\n3. ⭐ 核心:对排雷通过的候选,综合多路信号形成完整推理链\n   模板:因为[板块轮动A]+[资金建仓B]+[形态回踩C]+[催化将兑现D]+[排雷干净E]→预判[票F]未来'+horDays+'有上涨潜力\n4. 剔除只有单一信号(无共振)的票——需≥2路信号共振才入选\n5. 输出keyFields: {reasonedPicks:[{code,name,signals:[信号清单],reasoningChain:[A→B→C→D→排雷→E],potentialScore,riskAuditClean(排雷干净度bool),triggerWindow(触发时间窗)}]}\n\n⚠️ 这是核心环节:你的价值在"综合推理预判",不是拼数据。每只票必须说清"为什么预判它将涨"。', ctx), {agentType:'governor',schema:RET,label:'reasoning',phase:'推理验证'}))
 ctx += ap(reasoning,'推理验证')
 log('✅ 推理验证完成: ' + (reasoning?.summary || '空'))
 
@@ -112,7 +112,7 @@ phase('潜力锁定')
 log('🔄 潜力锁定 — governor/risk 选TopN+操作卡')
 const report = await S('governor', () => agent(P('risk-portfolio',
   '基于推理验证结果,锁定Top'+topN+'潜力票+操作卡。复用 risk-adjusted-return-optimizer 思维。',
-  '1. Read '+reasoning.path+' 取reasonedPicks\n2. 按 potentialScore(多信号共振强度)+风险收益比排序选Top'+topN+'\n3. ⭐ 输出每只票的操作卡:触发时间窗+买入区间+止损+止盈\n4. 仓位配置(组合分散:行业<=40%/催化同源<=50%/单票<=25%)\n5. 不再回测证伪踢出——回测只作风险参考(标注),不否决预判\n5b. ⚠️估值/业绩硬约束(future-picks不跑hard_gate.py,由你代码级执行,不可override):Read '+RD+'/fundamentals.json取每只票pePercentile+netProfitGrowthPct;pePercentile>80%→降级观察仓不入TopN(标估值已贵·位置不佳);pePercentile>95%→不得排Top1;netProfitGrowthPct<-30%→不得排Top1/3(业绩雷标低置信).病根:凯美PE分位100%/许继Q1-46%这类估值天花板+业绩雷票不该推给用户.\n6. WRITE output/'+asOf+'_未来潜力预判_'+horizon+'.md 报告结构:\n   一、预判方向(未来'+horDays+'占优风格/顺风板块/接力方向+宏观推理)\n   二、潜力票清单(每只附完整推理链A→B→C→D→E)\n   三、未来催化日历(哪些事件将兑现)\n   四、板块轮动图(今天热点→明天接力)\n   五、操作卡(触发窗+买入区间+止损+止盈)\n   六、预测跟踪表(本次预测记录,待未来兑现验证)\n7. WRITE '+RD+'/final.json + '+RD+'/_rec.json\n8. Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+'_'+horizon+' --json-file '+RD+'/_rec.json 2>&1\n9. Bash: python scripts/forecast_tracker.py record --run-id '+asOf+'_'+G+'_'+horizon+' --json-file '+RD+'/_rec.json --horizon '+horizon+' 2>&1 (失败不影响)\n返回schema: {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}', ctx), {agentType:'governor',schema:GOV,label:'governor',phase:'潜力锁定'}))
+  '1. Read '+reasoning.path+' 取reasonedPicks\n2. 按 potentialScore(多信号共振强度)+风险收益比排序选Top'+topN+'\n3. ⭐ 输出每只票的操作卡:触发时间窗+买入区间+止损+止盈\n4. 仓位配置(组合分散:行业<=40%/催化同源<=50%/单票<=25%)\n5. 不再回测证伪踢出——回测只作风险参考(标注),不否决预判\n5b. ⚠️估值/业绩/排雷硬约束(future-picks不跑hard_gate.py,由你代码级执行,不可override):①排雷:Read '+RD+'/reasoning.json取每只票riskAuditClean——false或被推理验证剔除的票不得入TopN(阶段3已跑risk_audit.py,若reasoning.json缺则Bash补跑 python scripts/risk_audit.py --codes <TopN候选逗号分隔> --json);②估值:Read '+RD+'/fundamentals.json取pePercentile;pePercentile>80%→降级观察仓不入TopN(标估值已贵·位置不佳);pePercentile>95%→不得排Top1;③业绩:netProfitGrowthPct<-30%→不得排Top1/3(业绩雷标低置信).病根:凯美PE分位100%/许继Q1-46%这类估值天花板+业绩雷票不该推给用户.\n6. WRITE output/'+asOf+'_未来潜力预判_'+horizon+'.md 报告结构:\n   一、预判方向(未来'+horDays+'占优风格/顺风板块/接力方向+宏观推理)\n   二、潜力票清单(每只附完整推理链A→B→C→D→E)\n   三、未来催化日历(哪些事件将兑现)\n   四、板块轮动图(今天热点→明天接力)\n   五、操作卡(触发窗+买入区间+止损+止盈)\n   六、预测跟踪表(本次预测记录,待未来兑现验证)\n7. WRITE '+RD+'/final.json + '+RD+'/_rec.json\n8. Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+'_'+horizon+' --json-file '+RD+'/_rec.json 2>&1\n9. Bash: python scripts/forecast_tracker.py record --run-id '+asOf+'_'+G+'_'+horizon+' --json-file '+RD+'/_rec.json --horizon '+horizon+' 2>&1 (失败不影响)\n返回schema: {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}', ctx), {agentType:'governor',schema:GOV,label:'governor',phase:'潜力锁定'}))
 ctx += ap(report,'潜力锁定')
 log('✅ 潜力锁定完成')
 
