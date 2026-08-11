@@ -29,6 +29,41 @@ sys.stderr.reconfigure(encoding="utf-8", errors="replace") if hasattr(sys.stderr
 TRACKER_PATH = "data/forecast_tracker.json"
 HORIZON_DAYS = {"短线": 5, "波段": 14, "中线": 90}  # 各周期预测窗口
 
+# ═══ A股交易成本模型(8-11新增,堵"收益测算虚高"病根) ═══
+# 病根:旧版收益测算只算价差不扣费,1万账户小额交易佣金最低5元占比高,
+# "微赚14元"扣费后实亏。现加完整费用模型诚实重算命中率。
+COMMISSION_RATE = 0.00025   # 佣金费率万2.5(双边)
+COMMISSION_MIN = 5.0         # 佣金最低5元/笔(小额交易主成本)
+STAMP_DUTY_RATE = 0.0005     # 印花税卖出千0.5(2023-08-28起由千1减半,现行税率)
+SLIPPAGE_BUY = 0.003        # 买入滑点0.3%(理想价之上,真实成交价更高)
+DEFAULT_CAPITAL = 10000      # 默认1万账户
+DEFAULT_POSITION_PCT = 0.25  # 默认单票仓位25%
+
+
+def _trade_fees(buy_value, sell_value):
+    """A股单次往返交易费用(元):佣金万2.5最低5元/笔(双边)+印花税卖出千1。
+    买入滑点单独在 buyPrice 体现(已*1.003),此处只算显性费用。
+    返回 (总费用, 买佣金, 卖佣金, 印花税)。
+    """
+    buy_comm = max(buy_value * COMMISSION_RATE, COMMISSION_MIN)
+    sell_comm = max(sell_value * COMMISSION_RATE, COMMISSION_MIN)
+    stamp = sell_value * STAMP_DUTY_RATE
+    return (buy_comm + sell_comm + stamp, buy_comm, sell_comm, stamp)
+
+
+def _net_return_pct(gross_chg_pct, capital, position_pct):
+    """给定价差涨跌(%)与仓位,算扣费后净收益率(%)。
+    买入滑点已在 buyPrice 体现,这里只扣显性费用(佣金+印花税)。
+    """
+    if capital <= 0 or position_pct <= 0:
+        return gross_chg_pct
+    buy_value = capital * position_pct
+    # 卖出金额=买入金额*(1+价差涨幅)
+    sell_value = buy_value * (1 + gross_chg_pct / 100.0)
+    fees, _, _, _ = _trade_fees(buy_value, sell_value)
+    net_value = sell_value - fees - buy_value
+    return net_value / buy_value * 100.0
+
 
 def _load():
     if os.path.exists(TRACKER_PATH):
@@ -127,6 +162,7 @@ def cmd_record(args):
     horizon = args.horizon or "波段"
     window_days = HORIZON_DAYS.get(horizon, 14)
     predict_date = args.as_of or (args.run_id.split("_")[0] if args.run_id else time.strftime("%Y%m%d"))
+    capital = args.capital if args.capital and args.capital > 0 else DEFAULT_CAPITAL
 
     # T7改进:记录大盘基准价(上证+创业板),供check时算alpha超额收益
     # 病根:旧hit只看"涨了没",大盘涨4%时随便买都涨,无选股alpha——必须算超额
@@ -144,6 +180,14 @@ def cmd_record(args):
         # 取当前价(预测基准价)
         prices = _fetch_prices([code]) if code else {}
         base_price = prices.get(code, {}).get("price") if prices else None
+        # 8-11:买入价加滑点(理想价*1.003),反映真实成交价高于盘中低点
+        buy_price = round(base_price * (1 + SLIPPAGE_BUY), 3) if base_price else None
+        # 仓位:优先用topN里的position百分比,否则默认25%
+        pos_str = str(t.get("position", "")).replace("%", "").replace("仓", "").strip()
+        try:
+            position_pct = float(pos_str) / 100.0 if pos_str else DEFAULT_POSITION_PCT
+        except (ValueError, TypeError):
+            position_pct = DEFAULT_POSITION_PCT
         pred = {
             "code": code,
             "name": t.get("name", ""),
@@ -151,7 +195,10 @@ def cmd_record(args):
             "windowDays": window_days,
             "predictDate": predict_date,
             "expireDate": (datetime.strptime(predict_date, "%Y%m%d") + timedelta(days=window_days)).strftime("%Y%m%d"),
-            "basePrice": base_price,
+            "basePrice": base_price,  # 理想基准价(盘中低点)
+            "buyPrice": buy_price,     # 含滑点的真实买入价=理想价*1.003
+            "capital": capital,
+            "positionPct": position_pct,
             "benchBase": bench_base,  # 大盘基准价(预测日),供算alpha超额
             "role": t.get("role", ""),
             "position": t.get("position", ""),
@@ -160,8 +207,11 @@ def cmd_record(args):
             "verified": False,
             "actualChangePct": None,
             "benchChangePct": None,  # 大盘同期涨幅
-            "alphaPct": None,  # 超额收益=个股涨幅-大盘涨幅(真选股alpha)
-            "hit": None,  # True=跑赢大盘(alpha>0)/False=跑输/None=未到期
+            "alphaPct": None,  # 毛超额收益=个股涨幅-大盘涨幅
+            "feeDragPct": None,  # 手续费拖累(%):佣金+印花税占仓位比
+            "netActualChangePct": None,  # 扣费后净涨幅(%)
+            "netAlphaPct": None,  # 扣费后净超额=毛超额-手续费拖累(真选股alpha)
+            "hit": None,  # True=扣费后跑赢大盘(netAlpha>0)/False=跑输/None=未到期
         }
         # 去重:同一runId+code只记一次
         if not any(p["runId"] == args.run_id and p["code"] == code for p in preds):
@@ -205,15 +255,26 @@ def cmd_check(args):
         # 取当前价算实际涨跌
         prices = _fetch_prices([p["code"]]) if p["code"] else {}
         cur = prices.get(p["code"], {}).get("price")
-        base = p.get("basePrice")
-        if base and cur and base > 0:
-            chg = (cur - base) / base * 100
+        # 8-11:优先用含滑点的buyPrice算毛收益(真实买入价),旧记录无buyPrice则回退basePrice
+        buy_price = p.get("buyPrice") or p.get("basePrice")
+        capital = p.get("capital", DEFAULT_CAPITAL)
+        position_pct = p.get("positionPct", DEFAULT_POSITION_PCT)
+        if buy_price and cur and buy_price > 0:
+            chg = (cur - buy_price) / buy_price * 100
             p["actualChangePct"] = round(chg, 2)
             p["benchChangePct"] = round(bench_chg, 2) if bench_chg is not None else None
-            # alpha=个股涨幅-大盘涨幅(真选股超额能力)
+            # 毛超额=个股涨幅-大盘涨幅
             alpha = chg - bench_chg if bench_chg is not None else chg
             p["alphaPct"] = round(alpha, 2)
-            p["hit"] = alpha > 0  # 跑赢大盘才算命中(非仅绝对涨跌)
+            # 8-11手续费建模:佣金万2.5最低5元/笔(双边)+印花税卖千1,算扣费后净收益
+            net_chg = _net_return_pct(chg, capital, position_pct)
+            fee_drag = chg - net_chg  # 手续费拖累(%)
+            p["feeDragPct"] = round(fee_drag, 2)
+            p["netActualChangePct"] = round(net_chg, 2)
+            # 净超额=毛超额-手续费拖累(真选股alpha,扣费后跑赢大盘才算命中)
+            net_alpha = alpha - fee_drag
+            p["netAlphaPct"] = round(net_alpha, 2)
+            p["hit"] = net_alpha > 0  # 扣费后跑赢大盘才算命中
             p["verified"] = True
             checked += 1
             if p["hit"]:
@@ -222,26 +283,33 @@ def cmd_check(args):
     total = sum(1 for p in preds if p.get("verified"))
     total_hits = sum(1 for p in preds if p.get("hit"))
     rate = (total_hits / total * 100) if total else 0
-    # alpha统计
+    # alpha统计(毛+净)
     alphas = [p.get("alphaPct", 0) for p in preds if p.get("verified") and p.get("alphaPct") is not None]
     avg_alpha = sum(alphas) / len(alphas) if alphas else 0
-    data["stats"] = {"totalPredictions": len(preds), "verified": total, "hits": total_hits, "hitRate": round(rate, 1), "avgAlpha": round(avg_alpha, 2), "benchChange": round(bench_chg, 2) if bench_chg else None}
+    net_alphas = [p.get("netAlphaPct", 0) for p in preds if p.get("verified") and p.get("netAlphaPct") is not None]
+    avg_net_alpha = sum(net_alphas) / len(net_alphas) if net_alphas else 0
+    fee_drags = [p.get("feeDragPct", 0) for p in preds if p.get("verified") and p.get("feeDragPct") is not None]
+    avg_fee_drag = sum(fee_drags) / len(fee_drags) if fee_drags else 0
+    data["stats"] = {"totalPredictions": len(preds), "verified": total, "hits": total_hits, "hitRate": round(rate, 1), "avgAlpha": round(avg_alpha, 2), "avgNetAlpha": round(avg_net_alpha, 2), "avgFeeDrag": round(avg_fee_drag, 2), "benchChange": round(bench_chg, 2) if bench_chg else None}
     _save(data)
-    print(f"forecast_tracker: 本次回看 {checked} 只,命中 {hits} 只。累计命中率 {rate:.1f}% ({total_hits}/{total})")
+    print(f"forecast_tracker: 本次回看 {checked} 只,扣费后命中 {hits} 只。累计命中率 {rate:.1f}% ({total_hits}/{total})")
     print(f"  待到期(未到回看日): {len(pending)} 只")
+    print(f"  平均毛alpha {avg_alpha:+.2f}% → 扣费后净alpha {avg_net_alpha:+.2f}% (手续费拖累 {avg_fee_drag:.2f}%)")
 
 
 def cmd_stats(args):
-    """查命中率+alpha超额收益"""
+    """查命中率+alpha超额收益(毛/净双口径)"""
     data = _load()
     stats = data.get("stats", {})
     preds = data.get("predictions", [])
-    print(f"=== 预测兑现统计(alpha口径:跑赢大盘才算命中) ===")
+    print(f"=== 预测兑现统计(扣费后跑赢大盘才算命中) ===")
     print(f"总预测: {len(preds)} 只")
     print(f"已回看: {stats.get('verified', 0)} 只")
-    print(f"跑赢大盘: {stats.get('hits', 0)} 只")
-    print(f"命中率(跑赢大盘): {stats.get('hitRate', 0)}%")
-    print(f"平均alpha超额: {stats.get('avgAlpha', 0)}%  (大盘同期: {stats.get('benchChange', '?')}%)")
+    print(f"扣费后跑赢大盘: {stats.get('hits', 0)} 只")
+    print(f"命中率(扣费后净alpha>0): {stats.get('hitRate', 0)}%")
+    print(f"平均毛alpha: {stats.get('avgAlpha', 0):+.2f}%")
+    print(f"平均手续费拖累: {stats.get('avgFeeDrag', 0):.2f}%")
+    print(f"平均净alpha(扣费后): {stats.get('avgNetAlpha', 0):+.2f}%  (大盘同期: {stats.get('benchChange', '?')}%)")
     # 按周期分
     for h in HORIZON_DAYS:
         hp = [p for p in preds if p.get("horizon") == h]
@@ -250,7 +318,54 @@ def cmd_stats(args):
         r = (len(hh) / len(hv) * 100) if hv else 0
         alphas = [p.get("alphaPct", 0) for p in hv if p.get("alphaPct") is not None]
         avg_a = sum(alphas) / len(alphas) if alphas else 0
-        print(f"  {h}: 总{len(hp)} 已验{len(hv)} 跑赢大盘{len(hh)} 命中率{r:.1f}% 平均alpha{avg_a:+.2f}%")
+        net_alphas = [p.get("netAlphaPct", 0) for p in hv if p.get("netAlphaPct") is not None]
+        avg_na = sum(net_alphas) / len(net_alphas) if net_alphas else 0
+        print(f"  {h}: 总{len(hp)} 已验{len(hv)} 扣费后跑赢{len(hh)} 命中率{r:.1f}% 毛alpha{avg_a:+.2f}% 净alpha{avg_na:+.2f}%")
+
+
+def cmd_recheck(args):
+    """重算已验证记录的扣费后净收益(8-11手续费建模后,补算旧记录的费用拖累)。
+    用已存储的 actualChangePct(到期日毛涨幅)反推费用,不重新取价(避免用今日价污染到期日兑现)。
+    """
+    data = _load()
+    preds = data.get("predictions", [])
+    recomputed = 0
+    for p in preds:
+        if not p.get("verified"):
+            continue
+        chg = p.get("actualChangePct")
+        if chg is None:
+            continue
+        capital = p.get("capital", DEFAULT_CAPITAL)
+        position_pct = p.get("positionPct", DEFAULT_POSITION_PCT)
+        bench_chg = p.get("benchChangePct")
+        # 毛超额(若旧记录无alphaPct,现算)
+        alpha = (chg - bench_chg) if bench_chg is not None else chg
+        if p.get("alphaPct") is None:
+            p["alphaPct"] = round(alpha, 2)
+        net_chg = _net_return_pct(chg, capital, position_pct)
+        fee_drag = chg - net_chg
+        p["feeDragPct"] = round(fee_drag, 2)
+        p["netActualChangePct"] = round(net_chg, 2)
+        net_alpha = alpha - fee_drag
+        p["netAlphaPct"] = round(net_alpha, 2)
+        p["hit"] = net_alpha > 0  # 重判命中(扣费后口径)
+        recomputed += 1
+    # 重算总命中
+    total = sum(1 for p in preds if p.get("verified"))
+    total_hits = sum(1 for p in preds if p.get("hit"))
+    rate = (total_hits / total * 100) if total else 0
+    alphas = [p.get("alphaPct", 0) for p in preds if p.get("verified") and p.get("alphaPct") is not None]
+    avg_alpha = sum(alphas) / len(alphas) if alphas else 0
+    net_alphas = [p.get("netAlphaPct", 0) for p in preds if p.get("verified") and p.get("netAlphaPct") is not None]
+    avg_net_alpha = sum(net_alphas) / len(net_alphas) if net_alphas else 0
+    fee_drags = [p.get("feeDragPct", 0) for p in preds if p.get("verified") and p.get("feeDragPct") is not None]
+    avg_fee_drag = sum(fee_drags) / len(fee_drags) if fee_drags else 0
+    data["stats"] = {"totalPredictions": len(preds), "verified": total, "hits": total_hits, "hitRate": round(rate, 1), "avgAlpha": round(avg_alpha, 2), "avgNetAlpha": round(avg_net_alpha, 2), "avgFeeDrag": round(avg_fee_drag, 2), "benchChange": data.get("stats", {}).get("benchChange")}
+    _save(data)
+    print(f"forecast_tracker: 重算 {recomputed} 条已验证记录的扣费后净收益")
+    print(f"  毛口径命中率 {sum(1 for p in preds if p.get('verified') and p.get('alphaPct',0)>0)}/{total} → 扣费后命中率 {rate:.1f}% ({total_hits}/{total})")
+    print(f"  平均毛alpha {avg_alpha:+.2f}% → 扣费后净alpha {avg_net_alpha:+.2f}% (手续费拖累 {avg_fee_drag:.2f}%)")
 
 
 def main():
@@ -260,6 +375,7 @@ def main():
     pr.add_argument("--run-id", required=True)
     pr.add_argument("--horizon", default="波段")
     pr.add_argument("--as-of", default="", help="预测基准日 YYYYMMDD")
+    pr.add_argument("--capital", type=float, default=DEFAULT_CAPITAL, help=f"账户资金(元),默认{DEFAULT_CAPITAL}用于算手续费")
     pr.add_argument("--json", default="")
     pr.add_argument("--json-file", default="")
     pr.set_defaults(func=cmd_record)
@@ -268,6 +384,8 @@ def main():
     pc.set_defaults(func=cmd_check)
     ps = sub.add_parser("stats", help="查命中率")
     ps.set_defaults(func=cmd_stats)
+    prc = sub.add_parser("recheck", help="重算已验证记录的扣费后净收益(手续费建模后补算)")
+    prc.set_defaults(func=cmd_recheck)
     args = p.parse_args()
     args.func(args)
 

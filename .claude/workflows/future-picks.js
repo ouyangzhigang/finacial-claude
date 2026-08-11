@@ -5,12 +5,11 @@
 
 export const meta = {
   name: 'future-picks',
-  description: 'A股未来预判——推理链5阶段(预判假设→证据收集→推理验证→潜力锁定→跟踪兑现),找未来有潜力上涨的票,非当日排行榜',
+  description: 'A股未来预判——推理链4阶段(预判假设→证据收集→推理锁定→跟踪兑现),找未来有潜力上涨的票,非当日排行榜',
   phases: [
     {title: '预判假设', detail: 'macro定方向+板块轮动接力预判'},
     {title: '证据收集', detail: 'sector∥technical∥catalyst∥fundamentals 找将涨信号'},
-    {title: '推理验证', detail: 'governor综合演绎:因为A→B→C→预判D将涨'},
-    {title: '潜力锁定', detail: 'TopN+操作卡(触发窗+买入区间+止损)'},
+    {title: '推理锁定', detail: 'governor综合演绎+排雷+选TopN+操作卡(8-11合并阶段3+4省1次串行)'},
     {title: '跟踪兑现', detail: 'record预测+命中率反馈'},
   ],
 }
@@ -75,8 +74,8 @@ log('🔄 证据收集 — 4路并行找将涨信号')
 const [sector, tech, cat, fund] = await parallel([
   // 2a. 板块轮动接力 + 跟风补涨票
   () => S('sector', () => agent(P('sector-analyst',
-    '找板块轮动接力的跟风补涨票(龙头已涨→今天没涨的跟风票将补涨)。复用 sector-rotation-detector 思维。',
-    '1. Read '+macro.path+' 的 data.nextRotation 获取接力方向预判\n2. 用 market_radar fetch_sector_ranking 找今日强势板块,预判下个接力板块\n3. ⭐ 核心:找龙头今日涨停/大涨的板块里,今天【没涨】的跟风票(将补涨)\n4. ⭐ 用 ifind_search_stocks 自然语言筛\"主线板块里近20日跌>5%+PE<30+未涨停\"的跟风补涨票(全市场未涨来源,补 cn_fetch.py rank=已涨榜单的滞后) + cn_fetch.py rank 补充龙头已涨信号; 汇总候选20-30只\n5. 输出keyFields: {candidates:[{code,name,sector,relaySignal(接力信号),reasoningChain}], nextSector(下个接力板块)}\n\n'+FOCUS, ctx), {agentType:'sector-analyst',schema:RET,label:'sector',phase:'证据收集'})),
+    '找板块轮动接力的跟风补涨票(龙头已涨→今天没涨的跟风票将补涨),但必须先过板块生命周期判断。复用 sector-rotation-detector 思维。',
+    '1. Read '+macro.path+' 的 data.nextRotation 获取接力方向预判\n2. 用 market_radar fetch_sector_ranking 找今日强势板块,预判下个接力板块\n3. ⭐⭐ 板块生命周期过滤(硬约束,8-11新增,堵"退潮当发酵"病根): Bash 跑 `python scripts/sector_lifecycle.py --board <今日强势板块名逗号分隔> --json`,对每板块读 verdict:\n   - deployable(启动/发酵期):跟风flat票=真蓄势将补涨,**可选**\n   - leader_only(高潮期):只选龙头,跟风票补涨空间已小不选\n   - veto(退潮期):**硬否决**,该板块票一律不进候选池(缩量=撤退非蓄势;8-03电网8-07退潮被误判"刚发酵"即此病根)\n   - unclear(数据不足):降权观察,标"生命周期未定性"\n   ⚠️ 关键:个股未涨≠将涨——退潮期板块的未涨票是弱势不是蓄势,必须靠板块生命周期上下文区分\n4. ⭐ 核心:只在 deployable(启动/发酵期)板块里,找龙头今日涨停/大涨但今天【没涨】的跟风票(将补涨);leader_only(高潮期)板块只取龙头;veto板块一票否决\n5. ⭐ 用 ifind_search_stocks 自然语言筛\"主线板块里近20日跌>5%+PE<30+未涨停\"的跟风补涨票(全市场未涨来源,补 cn_fetch.py rank=已涨榜单的滞后) + cn_fetch.py rank 补充龙头已涨信号; 汇总候选20-30只(每只标 lifecyclePhase 标签)\n6. 输出keyFields: {candidates:[{code,name,sector,lifecyclePhase(启动/发酵/高潮/退潮),relaySignal(接力信号),reasoningChain}], nextSector(下个接力板块), vetoedSectors:[{name,phase,reason}]}\n\n'+FOCUS, ctx), {agentType:'sector-analyst',schema:RET,label:'sector',phase:'证据收集'})),
   // 2b. 技术形态将涨信号(回踩企稳/区间收敛/底部结构)——用setup_score
   // ⚠️ 本路与2a sector并行,不能引用sector结果(TDZ),用阶段1已完成的macro.path
   () => S('technical', () => agent(P('technical-liquidity',
@@ -84,8 +83,8 @@ const [sector, tech, cat, fund] = await parallel([
     '1. Read '+macro.path+' 取顺风方向+候选线索(本路与sector并行,sector结果未就绪,勿引用)\n2. Bash: PYTHONIOENCODING=utf-8 python scripts/factor_engine.py --codes <从macro顺风方向自选候选> --output '+RD+'/factor_scores.json 2>&1\n3. Read '+RD+'/factor_scores.json 重点看 setup_score + setup_signals + range_contraction\n4. ⭐ 核心:挑 setup_score 高 + setup_signals 含"回踩企稳/区间收敛/底部结构"的票(非已突破的m5高)\n5. 输出keyFields: {setupCandidates:[{code,setup_score,setup_signals,reasoningChain}], passCodes}\n\n⚠️ 流动性硬门槛仍过滤(成交额>=1亿/换手1-7%/市值>=30亿/非ST)', ctx), {agentType:'technical-liquidity',schema:RET,label:'technical',phase:'证据收集'})),
   // 2c. 催化将兑现 + 主力建仓未拉升
   () => S('catalyst', () => agent(P('catalyst-scanner',
-    '找催化将兑现+主力建仓未拉升的票。复用 event-driven-detector + china-catalyst-calendar 思维。',
-    '1. Read '+SHARED+' 取龙虎榜+资金流信号\n2. Bash: python scripts/hot_trend_dig.py 2>&1 取龙虎榜机构建仓\n3. 用 market_radar fetch_capital_flow 找主力净流入为正但当日未大涨的票(建仓未拉升)\n4. ⭐ 核心:找有未来催化(财报/政策/会议)+主力已进场但未拉升的票\n5. 输出keyFields: {catalystCandidates:[{code,catalyst(未来事件),capitalSignal(建仓信号),reasoningChain}]}\n\n'+FOCUS, ctx), {agentType:'catalyst-scanner',schema:RET,label:'catalyst',phase:'证据收集'})),
+    '找催化将兑现+主力建仓未拉升的票,但兑现度须双维(板块×个股)交叉判断。复用 event-driven-detector + china-catalyst-calendar 思维。',
+    '1. Read '+SHARED+' 取龙虎榜+资金流信号\n2. Bash: python scripts/hot_trend_dig.py 2>&1 取龙虎榜机构建仓\n3. 用 market_radar fetch_capital_flow 找主力净流入为正但当日未大涨的票(建仓未拉升)\n4. ⭐⭐ 板块兑现度判断(8-11新增,堵"个股未涨=蓄势"误判): 对候选票所属板块, Bash 跑 `python scripts/sector_lifecycle.py --board <所属板块逗号分隔> --json` 取板块 phase+verdict:\n   - 板块启动期/发酵期(deployable): 个股未涨+主力建仓=真蓄势将补涨,可选加分\n   - 板块退潮期(veto): 整板块否决,个股未涨=弱势非蓄势,**不选**(8-07电网跟风票即此误判)\n   - 板块高潮期(leader_only): 只取龙头,跟风票不选\n5. ⭐ 核心:找有未来催化(财报/政策/会议)+主力已进场但未拉升+板块在启动/发酵期的票(三条件叠加=真将涨);板块退潮的不论催化多硬都不选\n6. 输出keyFields: {catalystCandidates:[{code,catalyst(未来事件),capitalSignal(建仓信号),boardPhase(板块阶段),fulfillmentPair(板块兑现度×个股兑现度),reasoningChain}], vetoedCandidates:[{code,boardPhase,reason}]}\n\n'+FOCUS, ctx), {agentType:'catalyst-scanner',schema:RET,label:'catalyst',phase:'证据收集'})),
   // 2d. 估值修复 + 业绩预增
   () => S('fundamentals', () => agent(P('fundamentals-analyst',
     '找估值修复+业绩预增的票(超跌低估值+基本面反转)。复用 sentiment-reality-gap + undervalued 思维。',
@@ -95,29 +94,18 @@ ctx += ap(sector,'板块接力') + ap(tech,'形态将涨') + ap(cat,'催化建�
 log('✅ 证据收集完成')
 
 // ════════════════════════════════════════
-// 阶段3: 推理验证 —— governor综合演绎(因为A→B→C→D→预判E将涨)
+// 阶段3: 推理锁定 —— governor综合演绎+排雷+选TopN+操作卡(8-11合并旧阶段3+4,省1次串行等待)
 // ════════════════════════════════════════
-phase('推理验证')
-log('🔄 推理验证 — governor综合演绎')
-const reasoning = await S('reasoning', () => agent(P('governor',
-  '综合4路证据+宏观预判,做推理演绎:哪些票未来'+horDays+'有上涨潜力,且说清为什么。',
-  '1. Read全部证据: '+sector.path+' '+tech.path+' '+cat.path+' '+fund.path+' '+macro.path+'\n2. ⭐ 排雷先行(硬否决,不可override):从4路证据汇总所有候选票代码(不论来自哪路),Bash跑 python scripts/risk_audit.py --codes <所有候选逗号分隔> --json,对hard_veto=true的票(业绩雷归母净利同比<-30%/卖方机构专用折价大宗出逃≥2笔/未来30日解禁>流通市值10%)直接剔除不入选——技术分再高有硬雷也踢。排雷干净度(无硬雷+业绩正增+买方机构接盘)在potentialScore加权(+10~15分)。这是8-07许继电气漏排雷的根因修复:许继是sector选的(非超跌股fundamentals没覆盖),5b只查fundamentals.json会漏——必须governor统一排雷所有候选。\n3. ⭐ 核心:对排雷通过的候选,综合多路信号形成完整推理链\n   模板:因为[板块轮动A]+[资金建仓B]+[形态回踩C]+[催化将兑现D]+[排雷干净E]→预判[票F]未来'+horDays+'有上涨潜力\n4. 剔除只有单一信号(无共振)的票——需≥2路信号共振才入选\n5. 输出keyFields: {reasonedPicks:[{code,name,signals:[信号清单],reasoningChain:[A→B→C→D→排雷→E],potentialScore,riskAuditClean(排雷干净度bool),triggerWindow(触发时间窗)}]}\n\n⚠️ 这是核心环节:你的价值在"综合推理预判",不是拼数据。每只票必须说清"为什么预判它将涨"。', ctx), {agentType:'governor',schema:RET,label:'reasoning',phase:'推理验证'}))
-ctx += ap(reasoning,'推理验证')
-log('✅ 推理验证完成: ' + (reasoning?.summary || '空'))
+phase('推理锁定')
+log('🔄 推理锁定 — governor综合演绎+排雷+选TopN+操作卡(合并省1次串行)')
+const report = await S('governor', () => agent(P('governor',
+  '综合4路证据+宏观预判,做推理演绎→排雷→选Top'+topN+'→操作卡→写报告。一气呵成,找未来'+horDays+'有上涨潜力的票并说清为什么。复用 risk-adjusted-return-optimizer 思维。',
+  '【A. 推理演绎】\n1. Read全部证据: '+sector.path+' '+tech.path+' '+cat.path+' '+fund.path+' '+macro.path+'\n2. ⭐ 排雷先行(硬否决,不可override):从4路证据汇总所有候选票代码,Bash跑 python scripts/risk_audit.py --codes <所有候选逗号分隔> --json,对hard_veto=true的票(业绩雷归母净利同比<-30%/卖方机构专用折价大宗出逃≥2笔/未来30日解禁>流通市值10%)直接剔除。排雷干净度(无硬雷+业绩正增+买方机构接盘)在potentialScore加权(+10~15分)。8-07许继电气漏排雷根因:许继是sector选的fundamentals没覆盖,必须governor统一排雷所有候选。\n3. ⭐ 核心:对排雷通过的候选,综合多路信号形成完整推理链\n   模板:因为[板块轮动A]+[资金建仓B]+[形态回踩C]+[催化将兑现D]+[排雷干净E]→预判[票F]未来'+horDays+'有上涨潜力\n4. 剔除只有单一信号(无共振)的票——需≥2路信号共振才入选\n5. 每只票标 lifecyclePhase(板块阶段:启动/发酵/高潮/退潮,从sector证据继承)+boardPhaseVerdict(deployable/leader_only/veto/unclear)+triggerWindow(触发时间窗)\n\n【B. TopN锁定+操作卡】\n6. 按 potentialScore(多信号共振强度)+风险收益比排序选Top'+topN+'\n7. ⭐ 输出每只票的操作卡:触发时间窗+买入区间(注明"实际成交价约+0.3%滑点")+止损+止盈\n8. 仓位配置(组合分散:行业<=40%/催化同源<=50%/单票<=25%)\n9. 不再回测证伪踢出——回测只作风险参考(标注),不否决预判\n9b. ⚠️估值/业绩/排雷硬约束(代码级执行,不可override):①排雷:hard_veto=true的票不入TopN;②估值:Read '+RD+'/fundamentals.json取pePercentile;pePercentile>80%→降级观察仓不入TopN(标估值已贵·位置不佳);pePercentile>95%→不得排Top1;③业绩:netProfitGrowthPct<-30%→不得排Top1/3(业绩雷标低置信).病根:凯美PE分位100%/许继Q1-46%这类估值天花板+业绩雷票不该推给用户.\n9c. ⭐⭐ 接力落地建仓(8-11新增,堵"过度保守让将涨票缺席"):按lifecyclePhase+boardPhaseVerdict定仓:\n   - 板块deployable(启动/发酵期)+个股flat未涨+setup高+多信号共振 → **TopN主推,标正常建仓(5-15%),不标观察仓0%**(8-11三花智控发酵期跟风票被标"资金未确认→观察仓0%"致缺席可部署清单即此病根;发酵期跟风票=将补涨主力,不该过度保守)\n   - 仅当板块阶段unclear/资金信号缺失/形态未确认时才降观察仓0%\n   - 板块leader_only(高潮期)降仓(3-8%)+标"高潮追涨,严格止损"\n   - 板块veto(退潮期)不入TopN(已在sector/catalyst过滤,governor复核)\n   病根:旧版"资金未确认"一刀切降观察仓,致真正将涨的发酵期接力票缺席TopN,推的反而是已退潮票——现用板块生命周期作建仓落地依据,deployable板块跟风票敢推敢建仓.\n\n【C. 写报告+记录】\n10. WRITE '+RD+'/reasoning.json 存reasonedPicks(供跟踪回溯)\n11. WRITE output/'+asOf+'_未来潜力预判_'+horizon+'.md 报告结构:\n   一、预判方向(未来'+horDays+'占优风格/顺风板块/接力方向+宏观推理)\n   二、潜力票清单(每只附完整推理链A→B→C→D→E+lifecyclePhase)\n   三、未来催化日历(哪些事件将兑现)\n   四、板块轮动图(今天热点→明天接力,标注各板块生命周期阶段)\n   五、操作卡(触发窗+买入区间含滑点提示+止损+止盈)\n   六、预测跟踪表(本次预测记录,待未来兑现验证,注明扣费口径)\n12. WRITE '+RD+'/final.json + '+RD+'/_rec.json\n13. Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+'_'+horizon+' --json-file '+RD+'/_rec.json 2>&1\n14. Bash: python scripts/forecast_tracker.py record --run-id '+asOf+'_'+G+'_'+horizon+' --json-file '+RD+'/_rec.json --horizon '+horizon+' 2>&1 (失败不影响)\n返回schema: {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}\n\n⚠️ 这是核心环节:你的价值在"综合推理预判",不是拼数据。每只票必须说清"为什么预判它将涨"。', ctx), {agentType:'governor',schema:GOV,label:'governor',phase:'推理锁定'}))
+ctx += ap(report,'推理锁定')
+log('✅ 推理锁定完成: ' + (report?.oneLineConclusion || '空'))
 
 // ════════════════════════════════════════
-// 阶段4: 潜力锁定 —— TopN+操作卡(不再回测证伪踢出,用预判强度+风险收益比)
-// ════════════════════════════════════════
-phase('潜力锁定')
-log('🔄 潜力锁定 — governor/risk 选TopN+操作卡')
-const report = await S('governor', () => agent(P('risk-portfolio',
-  '基于推理验证结果,锁定Top'+topN+'潜力票+操作卡。复用 risk-adjusted-return-optimizer 思维。',
-  '1. Read '+reasoning.path+' 取reasonedPicks\n2. 按 potentialScore(多信号共振强度)+风险收益比排序选Top'+topN+'\n3. ⭐ 输出每只票的操作卡:触发时间窗+买入区间+止损+止盈\n4. 仓位配置(组合分散:行业<=40%/催化同源<=50%/单票<=25%)\n5. 不再回测证伪踢出——回测只作风险参考(标注),不否决预判\n5b. ⚠️估值/业绩/排雷硬约束(future-picks不跑hard_gate.py,由你代码级执行,不可override):①排雷:Read '+RD+'/reasoning.json取每只票riskAuditClean——false或被推理验证剔除的票不得入TopN(阶段3已跑risk_audit.py,若reasoning.json缺则Bash补跑 python scripts/risk_audit.py --codes <TopN候选逗号分隔> --json);②估值:Read '+RD+'/fundamentals.json取pePercentile;pePercentile>80%→降级观察仓不入TopN(标估值已贵·位置不佳);pePercentile>95%→不得排Top1;③业绩:netProfitGrowthPct<-30%→不得排Top1/3(业绩雷标低置信).病根:凯美PE分位100%/许继Q1-46%这类估值天花板+业绩雷票不该推给用户.\n6. WRITE output/'+asOf+'_未来潜力预判_'+horizon+'.md 报告结构:\n   一、预判方向(未来'+horDays+'占优风格/顺风板块/接力方向+宏观推理)\n   二、潜力票清单(每只附完整推理链A→B→C→D→E)\n   三、未来催化日历(哪些事件将兑现)\n   四、板块轮动图(今天热点→明天接力)\n   五、操作卡(触发窗+买入区间+止损+止盈)\n   六、预测跟踪表(本次预测记录,待未来兑现验证)\n7. WRITE '+RD+'/final.json + '+RD+'/_rec.json\n8. Bash: python scripts/portfolio_tracker.py record --run-id '+asOf+'_'+G+'_'+horizon+' --json-file '+RD+'/_rec.json 2>&1\n9. Bash: python scripts/forecast_tracker.py record --run-id '+asOf+'_'+G+'_'+horizon+' --json-file '+RD+'/_rec.json --horizon '+horizon+' 2>&1 (失败不影响)\n返回schema: {path,dataPath,oneLineConclusion,topN,totalPosition,confidence,keyRisks}', ctx), {agentType:'governor',schema:GOV,label:'governor',phase:'潜力锁定'}))
-ctx += ap(report,'潜力锁定')
-log('✅ 潜力锁定完成')
-
-// ════════════════════════════════════════
-// 阶段5: 跟踪兑现 —— 已在阶段4 record,这里触发历史预测的回看
+// 阶段4: 跟踪兑现 —— 已在阶段3 record,这里触发历史预测的回看
 // ════════════════════════════════════════
 phase('跟踪兑现')
 log('🔄 跟踪兑现 — 回看历史预测命中率')

@@ -25,7 +25,10 @@
         "sz399006": 3343.96
       },
       "benchChangePct": 1.01,
-      "alphaPct": 6.07
+      "alphaPct": 6.07,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 6.63,
+      "netAlphaPct": 5.62
     },
     {
       "code": "600176",
@@ -52,7 +55,10 @@
         "sz399006": 3343.96
       },
       "benchChangePct": 1.01,
-      "alphaPct": 3.17
+      "alphaPct": 3.17,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 3.73,
+      "netAlphaPct": 2.72
     },
     {
       "code": "000938",
@@ -78,7 +84,10 @@
         "sz399006": 3343.96
       },
       "benchChangePct": 1.01,
-      "alphaPct": 6.5
+      "alphaPct": 6.5,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 7.06,
+      "netAlphaPct": 6.05
     },
     {
       "code": "300229",
@@ -104,7 +113,10 @@
         "sz399006": 3343.96
       },
       "benchChangePct": 1.01,
-      "alphaPct": 14.59
+      "alphaPct": 14.59,
+      "feeDragPct": 0.46,
+      "netActualChangePct": 15.14,
+      "netAlphaPct": 14.13
     },
     {
       "code": "002400",
@@ -130,7 +142,10 @@
         "sz399006": 3343.96
       },
       "benchChangePct": 1.01,
-      "alphaPct": 3.4
+      "alphaPct": 3.4,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 3.96,
+      "netAlphaPct": 2.95
     },
     {
       "code": "600089",
@@ -157,7 +172,10 @@
         "sz399006": 3302.55
       },
       "benchChangePct": 2.81,
-      "alphaPct": -2.25
+      "alphaPct": -2.25,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 0.12,
+      "netAlphaPct": -2.69
     },
     {
       "code": "002015",
@@ -184,7 +202,10 @@
         "sz399006": 3302.55
       },
       "benchChangePct": 2.81,
-      "alphaPct": -1.98
+      "alphaPct": -1.98,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 0.38,
+      "netAlphaPct": -2.43
     },
     {
       "code": "600522",
@@ -210,7 +231,10 @@
         "sz399006": 3302.55
       },
       "benchChangePct": 2.81,
-      "alphaPct": 14.83
+      "alphaPct": 14.83,
+      "feeDragPct": 0.46,
+      "netActualChangePct": 17.19,
+      "netAlphaPct": 14.38
     },
     {
       "code": "300605",
@@ -236,7 +260,10 @@
         "sz399006": 3302.55
       },
       "benchChangePct": 2.81,
-      "alphaPct": -1.06
+      "alphaPct": -1.06,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 1.3,
+      "netAlphaPct": -1.51
     },
     {
       "code": "002126",
@@ -262,7 +289,10 @@
         "sz399006": 3302.55
       },
       "benchChangePct": 2.81,
-      "alphaPct": 5.73
+      "alphaPct": 5.73,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 8.09,
+      "netAlphaPct": 5.28
     },
     {
       "code": "300499",
@@ -284,7 +314,10 @@
       "actualChangePct": 6.87,
       "benchChangePct": 2.81,
       "alphaPct": 4.05,
-      "hit": true
+      "hit": true,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 6.42,
+      "netAlphaPct": 3.61
     },
     {
       "code": "603533",
@@ -306,7 +339,10 @@
       "actualChangePct": 2.41,
       "benchChangePct": 2.81,
       "alphaPct": -0.4,
-      "hit": false
+      "hit": false,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 1.96,
+      "netAlphaPct": -0.85
     },
     {
       "code": "688106",
@@ -328,7 +364,10 @@
       "actualChangePct": 13.69,
       "benchChangePct": 2.81,
       "alphaPct": 10.88,
-      "hit": true
+      "hit": true,
+      "feeDragPct": 0.46,
+      "netActualChangePct": 13.23,
+      "netAlphaPct": 10.42
     },
     {
       "code": "002315",
@@ -350,7 +389,10 @@
       "actualChangePct": -1.62,
       "benchChangePct": 2.81,
       "alphaPct": -4.43,
-      "hit": false
+      "hit": false,
+      "feeDragPct": 0.45,
+      "netActualChangePct": -2.07,
+      "netAlphaPct": -4.88
     },
     {
       "code": "601360",
@@ -372,7 +414,10 @@
       "actualChangePct": -0.52,
       "benchChangePct": 2.81,
       "alphaPct": -3.33,
-      "hit": false
+      "hit": false,
+      "feeDragPct": 0.45,
+      "netActualChangePct": -0.97,
+      "netAlphaPct": -3.78
     },
     {
       "code": "000612",
@@ -394,7 +439,10 @@
       "actualChangePct": 0.26,
       "benchChangePct": 3.05,
       "alphaPct": -2.79,
-      "hit": false
+      "hit": false,
+      "feeDragPct": 0.45,
+      "netActualChangePct": -0.19,
+      "netAlphaPct": -3.24
     },
     {
       "code": "603386",
@@ -416,7 +464,10 @@
       "actualChangePct": 4.75,
       "benchChangePct": 3.05,
       "alphaPct": 1.71,
-      "hit": true
+      "hit": true,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 4.3,
+      "netAlphaPct": 1.25
     },
     {
       "code": "002425",
@@ -438,7 +489,10 @@
       "actualChangePct": -5.48,
       "benchChangePct": 3.05,
       "alphaPct": -8.52,
-      "hit": false
+      "hit": false,
+      "feeDragPct": 0.45,
+      "netActualChangePct": -5.93,
+      "netAlphaPct": -8.98
     },
     {
       "code": "300364",
@@ -460,7 +514,10 @@
       "actualChangePct": -2.78,
       "benchChangePct": 3.05,
       "alphaPct": -5.82,
-      "hit": false
+      "hit": false,
+      "feeDragPct": 0.45,
+      "netActualChangePct": -3.23,
+      "netAlphaPct": -6.28
     },
     {
       "code": "600522",
@@ -482,7 +539,10 @@
       "actualChangePct": 2.46,
       "benchChangePct": 3.05,
       "alphaPct": -0.59,
-      "hit": false
+      "hit": false,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 2.01,
+      "netAlphaPct": -1.04
     },
     {
       "code": "002805",
@@ -500,11 +560,14 @@
       "position": 25,
       "reasoningChain": [],
       "runId": "20260806_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "benchChangePct": null,
-      "alphaPct": null,
-      "hit": null
+      "verified": true,
+      "actualChangePct": 4.77,
+      "benchChangePct": 3.46,
+      "alphaPct": 1.32,
+      "hit": true,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 4.32,
+      "netAlphaPct": 0.86
     },
     {
       "code": "002354",
@@ -522,11 +585,14 @@
       "position": 25,
       "reasoningChain": [],
       "runId": "20260806_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "benchChangePct": null,
-      "alphaPct": null,
-      "hit": null
+      "verified": true,
+      "actualChangePct": 4.37,
+      "benchChangePct": 3.46,
+      "alphaPct": 0.91,
+      "hit": true,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 3.92,
+      "netAlphaPct": 0.46
     },
     {
       "code": "000815",
@@ -544,11 +610,14 @@
       "position": 20,
       "reasoningChain": [],
       "runId": "20260806_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "benchChangePct": null,
-      "alphaPct": null,
-      "hit": null
+      "verified": true,
+      "actualChangePct": 5.25,
+      "benchChangePct": 3.46,
+      "alphaPct": 1.8,
+      "hit": true,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 4.8,
+      "netAlphaPct": 1.34
     },
     {
       "code": "002407",
@@ -566,11 +635,14 @@
       "position": 15,
       "reasoningChain": [],
       "runId": "20260806_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "benchChangePct": null,
-      "alphaPct": null,
-      "hit": null
+      "verified": true,
+      "actualChangePct": 11.86,
+      "benchChangePct": 3.46,
+      "alphaPct": 8.4,
+      "hit": true,
+      "feeDragPct": 0.46,
+      "netActualChangePct": 11.4,
+      "netAlphaPct": 7.94
     },
     {
       "code": "002549",
@@ -588,11 +660,14 @@
       "position": 15,
       "reasoningChain": [],
       "runId": "20260806_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "benchChangePct": null,
-      "alphaPct": null,
-      "hit": null
+      "verified": true,
+      "actualChangePct": 3.84,
+      "benchChangePct": 3.46,
+      "alphaPct": 0.38,
+      "hit": false,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 3.39,
+      "netAlphaPct": -0.07
     },
     {
       "code": "002414",
@@ -613,11 +688,14 @@
         "板块龙头涨停个股下跌最强跟风补涨"
       ],
       "runId": "20260806_future-picks_短线",
-      "verified": false,
-      "actualChangePct": null,
-      "benchChangePct": null,
-      "alphaPct": null,
-      "hit": null
+      "verified": true,
+      "actualChangePct": 5.41,
+      "benchChangePct": 3.46,
+      "alphaPct": 1.95,
+      "hit": true,
+      "feeDragPct": 0.45,
+      "netActualChangePct": 4.96,
+      "netAlphaPct": 1.5
     },
     {
       "code": "000400",
@@ -1142,15 +1220,437 @@
       "benchChangePct": null,
       "alphaPct": null,
       "hit": null
+    },
+    {
+      "code": "000725",
+      "name": "京东方A",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260811",
+      "expireDate": "20260825",
+      "basePrice": 5.97,
+      "benchBase": {
+        "sh000001": 3964.79,
+        "sz399006": 3587.24
+      },
+      "role": "Top1-4信号共振建仓未拉升(面板/AIDC)",
+      "position": "17.9%(3手@5.97=1791元)",
+      "reasoningChain": [
+        "因为macro预判AIDC算力硬件链为第二顺风主线+IDC板块净流入39.39亿全市场第一→板块方向确认(信号A)",
+        "因为catalyst资金流显示京东方今日主力净流入6.01亿/超大单4.48亿但涨幅仅+1.53%=建仓未拉升最典型(信号B)",
+        "因为technical形态setup87三信号共振(回踩缩量企稳+贴MA20 5.88+区间收敛rc0.64),近20日跌14.67%超跌回踩非透支(信号C)",
+        "因为催化将兑现8月底中报+面板涨价+近5日+6.43%启动未透支(信号D)",
+        "因为risk_audit hard_veto=false(earnings+5.78%正/CF+0.33正/无解禁)(信号E)",
+        "预判京东方A未来1-2周有上涨潜力:板块资金第一+主力6亿建仓未拉升+形态回踩MA20+中报催化+排雷干净→资金已进场未拉升,概率路径指向1-2周内补涨"
+      ],
+      "runId": "20260811_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002050",
+      "name": "三花智控",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260811",
+      "expireDate": "20260825",
+      "basePrice": 39.06,
+      "benchBase": {
+        "sh000001": 3964.79,
+        "sz399006": 3587.24
+      },
+      "role": "Top2-人形机器人接力首选(setup92最高,观察仓待资金确认+价位约束)",
+      "position": "0%(观察仓:39元/手=39%超25%+资金未确认)",
+      "reasoningChain": [
+        "因为macro预判人形机器人为nextRotation#1(百花6连板高位分歧→资金扩散低位;斯菱+14.85%初动;政策新质生产力核心)→接力方向确认(信号A)",
+        "因为technical setup92为20只候选最高+四信号共振+m5仅0.72最纯蓄势待突破+entryScore20/25符合Top1入场优势(信号C)",
+        "因为催化具身智能2026图谱征集+中科芯知天使轮,近5日+0.61%未price-in(信号D)",
+        "因为risk_audit无任何warning全场最clean(earnings+2.68%正/CF+0.26正/无大宗/无解禁/supply0)(信号E)",
+        "但catalyst资金信号缺失(未进capitalFlow Top20)→形态强vs资金未确认矛盾,降一档不排Top1(矛盾调和)",
+        "预判三花智控未来1-2周有上涨潜力:人形机器人接力预判+setup最高最纯蓄势+排雷最clean→若次日主力流入转正则确认;风险=资金未确认+39元1万账户不可部署(待回调至33元以下or账户增长)"
+      ],
+      "runId": "20260811_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "000100",
+      "name": "TCL科技",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260811",
+      "expireDate": "20260825",
+      "basePrice": 5.07,
+      "benchBase": {
+        "sh000001": 3964.79,
+        "sz399006": 3587.24
+      },
+      "role": "Top3-面板双雄同步建仓(面板/AIDC/光伏)",
+      "position": "10.1%(2手@5.07=1014元)",
+      "reasoningChain": [
+        "因为macro预判AIDC算力第二顺风+面板涨价周期+光伏设备今日拉升→面板/光伏双顺风(信号A)",
+        "因为catalyst显示TCL主力净流入3.58亿/超大单1.68亿但涨幅+4.11%=建仓未拉升,与京东方构成面板双雄同步建仓(信号B)",
+        "因为催化8月底中报+面板涨价+光伏,近5日+3.65%启动未透支(信号D)",
+        "因为risk_audit hard_veto=false(earnings+53.71%正/CF+0.55正/无解禁)(信号E)",
+        "预判TCL科技未来1-2周有上涨潜力:面板双顺风+主力3.58亿建仓未拉升(双雄同步)+中报催化+排雷干净→跟随京东方补涨,低价5.07(1手507元)极易触达,宜与京东方配对面板双雄"
+      ],
+      "runId": "20260811_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002185",
+      "name": "华天科技",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260811",
+      "expireDate": "20260825",
+      "basePrice": 18.19,
+      "benchBase": {
+        "sh000001": 3964.79,
+        "sz399006": 3587.24
+      },
+      "role": "Top4-收敛最紧变盘窗(半导体封测/AIDC)",
+      "position": "18.2%(1手@18.19=1819元)",
+      "reasoningChain": [
+        "因为macro预判AIDC算力/半导体自主可控为顺风主线(大基金三期+中美博弈+模拟芯片涨价)→板块方向确认(信号A)",
+        "因为technical区间收敛rc0.38为20只候选最紧(收敛越紧突破动能越大=变盘窗最临近)+底部结构m20-28.82超跌企稳+5日均匀涨uniformity1.0(均匀涨质量高非spike透支)(信号C)",
+        "因为risk_audit无任何warning(earnings+568%正/CF+0.15正/无大宗/无解禁)→排雷最clean(信号E)",
+        "预判华天科技未来1-2周有上涨潜力:AIDC/半导体顺风+区间极致收敛变盘窗临近+底部结构+排雷最clean→变盘向上概率高,amt20=80.85亿顶级流动性+低价18.19(1手1819元)可触达"
+      ],
+      "runId": "20260811_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "000963",
+      "name": "华东医药",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260811",
+      "expireDate": "20260825",
+      "basePrice": 30.36,
+      "benchBase": {
+        "sh000001": 3964.79,
+        "sz399006": 3587.24
+      },
+      "role": "Top5-最强顺风医药商业(观察仓:CF红旗+价位约束)",
+      "position": "0%(观察仓:riskAuditClean=false CF红旗+30元/手=30%超25%)",
+      "reasoningChain": [
+        "因为macro预判创新药/医药商业为最强顺风主线(百花6连板全场最高+线下药店+6.5%居首+北向深股通370亿流向深市成长)→最强顺风方向(信号A)",
+        "因为technical形态setup87三信号共振(回踩缩量企稳+贴MA20 29.63+区间收敛rc0.67),m20仅0.5平盘长期底部收敛待变盘(信号C)",
+        "因为risk_audit hard_veto=false(无硬雷earnings+9.56%正)但CF负-0.49为盈利质量红旗→降仓不否决(信号E)",
+        "预判华东医药未来1-2周有上涨潜力:最强顺风+形态setup87回踩MA20→顺风发酵+形态买点共振;风险=CF红旗+非主线最高高度票(跟风非领涨)+30元1万账户不可部署"
+      ],
+      "runId": "20260811_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "600863",
+      "name": "华能蒙电",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260811",
+      "expireDate": "20260825",
+      "basePrice": 5.18,
+      "buyPrice": 5.196,
+      "capital": 10000,
+      "positionPct": 0.10400000000000001,
+      "benchBase": {
+        "sh000001": 3934.09,
+        "sz399006": 3549.16
+      },
+      "role": "Top2 电力发酵/主力建仓",
+      "position": "10.4%",
+      "reasoningChain": [],
+      "runId": "20260811_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "feeDragPct": null,
+      "netActualChangePct": null,
+      "netAlphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "300610",
+      "name": "晨化股份",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260811",
+      "expireDate": "20260825",
+      "basePrice": 10.08,
+      "buyPrice": 10.11,
+      "capital": 10000,
+      "positionPct": 0.10099999999999999,
+      "benchBase": {
+        "sh000001": 3934.09,
+        "sz399006": 3549.16
+      },
+      "role": "Top3 化学制品发酵/排雷最clean",
+      "position": "10.1%",
+      "reasoningChain": [],
+      "runId": "20260811_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "feeDragPct": null,
+      "netActualChangePct": null,
+      "netAlphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "600500",
+      "name": "中化国际",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260811",
+      "expireDate": "20260825",
+      "basePrice": 5.35,
+      "buyPrice": 5.366,
+      "capital": 10000,
+      "positionPct": 0.054000000000000006,
+      "benchBase": {
+        "sh000001": 3934.09,
+        "sz399006": 3549.16
+      },
+      "role": "Top4 化学制品央企/业绩+CF双正",
+      "position": "5.4%",
+      "reasoningChain": [],
+      "runId": "20260811_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "feeDragPct": null,
+      "netActualChangePct": null,
+      "netAlphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002284",
+      "name": "亚太股份",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260811",
+      "expireDate": "20260825",
+      "basePrice": 9.55,
+      "buyPrice": 9.579,
+      "capital": 10000,
+      "positionPct": 0.096,
+      "benchBase": {
+        "sh000001": 3934.09,
+        "sz399006": 3549.16
+      },
+      "role": "Top5 汽车7涨停最强发酵/人形链",
+      "position": "9.6%",
+      "reasoningChain": [],
+      "runId": "20260811_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "feeDragPct": null,
+      "netActualChangePct": null,
+      "netAlphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "300188",
+      "name": "国投智能",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260811",
+      "expireDate": "20260825",
+      "basePrice": 11.21,
+      "buyPrice": 11.244,
+      "capital": 10000,
+      "positionPct": 0.11199999999999999,
+      "benchBase": {
+        "sh000001": 3934.09,
+        "sz399006": 3549.16
+      },
+      "role": "Top6 AI应用/机构接盘3笔",
+      "position": "11.2%",
+      "reasoningChain": [],
+      "runId": "20260811_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "feeDragPct": null,
+      "netActualChangePct": null,
+      "netAlphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "300307",
+      "name": "慈星股份",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260811",
+      "expireDate": "20260825",
+      "basePrice": 7.66,
+      "buyPrice": 7.683,
+      "capital": 10000,
+      "positionPct": 0.077,
+      "benchBase": {
+        "sh000001": 3934.09,
+        "sz399006": 3549.16
+      },
+      "role": "Top7 专用设备发酵/业绩+CF双正",
+      "position": "7.7%",
+      "reasoningChain": [],
+      "runId": "20260811_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "feeDragPct": null,
+      "netActualChangePct": null,
+      "netAlphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002772",
+      "name": "众兴菌业",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260811",
+      "expireDate": "20260825",
+      "basePrice": 10.64,
+      "buyPrice": 10.672,
+      "capital": 10000,
+      "positionPct": 0.10800000000000001,
+      "benchBase": {
+        "sh000001": 3934.09,
+        "sz399006": 3549.16
+      },
+      "role": "Top8 价值锚/PB近破净",
+      "position": "10.8%",
+      "reasoningChain": [],
+      "runId": "20260811_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "feeDragPct": null,
+      "netActualChangePct": null,
+      "netAlphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "600588",
+      "name": "用友网络",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260811",
+      "expireDate": "20260825",
+      "basePrice": 11.92,
+      "buyPrice": 11.956,
+      "capital": 10000,
+      "positionPct": 0.11900000000000001,
+      "benchBase": {
+        "sh000001": 3934.09,
+        "sz399006": 3549.16
+      },
+      "role": "Top9 AI应用SaaS龙头",
+      "position": "11.9%",
+      "reasoningChain": [],
+      "runId": "20260811_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "feeDragPct": null,
+      "netActualChangePct": null,
+      "netAlphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "002611",
+      "name": "东方精工",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260811",
+      "expireDate": "20260825",
+      "basePrice": 15.96,
+      "buyPrice": 16.008,
+      "capital": 10000,
+      "positionPct": 0.0,
+      "benchBase": {
+        "sh000001": 3934.09,
+        "sz399006": 3549.16
+      },
+      "role": "Top10 观察/PE2.5+CF红旗",
+      "position": "0%",
+      "reasoningChain": [],
+      "runId": "20260811_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "feeDragPct": null,
+      "netActualChangePct": null,
+      "netAlphaPct": null,
+      "hit": null
+    },
+    {
+      "code": "600955",
+      "name": "维远股份",
+      "horizon": "波段",
+      "windowDays": 14,
+      "predictDate": "20260811",
+      "expireDate": "20260825",
+      "basePrice": 12.68,
+      "buyPrice": 12.718,
+      "capital": 10000,
+      "positionPct": 0.0,
+      "benchBase": {
+        "sh000001": 3934.09,
+        "sz399006": 3549.16
+      },
+      "role": "Top11 观察/PB破净+油气顺风",
+      "position": "0%",
+      "reasoningChain": [],
+      "runId": "20260811_future-picks_波段",
+      "verified": false,
+      "actualChangePct": null,
+      "benchChangePct": null,
+      "alphaPct": null,
+      "feeDragPct": null,
+      "netActualChangePct": null,
+      "netAlphaPct": null,
+      "hit": null
     }
   ],
-  "lastUpdated": "2026-08-10 14:46:34",
+  "lastUpdated": "2026-08-11 18:43:52",
   "stats": {
-    "totalPredictions": 46,
-    "verified": 20,
-    "hits": 10,
-    "hitRate": 50.0,
-    "avgAlpha": 1.99,
-    "benchChange": 3.45
+    "totalPredictions": 61,
+    "verified": 26,
+    "hits": 15,
+    "hitRate": 57.7,
+    "avgAlpha": 2.1,
+    "avgNetAlpha": 1.64,
+    "avgFeeDrag": 0.45,
+    "benchChange": 2.66
   }
 }
